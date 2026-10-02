@@ -165,9 +165,20 @@ export async function POST(request: Request) {
       });
     }
 
-    const research = await researchGoal(goal, currentLevel, targetLevel);
+    let research;
+    try {
+      research = await researchGoal(goal, currentLevel, targetLevel);
+    } catch (researchError) {
+      console.error("AuraMind research error:", researchError);
+      research = {
+        available: false,
+        searches: [],
+        note: "Live web research was temporarily unavailable; Gemini will continue using its own reasoning."
+      };
+    }
+
     const prompt = `
-You are AuraMind, a serious goal-accountability system, not a generic chatbot.
+You are AuraMind's senior goal architect. You are not a generic chatbot.
 
 USER GOAL
 ${goal}
@@ -196,9 +207,9 @@ ${researchText(research)}
 Build a detailed, realistic 7-day operating plan.
 
 RESEARCH RULES
-- Use the supplied research data as evidence.
-- Prefer authoritative/first-party sources when available.
-- Never invent a requirement when the research does not support it.
+- Use the supplied research data as evidence when it exists.
+- Prefer authoritative/first-party sources when the retrieved research contains them.
+- Never invent factual claims. When research is unavailable, clearly base planning on the user's supplied information and general reasoning.
 - Explain important decisions briefly.
 - Distinguish evidence from planning judgement.
 
@@ -210,6 +221,11 @@ PLANNING RULES
 - Break large work into trackable sessions.
 - Adapt difficulty to the stated current level.
 - Make each block actionable enough that the user knows exactly what to do.
+- Every focus block must state a concrete deliverable or measurable action.
+- Avoid repeated generic tasks such as "study", "practice", or "work"; specify what to study/do and what evidence of completion to produce.
+- Sequence the week intelligently: diagnose → learn/fix prerequisites → deliberate practice → application → review/error repair → checkpoint.
+- Allocate harder work to plausible high-energy windows and lighter work after demanding commitments.
+- Leave realistic buffers for meals, travel, transitions, and recovery.
 - Include recovery/breaks where needed.
 - Do not promise the user will achieve the goal.
 - Do not shame missed work; it becomes data for the accountability engine.
@@ -218,7 +234,9 @@ Return only JSON matching the schema.
 `;
 
     const response = await gemini.models.generateContent({
-      model: getGeminiModel(),
+      model: ["gemini-3.8-flash", "gemini-3.7-flash"].includes(getGeminiModel())
+        ? getGeminiModel()
+        : "gemini-3.8-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -238,18 +256,50 @@ Return only JSON matching the schema.
     });
   } catch (error: any) {
     console.error("AuraMind goal intelligence error:", error);
+
+    const fallbackBody = await (async () => {
+      try {
+        const body = await request.clone().json();
+        const goal = String(body.goal ?? "").trim();
+        const deadline = String(body.deadline ?? "").trim();
+        const currentLevel = String(body.currentLevel ?? "").trim();
+        const targetLevel = String(body.targetLevel ?? "").trim();
+        const fixedSchedule = String(body.fixedSchedule ?? "").trim();
+        const dailyHours = Number(body.dailyHours ?? 3);
+        const timezone = String(body.timezone ?? "Asia/Kolkata");
+        const demo = makeDemoPlan({
+          goal,
+          deadline,
+          currentLevel,
+          targetLevel,
+          fixedSchedule,
+          dailyHours,
+          timezone
+        });
+        return {
+          ...demo,
+          engine: "core",
+          research: {
+            research_summary: "AI research was temporarily unavailable. AuraMind Core generated a usable plan from your real constraints.",
+            requirements: [],
+            prerequisites: [],
+            common_bottlenecks: [],
+            strategy: []
+          },
+          researchSources: []
+        };
+      } catch {
+        return null;
+      }
+    })();
+
+    if (fallbackBody) {
+      return NextResponse.json(fallbackBody);
+    }
+
     return NextResponse.json(
-      {
-        error: "AuraMind could not build the researched goal.",
-        details: {
-          status: Number(error?.status) || 500,
-          message:
-            typeof error?.message === "string"
-              ? error.message
-              : "Unknown Gemini/research error."
-        }
-      },
-      { status: Number(error?.status) >= 400 && Number(error?.status) < 600 ? Number(error.status) : 500 }
+      { error: "AuraMind could not build the goal." },
+      { status: 500 }
     );
   }
 }
