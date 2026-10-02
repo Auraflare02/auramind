@@ -1,11 +1,21 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { savePlan } from "../lib/storage";
+import { savePlan, setGoalActive } from "../lib/storage";
 
 type Block = {start:string;end:string;activity:string;category:string;priority:"high"|"medium"|"low";reason:string};
 type Day = {day:string;date:string;blocks:Block[]};
-type Plan = {engine?: "openai"|"demo";goal_summary:string;success_definition:string;weekly_focus:string;risk_notes:string[];schedule:Day[]};
+type Plan = {
+  engine?: "ai"|"core"|"openai"|"demo";
+  goal_summary:string;
+  success_definition:string;
+  weekly_focus:string;
+  risk_notes:string[];
+  milestones?: {title:string;outcome:string;timing:string}[];
+  research?: {research_summary:string;requirements:string[];prerequisites:string[];common_bottlenecks:string[];strategy:string[]};
+  researchSources?: {title:string;url:string}[];
+  schedule:Day[];
+};
 
 export default function Home() {
   const [form,setForm]=useState({goal:"",deadline:"",currentLevel:"",targetLevel:"",fixedSchedule:"",dailyHours:"3"});
@@ -16,7 +26,7 @@ export default function Home() {
   async function submit(e:FormEvent) {
     e.preventDefault(); setLoading(true); setError(""); setPlan(null);
     try {
-      const res=await fetch("/api/plan",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...form,dailyHours:Number(form.dailyHours),timezone:"Asia/Kolkata"})});
+      const res=await fetch("/api/goal",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...form,dailyHours:Number(form.dailyHours),timezone:"Asia/Kolkata"})});
       const data=await res.json();
       if(!res.ok) throw new Error(data.error||"Something went wrong.");
       setPlan(data);
@@ -91,7 +101,7 @@ export default function Home() {
             <h2>Generated plan</h2>
             <p className="muted">{plan.goal_summary}</p>
           </div>
-          <a className="btn linkbtn" href="/dashboard">Start hourly accountability →</a>
+          <button className="btn linkbtn" onClick={() => { setGoalActive(true); window.location.href="/dashboard"; }}>Start Goal →</button>
         </div>
 
         <div className="stats">
@@ -100,8 +110,26 @@ export default function Home() {
           <div className="stat"><small>Tracking</small><strong>Hourly</strong></div>
         </div>
 
-        {plan.engine === "demo" && (
-          <div className="notice"><strong>AuraMind Core active:</strong> This free mode uses the user's goal, deadline, weak areas, commitments and availability to build a personalized rule-based plan. Paid LLM mode can be connected later for deeper language reasoning.</div>
+        <div className="notice">
+          <strong>Engine:</strong> {plan.engine === "ai" ? "Research + AI reasoning" : "AuraMind Core"}.
+          {plan.engine !== "ai" && " Live web research is not available without an enabled AI API."}
+        </div>
+        {plan.research && (
+          <div className="researchPanel">
+            <div className="sectionHead"><div><h3>Goal Research</h3><p className="muted">{plan.research.research_summary}</p></div></div>
+            <div className="researchGrid">
+              <div><strong>Requirements</strong><ul>{plan.research.requirements.map((x,i)=><li key={i}>{x}</li>)}</ul></div>
+              <div><strong>Prerequisites</strong><ul>{plan.research.prerequisites.map((x,i)=><li key={i}>{x}</li>)}</ul></div>
+              <div><strong>Common bottlenecks</strong><ul>{plan.research.common_bottlenecks.map((x,i)=><li key={i}>{x}</li>)}</ul></div>
+              <div><strong>Strategy</strong><ul>{plan.research.strategy.map((x,i)=><li key={i}>{x}</li>)}</ul></div>
+            </div>
+            {plan.researchSources && plan.researchSources.length > 0 && (
+              <div className="sources"><strong>Sources</strong>{plan.researchSources.map((s,i)=><a key={i} href={s.url} target="_blank" rel="noreferrer">{s.title}</a>)}</div>
+            )}
+          </div>
+        )}
+        {plan.milestones && (
+          <div className="notice"><strong>Milestones:</strong> {plan.milestones.map((m)=>m.title+" — "+m.timing).join(" · ")}</div>
         )}
         <div className="notice"><strong>Success definition:</strong> {plan.success_definition}</div>
         <div className="notice"><strong>Weekly focus:</strong> {plan.weekly_focus}</div>
