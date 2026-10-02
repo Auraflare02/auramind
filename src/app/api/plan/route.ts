@@ -70,7 +70,7 @@ export async function POST(request: Request) {
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const configured = process.env.OPENAI_MODEL ?? "";
-    const model = configured.startsWith("gpt-6-") ? configured : "gpt-6-luna";
+    const model = configured.startsWith("gpt-6-") ? configured : "gpt-6-astra";
 
     const system = [
       "You are AuraMind, an AI accountability planning engine.",
