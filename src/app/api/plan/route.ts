@@ -106,8 +106,28 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(JSON.parse(response.output_text));
-  } catch (error) {
+  } catch (error: any) {
     console.error("AuraMind plan error:", error);
-    return NextResponse.json({ error: "AuraMind could not generate the plan." }, { status: 500 });
+
+    const status = Number(error?.status) || 500;
+    const code = typeof error?.code === "string" ? error.code : undefined;
+    const type = typeof error?.type === "string" ? error.type : undefined;
+    const message =
+      typeof error?.message === "string"
+        ? error.message
+        : "Unknown OpenAI/API error.";
+
+    return NextResponse.json(
+      {
+        error: "AuraMind could not generate the plan.",
+        details: {
+          status,
+          code,
+          type,
+          message
+        }
+      },
+      { status: status >= 400 && status < 600 ? status : 500 }
+    );
   }
 }
