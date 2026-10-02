@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { NextResponse } from "next/server";
+import { makeDemoWeeklyReport } from "../../../../lib/demo-engine";
 
 const schema = {
   type: "object",
@@ -47,10 +48,6 @@ function dateOnly(value: Date) {
 
 export async function POST(request: Request) {
   try {
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json({ error: "OPENAI_API_KEY is not configured." }, { status: 500 });
-    }
-
     const body = await request.json();
     const anchorDate = String(body.anchorDate ?? "");
     const logs = Array.isArray(body.logs) ? body.logs : [];
@@ -87,6 +84,10 @@ export async function POST(request: Request) {
       ? Math.min(100, Math.round((focusedMinutes / plannedMinutes) * 1000) / 10)
       : 0;
 
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json(makeDemoWeeklyReport(anchorDate, logs));
+    }
+
     const configured = process.env.OPENAI_MODEL ?? "";
     const model = configured.startsWith("gpt-6-") ? configured : "gpt-6-luna";
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -120,8 +121,24 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(JSON.parse(response.output_text));
-  } catch (error) {
+  } catch (error: any) {
     console.error("AuraMind weekly report error:", error);
-    return NextResponse.json({ error: "AuraMind could not generate the weekly report." }, { status: 500 });
+
+    if (Number(error?.status) === 429) {
+      return NextResponse.json(makeDemoWeeklyReport(anchorDate, logs));
+    }
+
+    return NextResponse.json(
+      {
+        error: "AuraMind could not generate the weekly report.",
+        details: {
+          status: Number(error?.status) || 500,
+          code: typeof error?.code === "string" ? error.code : undefined,
+          type: typeof error?.type === "string" ? error.type : undefined,
+          message: typeof error?.message === "string" ? error.message : "Unknown OpenAI/API error."
+        }
+      },
+      { status: Number(error?.status) >= 400 && Number(error?.status) < 600 ? Number(error.status) : 500 }
+    );
   }
 }
