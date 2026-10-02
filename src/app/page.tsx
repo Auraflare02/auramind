@@ -101,7 +101,7 @@ export default function Home() {
         </div>
 
         {plan.engine === "demo" && (
-          <div className="notice"><strong>Demo engine active:</strong> AuraMind is working without OpenAI API credits. Your plan, tracking and reports are still functional.</div>
+          <div className="notice"><strong>AuraMind Core active:</strong> This free mode uses the user's goal, deadline, weak areas, commitments and availability to build a personalized rule-based plan. Paid LLM mode can be connected later for deeper language reasoning.</div>
         )}
         <div className="notice"><strong>Success definition:</strong> {plan.success_definition}</div>
         <div className="notice"><strong>Weekly focus:</strong> {plan.weekly_focus}</div>
