@@ -122,23 +122,6 @@ export async function POST(request: Request) {
         ? error.message
         : "Unknown OpenAI/API error.";
 
-    // A 429 usually means the API has no usable quota/credits or the request hit a rate limit.
-    // Keep AuraMind usable in demo mode instead of blocking the product.
-    if (status === 429) {
-      return NextResponse.json({
-        ...makeDemoPlan({
-          goal,
-          deadline,
-          currentLevel,
-          targetLevel,
-          fixedSchedule,
-          dailyHours,
-          timezone
-        }),
-        engine: "demo"
-      });
-    }
-
     return NextResponse.json(
       {
         error: "AuraMind could not generate the plan.",
