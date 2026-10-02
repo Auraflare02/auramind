@@ -16,6 +16,7 @@ export type PlanDay = {
 };
 
 export type AuraPlan = {
+  engine?: "openai" | "demo";
   goal_summary: string;
   success_definition: string;
   weekly_focus: string;
