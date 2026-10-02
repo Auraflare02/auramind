@@ -1,5 +1,5 @@
-import OpenAI from "openai";
 import { NextResponse } from "next/server";
+import { getGeminiClient, getGeminiModel } from "../../../../lib/gemini";
 import { makeDemoDailyReport } from "../../../../lib/demo-engine";
 
 const schema = {
@@ -73,50 +73,37 @@ export async function POST(request: Request) {
     const model = configured.startsWith("gpt-6-") ? configured : "gpt-6-astra";
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-    const response = await openai.responses.create({
-      model,
-      input: [
-        {
-          role: "system",
-          content:
-            "You are AuraMind's daily accountability analyst. Analyse self-reported hourly logs. Do not shame the user. Do not call a single missed task laziness. Distinguish difficulty, fatigue, interruptions, poor planning, boredom and digital distraction. Identify the strongest and weakest time periods only from supplied data. Give one concrete solution that can be applied tomorrow. Return only structured data."
-        },
-        {
-          role: "user",
-          content: JSON.stringify({
-            date,
-            plan,
-            logs,
-            calculated: { plannedMinutes, focusedMinutes, distractionMinutes, completionPercent }
-          })
-        }
-      ],
-      text: {
-        format: {
-          type: "json_schema",
-          name: "auramind_daily_report",
-          strict: true,
-          schema
-        }
+    const response = await gemini.models.generateContent({
+      model: getGeminiModel(),
+      contents: [
+        `You are AuraMind's daily behavioral coach. Analyze the user's self-reported hourly logs against the planned schedule. Be specific and practical. Never shame the user. Never label one missed task as laziness. Identify likely blocker types such as task difficulty, fatigue, interruption, poor planning, boredom, or digital distraction. Only claim patterns supported by the supplied data. Give one concrete change for the next day.`,
+        JSON.stringify({
+          date,
+          plan,
+          logs,
+          calculated: { plannedMinutes, focusedMinutes, distractionMinutes, completionPercent }
+        })
+      ].join("\n\n"),
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: schema
       }
     });
 
-    return NextResponse.json(JSON.parse(response.output_text));
+    if (!response.text) throw new Error("Gemini returned an empty daily report.");
+    return NextResponse.json(JSON.parse(response.text));
   } catch (error: any) {
     console.error("AuraMind daily report error:", error);
-
-    if (Number(error?.status) === 429) {
-      return NextResponse.json(makeDemoDailyReport(date, logs));
-    }
 
     return NextResponse.json(
       {
         error: "AuraMind could not analyse this day.",
         details: {
           status: Number(error?.status) || 500,
-          code: typeof error?.code === "string" ? error.code : undefined,
-          type: typeof error?.type === "string" ? error.type : undefined,
-          message: typeof error?.message === "string" ? error.message : "Unknown OpenAI/API error."
+          message:
+            typeof error?.message === "string"
+              ? error.message
+              : "Unknown Gemini error."
         }
       },
       { status: Number(error?.status) >= 400 && Number(error?.status) < 600 ? Number(error.status) : 500 }
