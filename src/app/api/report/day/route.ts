@@ -70,7 +70,7 @@ export async function POST(request: Request) {
     }
 
     const configured = process.env.OPENAI_MODEL ?? "";
-    const model = configured.startsWith("gpt-6-") ? configured : "gpt-6-luna";
+    const model = configured.startsWith("gpt-6-") ? configured : "gpt-6-astra";
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     const response = await openai.responses.create({
