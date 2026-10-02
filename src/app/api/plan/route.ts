@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { NextResponse } from "next/server";
+import { makeDemoPlan } from "../../../lib/demo-engine";
 
 const planSchema = {
   type: "object",
@@ -43,10 +44,6 @@ const planSchema = {
 
 export async function POST(request: Request) {
   try {
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json({ error: "OPENAI_API_KEY is not configured." }, { status: 500 });
-    }
-
     const body = await request.json();
     const goal = String(body.goal ?? "").trim();
     const deadline = String(body.deadline ?? "").trim();
@@ -60,6 +57,12 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Goal, deadline, current level and target level are required." },
         { status: 400 }
+      );
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json(
+        makeDemoPlan({ goal, deadline, currentLevel, targetLevel, fixedSchedule, dailyHours, timezone })
       );
     }
 
@@ -105,7 +108,7 @@ export async function POST(request: Request) {
       }
     });
 
-    return NextResponse.json(JSON.parse(response.output_text));
+    return NextResponse.json({ ...JSON.parse(response.output_text), engine: "openai" });
   } catch (error: any) {
     console.error("AuraMind plan error:", error);
 
@@ -117,15 +120,27 @@ export async function POST(request: Request) {
         ? error.message
         : "Unknown OpenAI/API error.";
 
+    // A 429 usually means the API has no usable quota/credits or the request hit a rate limit.
+    // Keep AuraMind usable in demo mode instead of blocking the product.
+    if (status === 429) {
+      return NextResponse.json({
+        ...makeDemoPlan({
+          goal,
+          deadline,
+          currentLevel,
+          targetLevel,
+          fixedSchedule,
+          dailyHours,
+          timezone
+        }),
+        engine: "demo"
+      });
+    }
+
     return NextResponse.json(
       {
         error: "AuraMind could not generate the plan.",
-        details: {
-          status,
-          code,
-          type,
-          message
-        }
+        details: { status, code, type, message }
       },
       { status: status >= 400 && status < 600 ? status : 500 }
     );
