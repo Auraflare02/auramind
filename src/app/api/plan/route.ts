@@ -60,10 +60,12 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        makeDemoPlan({ goal, deadline, currentLevel, targetLevel, fixedSchedule, dailyHours, timezone })
-      );
+    const aiMode = (process.env.AURAMIND_AI_MODE ?? "demo").toLowerCase();
+
+    // Demo mode is the default so AuraMind works without API credits.
+    // Set AURAMIND_AI_MODE=api only when a funded API project is intentionally enabled.
+    if (aiMode !== "api" || !process.env.OPENAI_API_KEY) {
+      return NextResponse.json(makeDemoPlan({ goal, deadline, currentLevel, targetLevel, fixedSchedule, dailyHours, timezone }));
     }
 
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
