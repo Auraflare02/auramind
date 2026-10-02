@@ -100,6 +100,9 @@ export default function Home() {
           <div className="stat"><small>Tracking</small><strong>Hourly</strong></div>
         </div>
 
+        {plan.engine === "demo" && (
+          <div className="notice"><strong>Demo engine active:</strong> AuraMind is working without OpenAI API credits. Your plan, tracking and reports are still functional.</div>
+        )}
         <div className="notice"><strong>Success definition:</strong> {plan.success_definition}</div>
         <div className="notice"><strong>Weekly focus:</strong> {plan.weekly_focus}</div>
 
