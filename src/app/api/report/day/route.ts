@@ -63,7 +63,9 @@ export async function POST(request: Request) {
       ? Math.min(100, Math.round((focusedMinutes / plannedMinutes) * 1000) / 10)
       : 0;
 
-    if (!process.env.OPENAI_API_KEY) {
+    const aiMode = (process.env.AURAMIND_AI_MODE ?? "demo").toLowerCase();
+
+    if (aiMode !== "api" || !process.env.OPENAI_API_KEY) {
       return NextResponse.json(makeDemoDailyReport(date, logs));
     }
 
