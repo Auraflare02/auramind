@@ -5,7 +5,7 @@ import { savePlan } from "../lib/storage";
 
 type Block = {start:string;end:string;activity:string;category:string;priority:"high"|"medium"|"low";reason:string};
 type Day = {day:string;date:string;blocks:Block[]};
-type Plan = {goal_summary:string;success_definition:string;weekly_focus:string;risk_notes:string[];schedule:Day[]};
+type Plan = {engine?: "openai"|"demo";goal_summary:string;success_definition:string;weekly_focus:string;risk_notes:string[];schedule:Day[]};
 
 export default function Home() {
   const [form,setForm]=useState({goal:"",deadline:"",currentLevel:"",targetLevel:"",fixedSchedule:"",dailyHours:"3"});
