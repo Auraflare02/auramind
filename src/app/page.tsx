@@ -6,7 +6,7 @@ import { savePlan, setGoalActive } from "../lib/storage";
 type Block = {start:string;end:string;activity:string;category:string;priority:"high"|"medium"|"low";reason:string};
 type Day = {day:string;date:string;blocks:Block[]};
 type Plan = {
-  engine?: "ai"|"core"|"openai"|"demo";
+  engine?: "gemini"|"ai"|"core"|"openai"|"demo";
   goal_summary:string;
   success_definition:string;
   weekly_focus:string;
@@ -111,8 +111,8 @@ export default function Home() {
         </div>
 
         <div className="notice">
-          <strong>Engine:</strong> {plan.engine === "ai" ? "Research + AI reasoning" : "AuraMind Core"}.
-          {plan.engine !== "ai" && " Live web research is not available without an enabled AI API."}
+          <strong>Engine:</strong> {plan.engine === "gemini" ? "Gemini + live web research" : plan.engine === "ai" ? "AI research + reasoning" : "AuraMind Core"}.
+          {plan.engine === "core" && " Add the Gemini and Tavily keys in Vercel to unlock the full research-first engine."}
         </div>
         {plan.research && (
           <div className="researchPanel">
