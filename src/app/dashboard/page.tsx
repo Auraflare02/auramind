@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { getLogs, getLogsForDate, getPlan, saveDailyReport, saveLog, saveWeeklyReport } from "../../lib/storage";
+import { awardXpOnce, getLogs, getLogsForDate, getPlan, getXp, isGoalActive, saveDailyReport, saveLog, saveWeeklyReport, setGoalActive } from "../../lib/storage";
+import { calculateXp } from "../../lib/xp";
 import type { AuraPlan, DailyReport, HourLog, WeeklyReport } from "../../lib/types";
 
 const hours = Array.from({ length: 17 }, (_, i) => i + 6);
@@ -67,11 +68,56 @@ export default function Dashboard() {
   const [weekly, setWeekly] = useState<WeeklyReport | null>(null);
   const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState("");
+  const [xp, setXp] = useState(0);
+  const [active, setActive] = useState(false);
+  const [promptRow, setPromptRow] = useState<HourLog | null>(null);
 
   useEffect(() => {
     setPlan(getPlan());
     setLogs(getLogsForDate(date));
+    setXp(getXp());
+    setActive(isGoalActive());
   }, [date]);
+
+  useEffect(() => {
+    if (!active) return;
+
+    let previousKey = "";
+
+    const checkHour = () => {
+      const now = new Date();
+      const currentDate = localDate();
+      const hour = Number(new Intl.DateTimeFormat("en-US", {
+        timeZone: "Asia/Kolkata",
+        hour: "2-digit",
+        hour12: false
+      }).format(now));
+
+      if (currentDate !== date || hour < 6 || hour > 22) return;
+
+      const key = currentDate + "-" + hour;
+      if (key === previousKey) return;
+      previousKey = key;
+
+      const existing = getLogsForDate(currentDate).find((log) => log.id === key);
+      if (!existing) {
+        const row = newRow(plan, currentDate, hour);
+        setPromptRow(row);
+
+        try {
+          if ("Notification" in window && Notification.permission === "granted") {
+            new Notification("AuraMind check-in", {
+              body: "Tell AuraMind what actually happened this hour."
+            });
+          }
+        } catch {}
+      }
+    };
+
+    checkHour();
+    const timer = window.setInterval(checkHour, 30000);
+    return () => window.clearInterval(timer);
+  }, [active, date, plan]);
 
   const rows = useMemo(
     () => hours.map((hour) => logs.find((l) => l.id === date + "-" + hour) || newRow(plan, date, hour)),
@@ -80,9 +126,27 @@ export default function Dashboard() {
 
   function save(row: HourLog) {
     saveLog(row);
+    const xpResult = calculateXp(row);
+    const award = awardXpOnce(row.id, xpResult.earned);
+    if (award.awarded) {
+      setXp(award.total);
+      setNotice("Saved · +" + xpResult.earned + " XP");
+    } else {
+      setNotice("Saved.");
+    }
     setLogs(getLogsForDate(date));
-    setNotice("Saved.");
-    window.setTimeout(() => setNotice(""), 1200);
+    setPromptRow(null);
+    window.setTimeout(() => setNotice(""), 1800);
+  }
+
+  async function enableNotifications() {
+    if (!("Notification" in window)) {
+      setNotice("Browser notifications are not supported here.");
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    setNotice(permission === "granted" ? "Hourly notifications enabled." : "Notifications were not enabled.");
+    window.setTimeout(() => setNotice(""), 1800);
   }
 
   async function makeDaily() {
@@ -142,6 +206,8 @@ export default function Dashboard() {
         <h1>{plan.goal_summary}</h1>
         <p>{plan.weekly_focus}</p>
         <div className="stats">
+          <div className="stat"><small>XP</small><strong>{xp.toLocaleString()} XP</strong></div>
+          <div className="stat"><small>Goal</small><strong>{active ? "Active" : "Paused"}</strong></div>
           <div className="stat"><small>Tracking</small><strong>Every hour</strong></div>
           <div className="stat"><small>Daily</small><strong>AI diagnosis</strong></div>
           <div className="stat"><small>Weekly</small><strong>Pattern report</strong></div>
@@ -178,6 +244,19 @@ export default function Dashboard() {
         </section>
       </section>
 
+      {promptRow && (
+        <div className="modalBackdrop">
+          <div className="checkinModal">
+            <div className="kicker">Hourly check-in</div>
+            <h2>{promptRow.hourStart} → {promptRow.hourEnd}</h2>
+            <p className="muted">Your planned activity was:</p>
+            <div className="notice"><strong>{promptRow.plannedActivity}</strong></div>
+            <p>Tell AuraMind what actually happened, then save the hour to earn XP.</p>
+            <HourRow row={promptRow} onSave={save} />
+            <button className="navLink modalClose" onClick={() => setPromptRow(null)}>Remind me later</button>
+          </div>
+        </div>
+      )}
       <div className="footer">AuraMind V1 · Plan → track → understand → improve.</div>
     </main>
   );
