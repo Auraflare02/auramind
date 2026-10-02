@@ -30,3 +30,20 @@ input:focus,textarea:focus,select:focus{border-color:rgba(169,108,255,.8);box-sh
 .empty{padding:22px;border:1px dashed var(--line);border-radius:14px;color:var(--muted);margin-top:14px}.report{margin-top:10px}.footer{padding-top:22px;text-align:center;color:var(--muted);font-size:11px}
 @media(max-width:900px){.grid{grid-template-columns:1fr}.hourRow{grid-template-columns:1fr}.saveBtn{width:100%}}
 @media(max-width:700px){.navActions{gap:5px}.badge{display:none}.sectionHead{align-items:flex-start;flex-direction:column}.linkbtn{width:100%}.formgrid,.formRow{grid-template-columns:1fr}.full{grid-column:auto}.stats{grid-template-columns:1fr}.block{grid-template-columns:1fr;gap:6px}.hero{padding:24px}}
+
+.dashboardActions{display:flex;align-items:center;gap:8px}
+.researchPanel{margin-top:14px;padding:17px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.025)}
+.researchGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
+.researchGrid>div{padding:14px;border:1px solid rgba(255,255,255,.06);border-radius:14px;background:rgba(255,255,255,.02)}
+.researchGrid strong{font-size:12px}
+.researchGrid ul{margin:8px 0 0;padding-left:18px;color:var(--muted);line-height:1.6;font-size:12px}
+.sources{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.06)}
+.sources strong{width:100%}
+.sources a{font-size:11px;color:var(--accent2);border:1px solid rgba(169,108,255,.25);border-radius:999px;padding:7px 9px;background:rgba(169,108,255,.05)}
+.modalBackdrop{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.68);backdrop-filter:blur(8px)}
+.checkinModal{width:min(980px,100%);max-height:92vh;overflow:auto;padding:22px;border:1px solid var(--line);border-radius:22px;background:var(--panel);box-shadow:0 30px 100px rgba(0,0,0,.55)}
+.checkinModal>h2{margin:8px 0}
+.checkinModal>p{color:var(--muted);line-height:1.55}
+.checkinModal .hourRow{margin-top:12px}
+.modalClose{margin-top:10px;background:transparent;color:var(--muted)}
+@media(max-width:700px){.dashboardActions{width:100%;flex-direction:column;align-items:stretch}.dateInput{max-width:none}.researchGrid{grid-template-columns:1fr}.checkinModal{padding:15px}}
