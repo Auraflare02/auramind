@@ -4,7 +4,6 @@ import { makeDemoDailyReport } from "../../../../lib/demo-engine";
 
 const schema = {
   type: "object",
-  additionalProperties: false,
   properties: {
     date: { type: "string" },
     completionPercent: { type: "number" },
@@ -31,6 +30,31 @@ const schema = {
   ]
 } as const;
 
+function calculate(logs: any[]) {
+  const plannedMinutes = logs.reduce(
+    (sum, log) =>
+      sum +
+      (log?.plannedActivity &&
+      !/break|free time|unplanned/i.test(String(log.plannedActivity))
+        ? 60
+        : 0),
+    0
+  );
+  const focusedMinutes = logs.reduce(
+    (sum, log) => sum + Math.max(0, Number(log?.focusedMinutes ?? 0)),
+    0
+  );
+  const distractionMinutes = logs.reduce(
+    (sum, log) => sum + Math.max(0, Number(log?.distractionMinutes ?? 0)),
+    0
+  );
+  const completionPercent = plannedMinutes
+    ? Math.min(100, Math.round((focusedMinutes / plannedMinutes) * 1000) / 10)
+    : 0;
+
+  return { plannedMinutes, focusedMinutes, distractionMinutes, completionPercent };
+}
+
 export async function POST(request: Request) {
   let logs: any[] = [];
   let date = "";
@@ -38,51 +62,31 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    logs = Array.isArray(body.logs) ? body.logs : [];
-    plan = body.plan ?? null;
-    date = String(body.date ?? "");
+    logs = Array.isArray(body?.logs) ? body.logs : [];
+    date = String(body?.date ?? "").trim();
+    plan = body?.plan ?? null;
 
     if (!date) {
       return NextResponse.json({ error: "Date is required." }, { status: 400 });
     }
 
-    const plannedMinutes = logs.reduce(
-      (sum: number, log: { plannedActivity?: string }) =>
-        sum + (log.plannedActivity && !/break|free time|unplanned/i.test(log.plannedActivity) ? 60 : 0),
-      0
-    );
-    const focusedMinutes = logs.reduce(
-      (sum: number, log: { focusedMinutes?: number }) => sum + Number(log.focusedMinutes ?? 0),
-      0
-    );
-    const distractionMinutes = logs.reduce(
-      (sum: number, log: { distractionMinutes?: number }) => sum + Number(log.distractionMinutes ?? 0),
-      0
-    );
-    const completionPercent = plannedMinutes
-      ? Math.min(100, Math.round((focusedMinutes / plannedMinutes) * 1000) / 10)
-      : 0;
+    const calculated = calculate(logs);
+    const gemini = getGeminiClient();
 
-    const aiMode = (process.env.AURAMIND_AI_MODE ?? "demo").toLowerCase();
-
-    if (aiMode !== "api" || !process.env.OPENAI_API_KEY) {
+    if (!gemini) {
       return NextResponse.json(makeDemoDailyReport(date, logs));
     }
-
-    const configured = process.env.OPENAI_MODEL ?? "";
-    const model = configured.startsWith("gpt-6-") ? configured : "gpt-6-astra";
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     const response = await gemini.models.generateContent({
       model: getGeminiModel(),
       contents: [
-        `You are AuraMind's daily behavioral coach. Analyze the user's self-reported hourly logs against the planned schedule. Be specific and practical. Never shame the user. Never label one missed task as laziness. Identify likely blocker types such as task difficulty, fatigue, interruption, poor planning, boredom, or digital distraction. Only claim patterns supported by the supplied data. Give one concrete change for the next day.`,
-        JSON.stringify({
-          date,
-          plan,
-          logs,
-          calculated: { plannedMinutes, focusedMinutes, distractionMinutes, completionPercent }
-        })
+        "You are AuraMind's daily behavioral coach.",
+        "Analyze the supplied plan and self-reported hourly logs.",
+        "Distinguish task difficulty, misunderstanding, fatigue, interruption, boredom, digital distraction, and planning mismatch.",
+        "Do not shame the user. A missed task is data, not proof of laziness.",
+        "Only call something a pattern when the supplied data supports it.",
+        "Give one concrete change for tomorrow.",
+        JSON.stringify({ date, plan, logs, calculated })
       ].join("\n\n"),
       config: {
         responseMimeType: "application/json",
@@ -94,7 +98,6 @@ export async function POST(request: Request) {
     return NextResponse.json(JSON.parse(response.text));
   } catch (error: any) {
     console.error("AuraMind daily report error:", error);
-
     return NextResponse.json(
       {
         error: "AuraMind could not analyse this day.",
@@ -106,7 +109,7 @@ export async function POST(request: Request) {
               : "Unknown Gemini error."
         }
       },
-      { status: Number(error?.status) >= 400 && Number(error?.status) < 600 ? Number(error.status) : 500 }
+      { status: 500 }
     );
   }
 }
