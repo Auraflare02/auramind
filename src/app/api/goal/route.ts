@@ -1,5 +1,6 @@
-import OpenAI from "openai";
 import { NextResponse } from "next/server";
+import { getGeminiClient, getGeminiModel } from "../../../lib/gemini";
+import { researchGoal } from "../../../lib/research";
 import { makeDemoPlan } from "../../../lib/demo-engine";
 
 const schema = {
@@ -81,21 +82,43 @@ const schema = {
   ]
 } as const;
 
-function citationSources(response: any) {
+function sourceLinks(research: Awaited<ReturnType<typeof researchGoal>>) {
   const sources: { title: string; url: string }[] = [];
-  for (const item of response?.output ?? []) {
-    for (const content of item?.content ?? []) {
-      for (const annotation of content?.annotations ?? []) {
-        if (annotation?.type === "url_citation" && annotation?.url) {
-          const url = String(annotation.url);
-          if (!sources.some((source) => source.url === url)) {
-            sources.push({ title: String(annotation.title ?? url), url });
-          }
-        }
+  for (const search of research.searches) {
+    for (const result of search.results) {
+      if (!result.url) continue;
+      if (!sources.some((source) => source.url === result.url)) {
+        sources.push({
+          title: result.title || result.url,
+          url: result.url
+        });
       }
     }
   }
-  return sources.slice(0, 12);
+  return sources.slice(0, 15);
+}
+
+function researchText(research: Awaited<ReturnType<typeof researchGoal>>) {
+  if (!research.available) return "No live web research was available.";
+  return research.searches
+    .map(
+      (search) =>
+        "SEARCH: " +
+        search.query +
+        "\n" +
+        search.results
+          .map(
+            (result) =>
+              "- " +
+              (result.title || "Untitled") +
+              " | " +
+              (result.url || "") +
+              "\n  " +
+              (result.content || "")
+          )
+          .join("\n")
+    )
+    .join("\n\n");
 }
 
 export async function POST(request: Request) {
@@ -116,9 +139,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const aiMode = (process.env.AURAMIND_AI_MODE ?? "demo").toLowerCase();
-
-    if (aiMode !== "api" || !process.env.OPENAI_API_KEY) {
+    const gemini = getGeminiClient();
+    if (!gemini) {
       const demo = makeDemoPlan({
         goal,
         deadline,
@@ -131,78 +153,88 @@ export async function POST(request: Request) {
 
       return NextResponse.json({
         ...demo,
-        milestones: [
-          {
-            title: "Foundation",
-            outcome: "Identify the exact skills and knowledge needed for the goal.",
-            timing: "Days 1–2"
-          },
-          {
-            title: "Execution",
-            outcome: "Complete focused practice and produce evidence of progress.",
-            timing: "Days 3–5"
-          },
-          {
-            title: "Checkpoint",
-            outcome: "Test, review errors and adjust the next week's workload.",
-            timing: "Days 6–7"
-          }
-        ],
+        engine: "core",
         research: {
-          research_summary: "Live research is disabled in free Core mode.",
-          requirements: ["Use the user's stated goal, deadline, current level and target."],
-          prerequisites: ["Collect enough information to define the next concrete task."],
-          common_bottlenecks: ["Unclear tasks", "Overloaded schedules", "Inconsistent check-ins"],
-          strategy: ["Start small", "Measure actual behavior", "Adapt from repeated evidence"]
+          research_summary: "Add GEMINI_API_KEY for AI reasoning and TAVILY_API_KEY for live web research.",
+          requirements: [],
+          prerequisites: [],
+          common_bottlenecks: [],
+          strategy: []
         },
-        researchSources: [],
-        engine: "core"
+        researchSources: []
       });
     }
 
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    const configured = process.env.OPENAI_MODEL ?? "gpt-6-astra";
-    const model = configured || "gpt-6-astra";
+    const research = await researchGoal(goal, currentLevel, targetLevel);
+    const prompt = `
+You are AuraMind, a serious goal-accountability system, not a generic chatbot.
 
-    const response = await openai.responses.create({
-      model,
-      reasoning: { effort: "high" },
-      tools: [{ type: "web_search" }],
-      tool_choice: "required",
-      input: [
-        {
-          role: "system",
-          content:
-            "You are AuraMind's Goal Intelligence Engine. First research the user's goal using authoritative, current web sources. Then synthesize the research with the user's real schedule and constraints. Do not invent requirements or cite unsupported claims. Identify prerequisites, workload, common bottlenecks, progression, and practical strategy. Build a detailed but realistic 7-day timetable around fixed commitments. Each block must have a concrete action, duration, priority, and reason. Prefer spaced practice, active recall, deliberate practice, recovery, and review when appropriate to the domain. Do not promise success. Return only the requested structured data."
-        },
-        {
-          role: "user",
-          content: JSON.stringify({
-            goal,
-            deadline,
-            current_level: currentLevel,
-            target_level: targetLevel,
-            fixed_schedule: fixedSchedule,
-            daily_available_hours: dailyHours,
-            timezone
-          })
-        }
-      ],
-      text: {
-        format: {
-          type: "json_schema",
-          name: "auramind_goal_intelligence",
-          strict: true,
-          schema
-        }
+USER GOAL
+${goal}
+
+DEADLINE
+${deadline}
+
+CURRENT LEVEL
+${currentLevel}
+
+TARGET
+${targetLevel}
+
+FIXED COMMITMENTS
+${fixedSchedule || "None supplied"}
+
+AVAILABLE FOCUS TIME PER DAY
+${dailyHours} hours
+
+TIMEZONE
+${timezone}
+
+RESEARCH DATA
+${researchText(research)}
+
+Build a detailed, realistic 7-day operating plan.
+
+RESEARCH RULES
+- Use the supplied research data as evidence.
+- Prefer authoritative/first-party sources when available.
+- Never invent a requirement when the research does not support it.
+- Explain important decisions briefly.
+- Distinguish evidence from planning judgement.
+
+PLANNING RULES
+- Respect fixed commitments and sleep.
+- Do not fill every available minute.
+- Use specific tasks, not labels like "study" or "work".
+- Vary task type across the week: foundation, deliberate practice, review, error repair, application, checkpoint as appropriate to the goal.
+- Break large work into trackable sessions.
+- Adapt difficulty to the stated current level.
+- Make each block actionable enough that the user knows exactly what to do.
+- Include recovery/breaks where needed.
+- Do not promise the user will achieve the goal.
+- Do not shame missed work; it becomes data for the accountability engine.
+
+Return only JSON matching the schema.
+`;
+
+    const response = await gemini.models.generateContent({
+      model: getGeminiModel(),
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: schema
       }
     });
 
-    const parsed = JSON.parse(response.output_text);
+    if (!response.text) {
+      throw new Error("Gemini returned an empty response.");
+    }
+
+    const parsed = JSON.parse(response.text);
     return NextResponse.json({
       ...parsed,
-      researchSources: citationSources(response),
-      engine: "ai"
+      researchSources: sourceLinks(research),
+      engine: "gemini"
     });
   } catch (error: any) {
     console.error("AuraMind goal intelligence error:", error);
@@ -211,11 +243,10 @@ export async function POST(request: Request) {
         error: "AuraMind could not build the researched goal.",
         details: {
           status: Number(error?.status) || 500,
-          code: typeof error?.code === "string" ? error.code : undefined,
           message:
             typeof error?.message === "string"
               ? error.message
-              : "Unknown OpenAI/API error."
+              : "Unknown Gemini/research error."
         }
       },
       { status: Number(error?.status) >= 400 && Number(error?.status) < 600 ? Number(error.status) : 500 }
