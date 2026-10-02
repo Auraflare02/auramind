@@ -4,7 +4,6 @@ import { makeDemoWeeklyReport } from "../../../../lib/demo-engine";
 
 const schema = {
   type: "object",
-  additionalProperties: false,
   properties: {
     weekStart: { type: "string" },
     weekEnd: { type: "string" },
@@ -35,10 +34,6 @@ const schema = {
   ]
 } as const;
 
-function parseDate(value: string) {
-  return new Date(value + "T00:00:00+05:30");
-}
-
 function dateOnly(value: Date) {
   const y = value.getUTCFullYear();
   const m = String(value.getUTCMonth() + 1).padStart(2, "0");
@@ -46,14 +41,43 @@ function dateOnly(value: Date) {
   return y + "-" + m + "-" + d;
 }
 
+function parseDate(value: string) {
+  return new Date(value + "T00:00:00+05:30");
+}
+
+function calculate(logs: any[]) {
+  const plannedMinutes = logs.reduce(
+    (sum, log) =>
+      sum +
+      (log?.plannedActivity &&
+      !/break|free time|unplanned/i.test(String(log.plannedActivity))
+        ? 60
+        : 0),
+    0
+  );
+  const focusedMinutes = logs.reduce(
+    (sum, log) => sum + Math.max(0, Number(log?.focusedMinutes ?? 0)),
+    0
+  );
+  const distractionMinutes = logs.reduce(
+    (sum, log) => sum + Math.max(0, Number(log?.distractionMinutes ?? 0)),
+    0
+  );
+  const completionPercent = plannedMinutes
+    ? Math.min(100, Math.round((focusedMinutes / plannedMinutes) * 1000) / 10)
+    : 0;
+
+  return { plannedMinutes, focusedMinutes, distractionMinutes, completionPercent };
+}
+
 export async function POST(request: Request) {
   let anchorDate = "";
-  let logs: any[] = [];
+  let allLogs: any[] = [];
 
   try {
     const body = await request.json();
-    anchorDate = String(body.anchorDate ?? "");
-    logs = Array.isArray(body.logs) ? body.logs : [];
+    anchorDate = String(body?.anchorDate ?? "").trim();
+    allLogs = Array.isArray(body?.logs) ? body.logs : [];
 
     if (!anchorDate) {
       return NextResponse.json({ error: "Anchor date is required." }, { status: 400 });
@@ -65,48 +89,29 @@ export async function POST(request: Request) {
 
     const weekStart = dateOnly(start);
     const weekEnd = dateOnly(end);
-    const weekLogs = logs.filter(
-      (log: { date?: string }) =>
-        typeof log.date === "string" && log.date >= weekStart && log.date <= weekEnd
+    const weekLogs = allLogs.filter(
+      (log) =>
+        typeof log?.date === "string" &&
+        log.date >= weekStart &&
+        log.date <= weekEnd
     );
+    const calculated = calculate(weekLogs);
+    const gemini = getGeminiClient();
 
-    const plannedMinutes = weekLogs.reduce(
-      (sum: number, log: { plannedActivity?: string }) =>
-        sum + (log.plannedActivity && !/break|free time|unplanned/i.test(log.plannedActivity) ? 60 : 0),
-      0
-    );
-    const focusedMinutes = weekLogs.reduce(
-      (sum: number, log: { focusedMinutes?: number }) => sum + Number(log.focusedMinutes ?? 0),
-      0
-    );
-    const distractionMinutes = weekLogs.reduce(
-      (sum: number, log: { distractionMinutes?: number }) => sum + Number(log.distractionMinutes ?? 0),
-      0
-    );
-    const completionPercent = plannedMinutes
-      ? Math.min(100, Math.round((focusedMinutes / plannedMinutes) * 1000) / 10)
-      : 0;
-
-    const aiMode = (process.env.AURAMIND_AI_MODE ?? "demo").toLowerCase();
-
-    if (aiMode !== "api" || !process.env.OPENAI_API_KEY) {
-      return NextResponse.json(makeDemoWeeklyReport(anchorDate, logs));
+    if (!gemini) {
+      return NextResponse.json(makeDemoWeeklyReport(anchorDate, allLogs));
     }
-
-    const configured = process.env.OPENAI_MODEL ?? "";
-    const model = configured.startsWith("gpt-6-") ? configured : "gpt-6-astra";
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     const response = await gemini.models.generateContent({
       model: getGeminiModel(),
       contents: [
-        `You are AuraMind's weekly behavioral intelligence coach. Analyze seven days of self-reported hourly data. Only call something a pattern when repetition across multiple days supports it. Explain whether problems look more like workload, task difficulty, fatigue, interruptions, boredom, digital distraction, or scheduling mismatch. Identify strong and weak time windows from supplied data. Produce practical changes for next week's plan. Do not shame the user and do not equate a missed task with laziness.`,
-        JSON.stringify({
-          weekStart,
-          weekEnd,
-          logs: weekLogs,
-          calculated: { plannedMinutes, focusedMinutes, distractionMinutes, completionPercent }
-        })
+        "You are AuraMind's weekly behavioral intelligence coach.",
+        "Analyze seven days of self-reported hourly data.",
+        "A pattern requires repetition across multiple days or multiple entries; do not infer a pattern from one miss.",
+        "Distinguish workload, task difficulty, misunderstanding, fatigue, interruptions, boredom, digital distraction, and schedule mismatch.",
+        "Identify useful time windows and concrete changes for the next week.",
+        "Do not shame the user or equate a missed task with laziness.",
+        JSON.stringify({ weekStart, weekEnd, logs: weekLogs, calculated })
       ].join("\n\n"),
       config: {
         responseMimeType: "application/json",
@@ -118,7 +123,6 @@ export async function POST(request: Request) {
     return NextResponse.json(JSON.parse(response.text));
   } catch (error: any) {
     console.error("AuraMind weekly report error:", error);
-
     return NextResponse.json(
       {
         error: "AuraMind could not generate the weekly report.",
@@ -130,7 +134,7 @@ export async function POST(request: Request) {
               : "Unknown Gemini error."
         }
       },
-      { status: Number(error?.status) >= 400 && Number(error?.status) < 600 ? Number(error.status) : 500 }
+      { status: 500 }
     );
   }
 }
