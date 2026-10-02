@@ -4,6 +4,8 @@ const PLAN_KEY = "auramind:plan";
 const LOG_KEY = "auramind:hour-logs";
 const DAILY_KEY = "auramind:daily-reports";
 const WEEKLY_KEY = "auramind:weekly-reports";
+const ACTIVE_KEY = "auramind:active-goal";
+const XP_KEY = "auramind:xp";
 
 function read<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -41,3 +43,9 @@ export function saveWeeklyReport(report: WeeklyReport) {
   reports.push(report);
   write(WEEKLY_KEY, reports);
 }
+
+
+export function isGoalActive() { return read<boolean>(ACTIVE_KEY, false); }
+export function setGoalActive(active: boolean) { write(ACTIVE_KEY, active); }
+export function getXp() { return read<number>(XP_KEY, 0); }
+export function addXp(points: number) { const next = Math.max(0, getXp() + points); write(XP_KEY, next); return next; }
