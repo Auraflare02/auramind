@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { savePlan } from "../lib/storage";
 
 type Block = {start:string;end:string;activity:string;category:string;priority:"high"|"medium"|"low";reason:string};
 type Day = {day:string;date:string;blocks:Block[]};
@@ -19,6 +20,7 @@ export default function Home() {
       const data=await res.json();
       if(!res.ok) throw new Error(data.error||"Something went wrong.");
       setPlan(data);
+      savePlan(data);
     } catch(err) {
       setError(err instanceof Error?err.message:"Something went wrong.");
     } finally { setLoading(false); }
@@ -27,14 +29,17 @@ export default function Home() {
   return (
     <main className="shell">
       <nav className="nav">
-        <div className="brand">Aura<span>Mind</span></div>
-        <div className="badge">AI Accountability Engine · V1</div>
+        <a href="/" className="brand">Aura<span>Mind</span></a>
+        <div className="navActions">
+          <a className="navLink" href="/dashboard">Open Dashboard</a>
+          <div className="badge">AI Accountability Engine · V1</div>
+        </div>
       </nav>
 
       <section className="hero">
         <div className="kicker">Plan your real life</div>
         <h1>Don't plan a perfect day. Build a system that learns your real one.</h1>
-        <p>AuraMind turns a goal and real timetable into a 7-day plan. The next layers will track every hour, detect distraction patterns, produce daily reports and learn from weekly behavior.</p>
+        <p>AuraMind turns a goal and real timetable into a 7-day plan. Then you report what actually happened hour by hour so AuraMind can analyse distractions and improve the next plan.</p>
       </section>
 
       <section className="grid">
@@ -73,21 +78,28 @@ export default function Home() {
             <div>01 · Goal → milestones</div>
             <div>02 · Milestones → realistic workload</div>
             <div>03 · Workload → hourly schedule</div>
-            <div>04 · Actual day → behavior data</div>
-            <div>05 · Behavior → daily report</div>
-            <div>06 · Weekly patterns → better next week</div>
+            <div>04 · Actual hour → behavior data</div>
+            <div>05 · Day → AI diagnosis + solution</div>
+            <div>06 · Week → recurring patterns + next plan</div>
           </div>
         </div>
       </section>
 
       {plan&&<section className="card" style={{marginTop:18}}>
-        <h2>Generated plan</h2>
-        <p className="muted">{plan.goal_summary}</p>
+        <div className="sectionHead">
+          <div>
+            <h2>Generated plan</h2>
+            <p className="muted">{plan.goal_summary}</p>
+          </div>
+          <a className="btn linkbtn" href="/dashboard">Start hourly accountability →</a>
+        </div>
+
         <div className="stats">
           <div className="stat"><small>Days planned</small><strong>{plan.schedule.length}</strong></div>
           <div className="stat"><small>Planning mode</small><strong>Adaptive</strong></div>
-          <div className="stat"><small>Accountability</small><strong>Hourly</strong></div>
+          <div className="stat"><small>Tracking</small><strong>Hourly</strong></div>
         </div>
+
         <div className="notice"><strong>Success definition:</strong> {plan.success_definition}</div>
         <div className="notice"><strong>Weekly focus:</strong> {plan.weekly_focus}</div>
 
@@ -103,7 +115,7 @@ export default function Home() {
         <div className="notice"><strong>Planning risks:</strong> {plan.risk_notes.join(" · ")}</div>
       </section>}
 
-      <div className="footer">AuraMind · Goal planning is V1. Hourly accountability and behavioral intelligence are next.</div>
+      <div className="footer">AuraMind · Goal planning → hourly accountability → behavioral intelligence.</div>
     </main>
   );
 }
