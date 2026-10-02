@@ -47,10 +47,13 @@ function dateOnly(value: Date) {
 }
 
 export async function POST(request: Request) {
+  let anchorDate = "";
+  let logs: any[] = [];
+
   try {
     const body = await request.json();
-    const anchorDate = String(body.anchorDate ?? "");
-    const logs = Array.isArray(body.logs) ? body.logs : [];
+    anchorDate = String(body.anchorDate ?? "");
+    logs = Array.isArray(body.logs) ? body.logs : [];
 
     if (!anchorDate) {
       return NextResponse.json({ error: "Anchor date is required." }, { status: 400 });
