@@ -32,11 +32,15 @@ const schema = {
 } as const;
 
 export async function POST(request: Request) {
+  let logs: any[] = [];
+  let date = "";
+  let plan: any = null;
+
   try {
     const body = await request.json();
-    const logs = Array.isArray(body.logs) ? body.logs : [];
-    const plan = body.plan ?? null;
-    const date = String(body.date ?? "");
+    logs = Array.isArray(body.logs) ? body.logs : [];
+    plan = body.plan ?? null;
+    date = String(body.date ?? "");
 
     if (!date) {
       return NextResponse.json({ error: "Date is required." }, { status: 400 });
