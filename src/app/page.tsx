@@ -49,7 +49,7 @@ export default function Home() {
       <section className="hero">
         <div className="kicker">Plan your real life</div>
         <h1>Don't plan a perfect day. Build a system that learns your real one.</h1>
-        <p>AuraMind turns a goal and real timetable into a 7-day plan. Then you report what actually happened hour by hour so AuraMind can analyse distractions and improve the next plan.</p>
+        <p>AuraMind researches the goal, combines it with your real timetable, and builds a 7-day operating plan. Then you report what actually happened hour by hour so AuraMind can analyse distractions and improve the next plan.</p>
       </section>
 
       <section className="grid">
@@ -77,7 +77,7 @@ export default function Home() {
             <label className="full">Fixed commitments
               <textarea value={form.fixedSchedule} onChange={e=>setForm({...form,fixedSchedule:e.target.value})} placeholder={"School: 7:30 AM–2:00 PM\nTuition: 4:00 PM–6:00 PM\nSleep: 11:00 PM–6:30 AM"} />
             </label>
-            <div className="full"><button className="btn" disabled={loading}>{loading?"Building your plan…":"Generate 7-day plan"}</button></div>
+            <div className="full"><button className="btn" disabled={loading}>{loading?"Building your plan…":"Research goal + build plan"}</button></div>
           </form>
           {error&&<div className="error">{error}</div>}
         </div>
