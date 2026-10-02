@@ -15,8 +15,24 @@ export type PlanDay = {
   blocks: ScheduleBlock[];
 };
 
+export type ResearchBrief = {
+  research_summary: string;
+  requirements: string[];
+  prerequisites: string[];
+  common_bottlenecks: string[];
+  strategy: string[];
+};
+
+export type ResearchSource = {
+  title: string;
+  url: string;
+};
+
 export type AuraPlan = {
-  engine?: "openai" | "demo";
+  engine?: "ai" | "core" | "openai" | "demo";
+  research?: ResearchBrief;
+  researchSources?: ResearchSource[];
+  milestones?: { title: string; outcome: string; timing: string }[];
   goal_summary: string;
   success_definition: string;
   weekly_focus: string;
