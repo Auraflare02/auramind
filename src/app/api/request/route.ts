@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import { getServerDb, dbUnavailableMessage } from "../../../lib/server-db";
 
 function requestCode() {
-  return "AM-" + crypto.randomBytes(4).toString("hex").toUpperCase();
+  return "AM-" + crypto.randomBytes(8).toString("hex").toUpperCase();
 }
 
 export async function POST(request: Request) {
