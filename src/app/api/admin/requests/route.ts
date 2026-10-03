@@ -95,7 +95,7 @@ export async function GET(request: Request) {
 
   const { data, error } = await db
     .from("goal_requests")
-    .select("request_code,goal,deadline,current_level,target_level,status,eta_at,research,plan,created_at,ready_at")
+    .select("request_code,goal,deadline,current_level,target_level,fixed_schedule,daily_hours,timezone,preferred_focus_time,known_distractions,past_attempts,constraints,status,eta_at,research,plan,created_at,ready_at")
     .order("created_at", { ascending: false })
     .limit(100);
 
