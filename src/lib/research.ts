@@ -29,20 +29,19 @@ export async function researchGoal(goal: string, currentLevel: string, targetLev
     `${goal} ${currentLevel} ${targetLevel} strategy`
   ];
 
-  const searches: ResearchResult[] = [];
-
-  for (const query of queries) {
+  async function runSearch(query: string): Promise<ResearchResult> {
     const response = await fetch("https://api.tavily.com/search", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         api_key: key,
         query,
-        search_depth: "advanced",
+        search_depth: "basic",
         max_results: 5,
         include_answer: false
       }),
-      cache: "no-store"
+      cache: "no-store",
+      signal: AbortSignal.timeout(7000)
     });
 
     if (!response.ok) {
@@ -50,7 +49,7 @@ export async function researchGoal(goal: string, currentLevel: string, targetLev
     }
 
     const data = await response.json();
-    searches.push({
+    return {
       query,
       results: Array.isArray(data?.results)
         ? data.results.map((item: SearchResult) => ({
@@ -59,12 +58,22 @@ export async function researchGoal(goal: string, currentLevel: string, targetLev
             content: clean(item.content)
           }))
         : []
-    });
+    };
   }
 
+  const settled = await Promise.allSettled(queries.map(runSearch));
+  const searches = settled
+    .filter((result): result is PromiseFulfilledResult<ResearchResult> => result.status === "fulfilled")
+    .map((result) => result.value);
+
   return {
-    available: true,
+    available: searches.length > 0,
     searches,
-    note: "Live research was retrieved from the configured web-search provider."
+    note:
+      searches.length === queries.length
+        ? "Live research was retrieved from the configured web-search provider."
+        : searches.length
+          ? "Live research was partially retrieved; unavailable searches were skipped."
+          : "Live research was unavailable; AuraMind will continue with Gemini/Core reasoning."
   };
 }
