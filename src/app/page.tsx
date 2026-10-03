@@ -14,12 +14,12 @@ type Plan = {
   milestones?: {title:string;outcome:string;timing:string}[];
   research?: {research_summary:string;requirements:string[];prerequisites:string[];common_bottlenecks:string[];strategy:string[]};
   researchSources?: {title:string;url:string}[];
-  goalContext?: {goal:string;deadline:string;currentLevel:string;targetLevel:string;fixedSchedule:string;dailyHours:number;timezone:string};
+  goalContext?: {goal:string;deadline:string;currentLevel:string;targetLevel:string;fixedSchedule:string;dailyHours:number;timezone:string;preferredFocusTime:string;knownDistractions:string;pastAttempts:string;constraints:string};
   schedule:Day[];
 };
 
 export default function Home() {
-  const [form,setForm]=useState({goal:"",deadline:"",currentLevel:"",targetLevel:"",fixedSchedule:"",dailyHours:"3"});
+  const [form,setForm]=useState({goal:"",deadline:"",currentLevel:"",targetLevel:"",fixedSchedule:"",dailyHours:"3",preferredFocusTime:"",knownDistractions:"",pastAttempts:"",constraints:""});
   const [plan,setPlan]=useState<Plan|null>(null);
   const [loading,setLoading]=useState(false);
   const [error,setError]=useState("");
@@ -56,7 +56,7 @@ export default function Home() {
       <section className="grid">
         <div className="card">
           <h2>Create your goal</h2>
-          <p className="muted">AuraMind needs your current reality, not just your dream.</p>
+          <p className="muted">AuraMind needs enough context to build around your real life—not a generic template.</p>
           <form onSubmit={submit} className="formgrid">
             <label className="full">Goal
               <input required value={form.goal} onChange={e=>setForm({...form,goal:e.target.value})} placeholder="Score 85% in Class 10 boards" />
@@ -77,6 +77,26 @@ export default function Home() {
             </label>
             <label className="full">Fixed commitments
               <textarea value={form.fixedSchedule} onChange={e=>setForm({...form,fixedSchedule:e.target.value})} placeholder={"School: 7:30 AM–2:00 PM\nTuition: 4:00 PM–6:00 PM\nSleep: 11:00 PM–6:30 AM"} />
+            </label>
+            <label>Best focus time
+              <select value={form.preferredFocusTime} onChange={e=>setForm({...form,preferredFocusTime:e.target.value})}>
+                <option value="">Let AuraMind infer</option>
+                <option>Morning</option><option>Afternoon</option><option>Evening</option><option>Late night</option>
+              </select>
+            </label>
+            <label>Available focus time/day
+              <select value={form.dailyHours} onChange={e=>setForm({...form,dailyHours:e.target.value})}>
+                {[1,2,3,4,5,6].map(h=><option key={h} value={h}>{h} hours</option>)}
+              </select>
+            </label>
+            <label className="full">Known distractions
+              <input value={form.knownDistractions} onChange={e=>setForm({...form,knownDistractions:e.target.value})} placeholder="Phone, YouTube after difficult tasks, gaming, notifications..." />
+            </label>
+            <label className="full">What has stopped you before?
+              <textarea value={form.pastAttempts} onChange={e=>setForm({...form,pastAttempts:e.target.value})} placeholder="Plans were too long, I avoid hard topics, I lose focus after tuition..." />
+            </label>
+            <label className="full">Other constraints
+              <textarea value={form.constraints} onChange={e=>setForm({...form,constraints:e.target.value})} placeholder="Travel, family responsibilities, preferred rest days, equipment limits..." />
             </label>
             <div className="full"><button className="btn" disabled={loading}>{loading?"Building your plan…":"Research goal + build plan"}</button></div>
           </form>
