@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { awardXpOnce, getLogs, getLogsForDate, getPlan, getXp, isGoalActive, saveDailyReport, saveLog, saveWeeklyReport } from "../../lib/storage";
 import { calculateXp } from "../../lib/xp";
-import type { AuraPlan, DailyReport, HourLog, WeeklyReport } from "../../lib/types";
+import type { AuraPlan, DailyReport, HourLog, WeeklyReport, AdaptivePlan } from "../../lib/types";
 
 const hours = Array.from({ length: 17 }, (_, i) => i + 6);
 const distractionTypes = ["Social media","YouTube","Gaming","Messaging","Web browsing","Sleep","Family/interruption","Boredom","Other"];
@@ -66,6 +66,7 @@ export default function Dashboard() {
   const [logs, setLogs] = useState<HourLog[]>([]);
   const [daily, setDaily] = useState<DailyReport | null>(null);
   const [weekly, setWeekly] = useState<WeeklyReport | null>(null);
+  const [adaptive, setAdaptive] = useState<AdaptivePlan | null>(null);
   const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState("");
   const [xp, setXp] = useState(0);
@@ -165,6 +166,33 @@ export default function Dashboard() {
     } finally { setBusy(""); }
   }
 
+  async function makeAdaptive() {
+    setBusy("adaptive"); setNotice("");
+    try {
+      const res = await fetch("/api/plan/adapt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan,
+          weeklyReport: weekly,
+          logs: getLogs(),
+          deadline: plan?.schedule?.at(-1)?.date || "",
+          currentLevel: "",
+          targetLevel: "",
+          fixedSchedule: "",
+          dailyHours: 3,
+          timezone: "Asia/Kolkata"
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Adaptive planning failed.");
+      setAdaptive(data);
+      setNotice("Next week has been rebuilt from your behavior data.");
+    } catch (e) {
+      setNotice(e instanceof Error ? e.message : "Adaptive planning failed.");
+    } finally { setBusy(""); }
+  }
+
   async function makeWeekly() {
     setBusy("weekly"); setNotice("");
     try {
@@ -241,6 +269,41 @@ export default function Dashboard() {
             <button className="btn smallbtn" disabled={busy !== ""} onClick={makeWeekly}>{busy === "weekly" ? "Finding patterns…" : "Weekly report"}</button>
           </div>
           {weekly ? <WeeklyView report={weekly} /> : <div className="empty">Build several days of data, then run the weekly analysis.</div>}
+        </section>
+      </section>
+
+      {weekly && (
+        <section className="card" style={{ marginTop: 18 }}>
+          <div className="sectionHead">
+            <div>
+              <h2>Adaptive next week</h2>
+              <p className="muted">AuraMind uses the weekly evidence to change the next 7 days instead of repeating the same plan.</p>
+            </div>
+            <button className="btn smallbtn" disabled={busy !== ""} onClick={makeAdaptive}>
+              {busy === "adaptive" ? "Rebuilding…" : "Build next week"}
+            </button>
+          </div>
+          {adaptive ? (
+            <div className="report">
+              <div className="notice"><strong>What changed:</strong> {adaptive.adaptationSummary}</div>
+              <div className="notice"><strong>Changes:</strong> {adaptive.changes.join(" · ")}</div>
+              <div className="notice"><strong>Focus:</strong> {adaptive.weekly_focus}</div>
+              {adaptive.schedule.map((day) => (
+                <div className="day" key={day.date}>
+                  <h3>{day.day} · {day.date}</h3>
+                  {day.blocks.map((b, i) => (
+                    <div className="block" key={i}>
+                      <div className="time">{b.start}–{b.end}</div>
+                      <div><strong>{b.activity}</strong><div className="reason">{b.reason}</div></div>
+                      <div className="tag">{b.priority} · {b.category}</div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="empty">Run the weekly report first. Then AuraMind can rebuild the following week using evidence.</div>
+          )}
         </section>
       </section>
 
