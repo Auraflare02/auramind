@@ -47,6 +47,7 @@ export async function POST(request: Request) {
     const plan = body?.plan ?? null;
     const weeklyReport = body?.weeklyReport ?? null;
     const logs = Array.isArray(body?.logs) ? body.logs : [];
+    const context = plan?.goalContext ?? body?.goalContext ?? null;
 
     if (!plan) {
       return NextResponse.json({ error: "Current plan is required." }, { status: 400 });
@@ -56,12 +57,12 @@ export async function POST(request: Request) {
     if (!gemini) {
       const fallback = makeDemoPlan({
         goal: String(plan.goal_summary ?? ""),
-        deadline: String(body?.deadline ?? ""),
-        currentLevel: String(body?.currentLevel ?? ""),
-        targetLevel: String(body?.targetLevel ?? ""),
-        fixedSchedule: String(body?.fixedSchedule ?? ""),
-        dailyHours: Number(body?.dailyHours ?? 3),
-        timezone: String(body?.timezone ?? "Asia/Kolkata")
+        deadline: String(context?.deadline ?? ""),
+        currentLevel: String(context?.currentLevel ?? ""),
+        targetLevel: String(context?.targetLevel ?? ""),
+        fixedSchedule: String(context?.fixedSchedule ?? ""),
+        dailyHours: Number(context?.dailyHours ?? 3),
+        timezone: String(context?.timezone ?? "Asia/Kolkata")
       });
       return NextResponse.json({
         adaptationSummary: "Core adaptation generated a fresh week from the available constraints.",
@@ -77,6 +78,15 @@ export async function POST(request: Request) {
       });
     }
 
+    const nextStart = new Date();
+    nextStart.setDate(nextStart.getDate() + 1);
+
+    const nextDates = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(nextStart);
+      d.setDate(nextStart.getDate() + i);
+      return d.toISOString().slice(0, 10);
+    });
+
     const prompt = [
       "You are AuraMind's Adaptive Planning Engine.",
       "The user has completed a week of an active goal.",
@@ -90,7 +100,13 @@ export async function POST(request: Request) {
       "If the user was consistently underloaded and completing work comfortably, modestly increase difficulty rather than blindly adding hours.",
       "Every focus block must have a concrete deliverable.",
       "Return only JSON matching the schema.",
-      JSON.stringify({ currentPlan: plan, weeklyReport, recentLogs: logs.slice(-168) })
+      JSON.stringify({
+        currentPlan: plan,
+        goalContext: context,
+        targetDates: nextDates,
+        weeklyReport,
+        recentLogs: logs.slice(-168)
+      })
     ].join("\n\n");
 
     const response = await gemini.models.generateContent({
