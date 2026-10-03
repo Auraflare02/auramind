@@ -122,15 +122,23 @@ function researchText(research: Awaited<ReturnType<typeof researchGoal>>) {
 }
 
 export async function POST(request: Request) {
+  let goal = "";
+  let deadline = "";
+  let currentLevel = "";
+  let targetLevel = "";
+  let fixedSchedule = "";
+  let dailyHours = 3;
+  let timezone = "Asia/Kolkata";
+
   try {
     const body = await request.json();
-    const goal = String(body.goal ?? "").trim();
-    const deadline = String(body.deadline ?? "").trim();
-    const currentLevel = String(body.currentLevel ?? "").trim();
-    const targetLevel = String(body.targetLevel ?? "").trim();
-    const fixedSchedule = String(body.fixedSchedule ?? "").trim();
-    const dailyHours = Number(body.dailyHours ?? 3);
-    const timezone = String(body.timezone ?? "Asia/Kolkata");
+    goal = String(body.goal ?? "").trim();
+    deadline = String(body.deadline ?? "").trim();
+    currentLevel = String(body.currentLevel ?? "").trim();
+    targetLevel = String(body.targetLevel ?? "").trim();
+    fixedSchedule = String(body.fixedSchedule ?? "").trim();
+    dailyHours = Number(body.dailyHours ?? 3);
+    timezone = String(body.timezone ?? "Asia/Kolkata");
 
     if (!goal || !deadline || !currentLevel || !targetLevel) {
       return NextResponse.json(
@@ -275,49 +283,31 @@ Return only JSON matching the schema.
   } catch (error: any) {
     console.error("AuraMind goal intelligence error:", error);
 
-    const fallbackBody = await (async () => {
-      try {
-        const body = await request.clone().json();
-        const goal = String(body.goal ?? "").trim();
-        const deadline = String(body.deadline ?? "").trim();
-        const currentLevel = String(body.currentLevel ?? "").trim();
-        const targetLevel = String(body.targetLevel ?? "").trim();
-        const fixedSchedule = String(body.fixedSchedule ?? "").trim();
-        const dailyHours = Number(body.dailyHours ?? 3);
-        const timezone = String(body.timezone ?? "Asia/Kolkata");
-        const demo = makeDemoPlan({
-          goal,
-          deadline,
-          currentLevel,
-          targetLevel,
-          fixedSchedule,
-          dailyHours,
-          timezone
-        });
-        return {
-          ...demo,
-          engine: "core",
-          research: {
-            research_summary: "AI research was temporarily unavailable. AuraMind Core generated a usable plan from your real constraints.",
-            requirements: [],
-            prerequisites: [],
-            common_bottlenecks: [],
-            strategy: []
-          },
-          researchSources: []
-        };
-      } catch {
-        return null;
-      }
-    })();
+    if (goal && deadline && currentLevel && targetLevel) {
+      const demo = makeDemoPlan({
+        goal,
+        deadline,
+        currentLevel,
+        targetLevel,
+        fixedSchedule,
+        dailyHours,
+        timezone
+      });
 
-    if (fallbackBody) {
-      return NextResponse.json(fallbackBody);
+      return NextResponse.json({
+        ...demo,
+        engine: "core",
+        research: {
+          research_summary: "AI research was temporarily unavailable. AuraMind Core generated a usable plan from your real constraints.",
+          requirements: [],
+          prerequisites: [],
+          common_bottlenecks: [],
+          strategy: []
+        },
+        researchSources: []
+      });
     }
 
-    return NextResponse.json(
-      { error: "AuraMind could not build the goal." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "AuraMind could not build the goal." }, { status: 500 });
   }
 }
