@@ -14,6 +14,7 @@ type Plan = {
   milestones?: {title:string;outcome:string;timing:string}[];
   research?: {research_summary:string;requirements:string[];prerequisites:string[];common_bottlenecks:string[];strategy:string[]};
   researchSources?: {title:string;url:string}[];
+  goalContext?: {goal:string;deadline:string;currentLevel:string;targetLevel:string;fixedSchedule:string;dailyHours:number;timezone:string};
   schedule:Day[];
 };
 
