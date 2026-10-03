@@ -97,19 +97,11 @@ export async function POST(request: Request) {
     if (!response.text) throw new Error("Gemini returned an empty daily report.");
     return NextResponse.json(JSON.parse(response.text));
   } catch (error: any) {
-    console.error("AuraMind daily report error:", error);
-    return NextResponse.json(
-      {
-        error: "AuraMind could not analyse this day.",
-        details: {
-          status: Number(error?.status) || 500,
-          message:
-            typeof error?.message === "string"
-              ? error.message
-              : "Unknown Gemini error."
-        }
-      },
-      { status: 500 }
-    );
+    console.error("AuraMind daily report AI error; using Core fallback:", error);
+    return NextResponse.json({
+      ...makeDemoDailyReport(date, logs),
+      engine: "core",
+      degraded: true
+    });
   }
 }
