@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 type Request = {
   request_code: string; goal: string; deadline: string; current_level: string; target_level: string;
-  status: "pending"|"researching"|"ready"|"archived"; research: any; plan: any; created_at: string; ready_at?: string|null;
+  fixed_schedule: string; daily_hours: number; timezone: string; preferred_focus_time: string; known_distractions: string; past_attempts: string; constraints: string; status: "pending"|"researching"|"ready"|"archived"; research: any; plan: any; created_at: string; ready_at?: string|null;
 };
 
 export default function Admin() {
@@ -92,7 +92,15 @@ export default function Admin() {
       {selected&&<section className="card" style={{marginTop:18}}>
         <div className="sectionHead"><div><div className="kicker">{selected.status}</div><h2>{selected.request_code}</h2><p className="muted">{selected.goal} · {selected.current_level} → {selected.target_level} · deadline {selected.deadline}</p><p className="muted">Received {new Date(selected.created_at).toLocaleString()}</p></div></div>
 
-        <div className="notice"><strong>User context:</strong> Open the request details above and use the user's schedule, constraints, distractions and past attempts as part of your research.</div>
+        <div className="notice"><strong>User context:</strong> Use these real constraints as part of the research and timetable design.</div>
+        <div className="researchGrid">
+          <div className="notice"><strong>Fixed commitments</strong><br/>{selected.fixed_schedule || "None supplied"}</div>
+          <div className="notice"><strong>Focus time/day</strong><br/>{selected.daily_hours} hours</div>
+          <div className="notice"><strong>Preferred focus</strong><br/>{selected.preferred_focus_time || "Not specified"}</div>
+          <div className="notice"><strong>Known distractions</strong><br/>{selected.known_distractions || "None supplied"}</div>
+          <div className="notice"><strong>Past attempts</strong><br/>{selected.past_attempts || "None supplied"}</div>
+          <div className="notice"><strong>Other constraints</strong><br/>{selected.constraints || "None supplied"}</div>
+        </div>
 
         <div className="researchGrid">
           <label>Research summary<textarea value={research.research_summary} onChange={e=>setResearch({...research,research_summary:e.target.value})} placeholder="Your researched conclusion and evidence."/></label>
