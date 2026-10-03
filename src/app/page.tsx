@@ -84,11 +84,6 @@ export default function Home() {
                 <option>Morning</option><option>Afternoon</option><option>Evening</option><option>Late night</option>
               </select>
             </label>
-            <label>Available focus time/day
-              <select value={form.dailyHours} onChange={e=>setForm({...form,dailyHours:e.target.value})}>
-                {[1,2,3,4,5,6].map(h=><option key={h} value={h}>{h} hours</option>)}
-              </select>
-            </label>
             <label className="full">Known distractions
               <input value={form.knownDistractions} onChange={e=>setForm({...form,knownDistractions:e.target.value})} placeholder="Phone, YouTube after difficult tasks, gaming, notifications..." />
             </label>
