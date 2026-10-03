@@ -269,17 +269,22 @@ function allocateSessions(
 }
 
 export function makeDemoPlan(input: PlanInput): AuraPlan {
-  const dailyHours = Math.max(1, Math.min(6, Number.isFinite(input.dailyHours) ? input.dailyHours : 3));
+  const dailyHours = Math.max(1, Math.min(12, Number.isFinite(input.dailyHours) ? input.dailyHours : 3));
   const commitments = parseCommitments(input.fixedSchedule);
   const sleep = inferSleep(commitments);
   const templates = getTaskTemplates(input);
   const daysLeft = daysUntil(input.deadline, input.timezone);
   const today = todayInTimezone(input.timezone);
 
-  const schedule = Array.from({ length: 7 }, (_, index) => {
+  const schedule = Array.from({ length: 30 }, (_, index) => {
     const current = addDays(today, index);
     const weekday = current.getDay();
     const isWeekend = weekday === 0 || weekday === 6;
+    const phase =
+      index < 7 ? "Foundation" :
+      index < 14 ? "Deliberate practice" :
+      index < 23 ? "Application + error repair" :
+      "Consolidation + checkpoint";
 
     const baseWindows = [
       { start: sleep.wake + 30, end: 10 * 60 + 30 },
@@ -289,26 +294,32 @@ export function makeDemoPlan(input: PlanInput): AuraPlan {
 
     const available = subtractBusy(baseWindows, commitments);
     const targetMinutes = dailyHours * 60;
-
-    // Keep a small buffer rather than stuffing the full stated availability every day.
     const usableMinutes = Math.round(targetMinutes * (isWeekend ? 0.95 : 0.85));
     const windows = available
       .sort((a, b) => (b.end - b.start) - (a.end - a.start))
       .map((window) => ({ ...window }));
 
+    const template = templates[index % templates.length];
+    const phasePrefix = phase + " — ";
     const blocks = allocateSessions(
       windows,
       usableMinutes,
-      templates[index],
+      {
+        activity:
+          phasePrefix +
+          (index >= 28
+            ? "Consolidate the highest-value skills, review errors, and produce a final evidence/checkpoint output"
+            : template.activity),
+        category: phase === "Consolidation + checkpoint" ? "Checkpoint" : template.category
+      },
       priorityFor(index, 0, daysLeft),
-      index
+      index % 7
     );
 
-    // Re-sort chronologically because windows were used by size.
     blocks.sort((a, b) => (parseClock(a.start) ?? 0) - (parseClock(b.start) ?? 0));
 
     return {
-      day: dayName(current, input.timezone),
+      day: dayName(current, input.timezone) + " · Day " + (index + 1),
       date: isoDate(current, input.timezone),
       blocks
     };
@@ -317,15 +328,15 @@ export function makeDemoPlan(input: PlanInput): AuraPlan {
   const domain = inferDomain(input);
   const urgency =
     daysLeft <= 7
-      ? "Deadline is close, so this week emphasizes practice and review."
+      ? "The deadline is very close, so the 30-day template prioritizes execution and consolidation."
       : daysLeft <= 30
-        ? "The deadline is approaching, so the plan gradually shifts from learning to practice."
-        : "The first week prioritizes consistency and foundation before increasing difficulty.";
+        ? "The deadline is approaching, so the timetable moves progressively from foundations to practice and consolidation."
+        : "The first 30 days build consistency, prerequisites, deliberate practice, application, and review.";
 
   return {
     goal_summary: input.goal,
     success_definition:
-      "A successful week means the user completes the planned focus blocks, logs what actually happened, and leaves evidence that the next week can be adjusted.",
+      "A successful 30-day cycle means completing trackable focus blocks, recording what actually happened, and leaving evidence that future weeks can be adapted.",
     weekly_focus:
       urgency +
       " Goal type: " +
@@ -336,9 +347,9 @@ export function makeDemoPlan(input: PlanInput): AuraPlan {
       input.targetLevel +
       ".",
     risk_notes: [
-      "The plan deliberately leaves buffer around fixed commitments instead of filling every free minute.",
-      "A skipped block is treated as behavioral data; repeated patterns should trigger schedule changes.",
-      "Task difficulty should increase only after the user demonstrates consistent completion."
+      "The timetable leaves buffers around fixed commitments rather than filling every available minute.",
+      "The plan is a 30-day operating template; real behavior should drive weekly adaptations after launch.",
+      "Difficulty should increase only when the user's evidence supports it."
     ],
     schedule,
     engine: "demo"
