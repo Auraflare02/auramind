@@ -147,6 +147,16 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ ok: true, research });
     }
 
+    if (action === "release") {
+      if (!existing.data.plan) return NextResponse.json({ error: "Generate and review the plan before releasing it." }, { status: 400 });
+      const { error } = await db.from("goal_requests").update({
+        status: "ready",
+        ready_at: new Date().toISOString()
+      }).eq("request_code", requestId);
+      if (error) return NextResponse.json({ error: "Could not release the plan." }, { status: 500 });
+      return NextResponse.json({ ok: true, status: "ready" });
+    }
+
     if (action === "generate-plan") {
       const gemini = getGeminiClient();
       if (!gemini) return NextResponse.json({ error: "GEMINI_API_KEY is not configured." }, { status: 503 });
@@ -194,8 +204,8 @@ export async function PATCH(request: Request) {
       const plan = JSON.parse(response.text);
       const { error } = await db.from("goal_requests").update({
         plan,
-        status: "ready",
-        ready_at: new Date().toISOString()
+        status: "review",
+        ready_at: null
       }).eq("request_code", requestId);
 
       if (error) {
