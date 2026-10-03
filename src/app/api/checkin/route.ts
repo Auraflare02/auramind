@@ -70,9 +70,10 @@ function coreCoach(log: any) {
 }
 
 export async function POST(request: Request) {
+  let log: any = null;
   try {
     const body = await request.json();
-    const log = body?.log ?? null;
+    log = body?.log ?? null;
     const plan = body?.plan ?? null;
     const recentLogs = Array.isArray(body?.recentLogs) ? body.recentLogs.slice(-24) : [];
 
@@ -117,10 +118,12 @@ export async function POST(request: Request) {
       engine: "gemini"
     });
   } catch (error: any) {
-    console.error("AuraMind check-in error:", error);
-    return NextResponse.json(
-      { error: "AuraMind could not coach this check-in right now." },
-      { status: 500 }
-    );
+    console.error("AuraMind check-in AI error; using Core fallback:", error);
+    return NextResponse.json({
+      ...coreCoach(log ?? {}),
+      xp: calculateXp(log ?? {}).earned,
+      engine: "core",
+      degraded: true
+    });
   }
 }
