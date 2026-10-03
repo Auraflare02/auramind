@@ -53,7 +53,7 @@ export default function Admin() {
       });
       const data=await res.json();
       if(!res.ok) throw new Error(data.error||"Action failed.");
-      setMessage(action==="generate-plan"?"30-day timetable generated and request is now READY.":"Saved.");
+      setMessage(action==="generate-plan"?"30-day timetable generated. Review it, then release it to the user.":action==="release"?"Request released to the user.":"Saved.");
       await load();
     }catch(e){setMessage(e instanceof Error?e.message:"Admin action failed.");}
     finally{setBusy(false);}
@@ -114,6 +114,7 @@ export default function Admin() {
           <button className="btn" onClick={()=>update("start")} disabled={busy}>Start research</button>
           <button className="btn" onClick={()=>update("save-research")} disabled={busy}>Save research</button>
           <button className="btn" onClick={()=>update("generate-plan")} disabled={busy}>Generate 30-day timetable</button>
+            <button className="btn" onClick={()=>update("release")} disabled={busy || selected.status !== "review"}>Release to user</button>
         </div>
 
         {selected.plan&&<div className="notice"><strong>Timetable already saved:</strong> {selected.plan.schedule?.length||0} days.</div>}
