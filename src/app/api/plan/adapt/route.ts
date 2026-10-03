@@ -126,16 +126,31 @@ export async function POST(request: Request) {
       engine: "gemini"
     });
   } catch (error: any) {
-    console.error("AuraMind adaptive plan error:", error);
-    return NextResponse.json(
-      {
-        error: "AuraMind could not build the adaptive next-week plan.",
-        details: {
-          status: Number(error?.status) || 500,
-          message: typeof error?.message === "string" ? error.message : "Unknown Gemini error."
-        }
-      },
-      { status: Number(error?.status) >= 400 && Number(error?.status) < 600 ? Number(error.status) : 500 }
-    );
+    console.error("AuraMind adaptive AI error; using Core fallback:", error);
+    const context = body?.plan?.goalContext ?? body?.goalContext ?? {};
+    const fallback = makeDemoPlan({
+      goal: String(body?.plan?.goal_summary ?? ""),
+      deadline: String(context?.deadline ?? ""),
+      currentLevel: String(context?.currentLevel ?? ""),
+      targetLevel: String(context?.targetLevel ?? ""),
+      fixedSchedule: String(context?.fixedSchedule ?? ""),
+      dailyHours: Number(context?.dailyHours ?? 3),
+      timezone: String(context?.timezone ?? "Asia/Kolkata")
+    });
+    return NextResponse.json({
+      adaptationSummary: "Core adaptation generated a fresh week from the saved goal constraints.",
+      changes: [
+        "Reduce or move work in periods with repeated low focus.",
+        "Protect the strongest recurring time window for harder work.",
+        "Keep tasks concrete and measurable instead of automatically adding hours."
+      ],
+      weekly_focus: fallback.weekly_focus,
+      success_definition: fallback.success_definition,
+      schedule: fallback.schedule,
+      engine: "core",
+      degraded: true
+    });
+  }
+}
   }
 }
