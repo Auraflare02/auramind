@@ -124,7 +124,7 @@ create table if not exists public.goal_requests (
   known_distractions text not null default '',
   past_attempts text not null default '',
   constraints text not null default '',
-  status text not null default 'pending' check (status in ('pending','researching','ready','archived')),
+  status text not null default 'pending' check (status in ('pending','researching','review','ready','archived')),
   research jsonb,
   plan jsonb,
   eta_at timestamptz not null default (now() + interval '12 hours'),
