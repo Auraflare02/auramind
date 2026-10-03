@@ -74,6 +74,7 @@ export default function Home() {
 
   const statusLabel =
     status?.status === "ready" ? "Research completed" :
+    status?.status === "review" ? "Plan under review" :
     status?.status === "researching" ? "Research in progress" : "Request received";
   const eta = status?.etaAt ? new Date(status.etaAt).toLocaleString() : "";
 
