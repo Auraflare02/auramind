@@ -1,168 +1,182 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { savePlan, setGoalActive } from "../lib/storage";
 
-type Block = {start:string;end:string;activity:string;category:string;priority:"high"|"medium"|"low";reason:string};
-type Day = {day:string;date:string;blocks:Block[]};
 type Plan = {
-  engine?: "gemini"|"ai"|"core"|"openai"|"demo";
-  goal_summary:string;
-  success_definition:string;
-  weekly_focus:string;
-  risk_notes:string[];
-  milestones?: {title:string;outcome:string;timing:string}[];
-  research?: {research_summary:string;requirements:string[];prerequisites:string[];common_bottlenecks:string[];strategy:string[]};
-  researchSources?: {title:string;url:string}[];
-  goalContext?: {goal:string;deadline:string;currentLevel:string;targetLevel:string;fixedSchedule:string;dailyHours:number;timezone:string;preferredFocusTime:string;knownDistractions:string;pastAttempts:string;constraints:string};
-  schedule:Day[];
+  goal_summary: string;
+  success_definition: string;
+  weekly_focus: string;
+  risk_notes: string[];
+  milestones?: { title: string; outcome: string; timing: string }[];
+  research?: { research_summary: string; requirements: string[]; prerequisites: string[]; common_bottlenecks: string[]; strategy: string[] };
+  schedule: Array<{ day: string; date: string; blocks: Array<{ start: string; end: string; activity: string; category: string; priority: "high"|"medium"|"low"; reason: string }> }>;
 };
 
 export default function Home() {
-  const [form,setForm]=useState({goal:"",deadline:"",currentLevel:"",targetLevel:"",fixedSchedule:"",dailyHours:"3",preferredFocusTime:"",knownDistractions:"",pastAttempts:"",constraints:""});
-  const [plan,setPlan]=useState<Plan|null>(null);
-  const [loading,setLoading]=useState(false);
-  const [error,setError]=useState("");
+  const [form, setForm] = useState({
+    goal: "", deadline: "", currentLevel: "", targetLevel: "", fixedSchedule: "",
+    dailyHours: "3", preferredFocusTime: "", knownDistractions: "", pastAttempts: "", constraints: ""
+  });
+  const [requestId, setRequestId] = useState("");
+  const [status, setStatus] = useState<any>(null);
+  const [lookupId, setLookupId] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
 
-  async function submit(e:FormEvent) {
-    e.preventDefault(); setLoading(true); setError(""); setPlan(null);
+  useEffect(() => {
+    const saved = window.localStorage.getItem("auramind:last-request-id");
+    if (saved) { setRequestId(saved); setLookupId(saved); }
+  }, []);
+
+  async function submit(e: FormEvent) {
+    e.preventDefault(); setLoading(true); setError(""); setStatus(null);
     try {
-      const res=await fetch("/api/goal",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...form,dailyHours:Number(form.dailyHours),timezone:"Asia/Kolkata"})});
-      const data=await res.json();
-      if(!res.ok) throw new Error(data.error||"Something went wrong.");
-      setPlan(data);
-      savePlan(data);
-    } catch(err) {
-      setError(err instanceof Error?err.message:"Something went wrong.");
+      const res = await fetch("/api/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, dailyHours: Number(form.dailyHours), timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Kolkata" })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not submit the request.");
+      setRequestId(data.requestId); setLookupId(data.requestId); setStatus(data);
+      window.localStorage.setItem("auramind:last-request-id", data.requestId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not submit the request.");
     } finally { setLoading(false); }
   }
+
+  async function check(id = lookupId) {
+    const code = id.trim().toUpperCase();
+    if (!code) return;
+    setLoading(true); setError("");
+    try {
+      const res = await fetch("/api/request/" + encodeURIComponent(code), { cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Request not found.");
+      setRequestId(data.requestId); setStatus(data);
+      window.localStorage.setItem("auramind:last-request-id", data.requestId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not check the request.");
+    } finally { setLoading(false); }
+  }
+
+  function startGoal(plan: Plan) {
+    savePlan(plan as any); setGoalActive(true); window.location.href = "/dashboard";
+  }
+
+  async function copyId() {
+    if (!requestId) return;
+    try { await navigator.clipboard.writeText(requestId); } catch {}
+    setCopied(true); window.setTimeout(() => setCopied(false), 1500);
+  }
+
+  const statusLabel =
+    status?.status === "ready" ? "Research completed" :
+    status?.status === "researching" ? "Research in progress" : "Request received";
+  const eta = status?.etaAt ? new Date(status.etaAt).toLocaleString() : "";
 
   return (
     <main className="shell">
       <nav className="nav">
         <a href="/" className="brand">Aura<span>Mind</span></a>
         <div className="navActions">
-          <a className="navLink" href="/dashboard">Open Dashboard</a>
-          <div className="badge">AI Accountability Engine · V1</div>
+          <a className="navLink" href="/dashboard">Dashboard</a>
+          <a className="navLink" href="/admin">Admin</a>
+          <div className="badge">Human-researched accountability</div>
         </div>
       </nav>
 
       <section className="hero">
-        <div className="kicker">Plan your real life</div>
-        <h1>Don't plan a perfect day. Build a system that learns your real one.</h1>
-        <p>AuraMind researches the goal, combines it with your real timetable, and builds a 7-day operating plan. Then you report what actually happened hour by hour so AuraMind can analyse distractions and improve the next plan.</p>
+        <div className="kicker">Research before action</div>
+        <h1>Your goal gets researched before AuraMind builds the plan.</h1>
+        <p>Submit the goal once. AuraMind gives you a request ID, the request enters a research queue, and the personalized 30-day timetable is released when the research is complete.</p>
       </section>
 
       <section className="grid">
         <div className="card">
-          <h2>Create your goal</h2>
-          <p className="muted">AuraMind needs enough context to build around your real life—not a generic template.</p>
+          <h2>Submit a goal request</h2>
+          <p className="muted">Give enough context for a real plan instead of a generic template.</p>
           <form onSubmit={submit} className="formgrid">
             <label className="full">Goal
-              <input required value={form.goal} onChange={e=>setForm({...form,goal:e.target.value})} placeholder="Score 85% in Class 10 boards" />
+              <input required value={form.goal} onChange={e=>setForm({...form,goal:e.target.value})} placeholder="Reach German B2 by June 2028" />
             </label>
             <label>Deadline
               <input required type="date" value={form.deadline} onChange={e=>setForm({...form,deadline:e.target.value})} />
             </label>
             <label>Current level
-              <input required value={form.currentLevel} onChange={e=>setForm({...form,currentLevel:e.target.value})} placeholder="Weak Maths foundation" />
+              <input required value={form.currentLevel} onChange={e=>setForm({...form,currentLevel:e.target.value})} placeholder="A1" />
             </label>
             <label>Target level
-              <input required value={form.targetLevel} onChange={e=>setForm({...form,targetLevel:e.target.value})} placeholder="70+ marks" />
+              <input required value={form.targetLevel} onChange={e=>setForm({...form,targetLevel:e.target.value})} placeholder="B2" />
             </label>
-            <label>Available focus time/day
+            <label>Focus time/day
               <select value={form.dailyHours} onChange={e=>setForm({...form,dailyHours:e.target.value})}>
-                {[1,2,3,4,5,6].map(h=><option key={h} value={h}>{h} hours</option>)}
+                {[1,2,3,4,5,6,7,8,9,10,11,12].map(h=><option key={h} value={h}>{h} hours</option>)}
+              </select>
+            </label>
+            <label>Best focus time
+              <select value={form.preferredFocusTime} onChange={e=>setForm({...form,preferredFocusTime:e.target.value})}>
+                <option value="">Let researcher decide</option><option>Morning</option><option>Afternoon</option><option>Evening</option>
               </select>
             </label>
             <label className="full">Fixed commitments
               <textarea value={form.fixedSchedule} onChange={e=>setForm({...form,fixedSchedule:e.target.value})} placeholder={"School: 7:30 AM–2:00 PM\nTuition: 4:00 PM–6:00 PM\nSleep: 11:00 PM–6:30 AM"} />
             </label>
-            <label>Best focus time
-              <select value={form.preferredFocusTime} onChange={e=>setForm({...form,preferredFocusTime:e.target.value})}>
-                <option value="">Let AuraMind infer</option>
-                <option>Morning</option><option>Afternoon</option><option>Evening</option><option>Late night</option>
-              </select>
-            </label>
             <label className="full">Known distractions
-              <input value={form.knownDistractions} onChange={e=>setForm({...form,knownDistractions:e.target.value})} placeholder="Phone, YouTube after difficult tasks, gaming, notifications..." />
+              <input value={form.knownDistractions} onChange={e=>setForm({...form,knownDistractions:e.target.value})} placeholder="Phone, YouTube after hard tasks, gaming..." />
             </label>
-            <label className="full">What has stopped you before?
-              <textarea value={form.pastAttempts} onChange={e=>setForm({...form,pastAttempts:e.target.value})} placeholder="Plans were too long, I avoid hard topics, I lose focus after tuition..." />
+            <label className="full">What stopped you before?
+              <textarea value={form.pastAttempts} onChange={e=>setForm({...form,pastAttempts:e.target.value})} placeholder="Plans were too long, I avoid difficult topics..." />
             </label>
             <label className="full">Other constraints
-              <textarea value={form.constraints} onChange={e=>setForm({...form,constraints:e.target.value})} placeholder="Travel, family responsibilities, preferred rest days, equipment limits..." />
+              <textarea value={form.constraints} onChange={e=>setForm({...form,constraints:e.target.value})} placeholder="Travel, family responsibilities, equipment, rest days..." />
             </label>
-            <div className="full"><button className="btn" disabled={loading}>{loading?"Building your plan…":"Research goal + build plan"}</button></div>
+            <div className="full"><button className="btn" disabled={loading}>{loading ? "Submitting…" : "Submit goal request"}</button></div>
           </form>
-          {error&&<div className="error">{error}</div>}
+          {error && <div className="error">{error}</div>}
         </div>
 
         <div className="card">
-          <h2>AuraMind loop</h2>
+          <h2>How your request works</h2>
           <div className="flow">
-            <div>01 · Goal → milestones</div>
-            <div>02 · Milestones → realistic workload</div>
-            <div>03 · Workload → hourly schedule</div>
-            <div>04 · Actual hour → behavior data</div>
-            <div>05 · Day → AI diagnosis + solution</div>
-            <div>06 · Week → recurring patterns + next plan</div>
+            <div>01 · Submit goal + context</div><div>02 · Get a unique request ID</div><div>03 · Human research begins</div>
+            <div>04 · Research → 30-day timetable</div><div>05 · Completed plan is released</div><div>06 · Start Goal → hourly accountability</div>
           </div>
+          <div className="notice"><strong>Research window:</strong> up to 12 hours.</div>
         </div>
       </section>
 
-      {plan&&<section className="card" style={{marginTop:18}}>
-        <div className="sectionHead">
-          <div>
-            <h2>Generated plan</h2>
-            <p className="muted">{plan.goal_summary}</p>
+      <section className="grid" style={{marginTop:18}}>
+        <div className="card">
+          <h2>Check request status</h2>
+          <p className="muted">Enter the request ID you received.</p>
+          <div className="formRow">
+            <input value={lookupId} onChange={e=>setLookupId(e.target.value.toUpperCase())} placeholder="AM-1A2B3C4D" />
+            <button className="btn" onClick={()=>check()} disabled={loading}>{loading ? "Checking…" : "Check status"}</button>
           </div>
-          <button className="btn linkbtn" onClick={() => { setGoalActive(true); window.location.href="/dashboard"; }}>Start Goal →</button>
         </div>
 
-        <div className="stats">
-          <div className="stat"><small>Days planned</small><strong>{plan.schedule.length}</strong></div>
-          <div className="stat"><small>Planning mode</small><strong>Adaptive</strong></div>
-          <div className="stat"><small>Tracking</small><strong>Hourly</strong></div>
-        </div>
-
-        <div className="notice">
-          <strong>Engine:</strong> {plan.engine === "gemini" ? "Gemini + live web research" : plan.engine === "ai" ? "AI research + reasoning" : "AuraMind Core"}.
-          {plan.engine === "core" && " Add the Gemini and Tavily keys in Vercel to unlock the full research-first engine."}
-        </div>
-        {plan.research && (
-          <div className="researchPanel">
-            <div className="sectionHead"><div><h3>Goal Research</h3><p className="muted">{plan.research.research_summary}</p></div></div>
-            <div className="researchGrid">
-              <div><strong>Requirements</strong><ul>{plan.research.requirements.map((x,i)=><li key={i}>{x}</li>)}</ul></div>
-              <div><strong>Prerequisites</strong><ul>{plan.research.prerequisites.map((x,i)=><li key={i}>{x}</li>)}</ul></div>
-              <div><strong>Common bottlenecks</strong><ul>{plan.research.common_bottlenecks.map((x,i)=><li key={i}>{x}</li>)}</ul></div>
-              <div><strong>Strategy</strong><ul>{plan.research.strategy.map((x,i)=><li key={i}>{x}</li>)}</ul></div>
+        {requestId && status && (
+          <div className="card">
+            <div className="sectionHead">
+              <div><div className="kicker">{statusLabel}</div><h2>{requestId}</h2><p className="muted">{status.goal}</p></div>
+              <button className="navLink" onClick={copyId}>{copied ? "Copied" : "Copy ID"}</button>
             </div>
-            {plan.researchSources && plan.researchSources.length > 0 && (
-              <div className="sources"><strong>Sources</strong>{plan.researchSources.map((s,i)=><a key={i} href={s.url} target="_blank" rel="noreferrer">{s.title}</a>)}</div>
+            <div className="notice"><strong>Status:</strong> {status.status}</div>
+            {eta && status.status !== "ready" && <div className="notice"><strong>Research target:</strong> {eta}</div>}
+            {status.readyAt && <div className="notice"><strong>Ready:</strong> {new Date(status.readyAt).toLocaleString()}</div>}
+            {status.status === "ready" && status.plan ? (
+              <button className="btn" onClick={()=>startGoal(status.plan)}>Start 30-Day Goal →</button>
+            ) : (
+              <div className="empty">Your 30-day timetable will appear here when the research is completed.</div>
             )}
           </div>
         )}
-        {plan.milestones && (
-          <div className="notice"><strong>Milestones:</strong> {plan.milestones.map((m)=>m.title+" — "+m.timing).join(" · ")}</div>
-        )}
-        <div className="notice"><strong>Success definition:</strong> {plan.success_definition}</div>
-        <div className="notice"><strong>Weekly focus:</strong> {plan.weekly_focus}</div>
+      </section>
 
-        {plan.schedule.map(day=><div className="day" key={day.date}>
-          <h3>{day.day} · {day.date}</h3>
-          {day.blocks.map((b,i)=><div className="block" key={i}>
-            <div className="time">{b.start}–{b.end}</div>
-            <div><strong>{b.activity}</strong><div className="reason">{b.reason}</div></div>
-            <div className="tag">{b.priority} · {b.category}</div>
-          </div>)}
-        </div>)}
-
-        <div className="notice"><strong>Planning risks:</strong> {plan.risk_notes.join(" · ")}</div>
-      </section>}
-
-      <div className="footer">AuraMind · Goal planning → hourly accountability → behavioral intelligence.</div>
+      <div className="footer">AuraMind · Request → research → 30-day plan → accountability → adaptation.</div>
     </main>
   );
 }
