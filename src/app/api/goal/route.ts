@@ -129,6 +129,10 @@ export async function POST(request: Request) {
   let fixedSchedule = "";
   let dailyHours = 3;
   let timezone = "Asia/Kolkata";
+  let preferredFocusTime = "";
+  let knownDistractions = "";
+  let pastAttempts = "";
+  let constraints = "";
 
   try {
     const body = await request.json();
@@ -139,6 +143,10 @@ export async function POST(request: Request) {
     fixedSchedule = String(body.fixedSchedule ?? "").trim();
     dailyHours = Number(body.dailyHours ?? 3);
     timezone = String(body.timezone ?? "Asia/Kolkata");
+    preferredFocusTime = String(body.preferredFocusTime ?? "").trim();
+    knownDistractions = String(body.knownDistractions ?? "").trim();
+    pastAttempts = String(body.pastAttempts ?? "").trim();
+    constraints = String(body.constraints ?? "").trim();
 
     if (!goal || !deadline || !currentLevel || !targetLevel) {
       return NextResponse.json(
@@ -168,7 +176,11 @@ export async function POST(request: Request) {
           targetLevel,
           fixedSchedule,
           dailyHours,
-          timezone
+          timezone,
+          preferredFocusTime,
+          knownDistractions,
+          pastAttempts,
+          constraints
         },
         engine: "core",
         research: {
@@ -214,6 +226,18 @@ ${fixedSchedule || "None supplied"}
 
 AVAILABLE FOCUS TIME PER DAY
 ${dailyHours} hours
+
+PREFERRED FOCUS TIME
+${preferredFocusTime || "Not specified; infer conservatively."}
+
+KNOWN DISTRACTIONS
+${knownDistractions || "Not specified."}
+
+WHAT HAS BEEN TRIED BEFORE
+${pastAttempts || "Not specified."}
+
+SPECIAL CONSTRAINTS
+${constraints || "None specified."}
 
 TIMEZONE
 ${timezone}
@@ -275,7 +299,11 @@ Return only JSON matching the schema.
         targetLevel,
         fixedSchedule,
         dailyHours,
-        timezone
+        timezone,
+        preferredFocusTime,
+        knownDistractions,
+        pastAttempts,
+        constraints
       },
       researchSources: sourceLinks(research),
       engine: "gemini"
