@@ -153,6 +153,15 @@ export async function POST(request: Request) {
 
       return NextResponse.json({
         ...demo,
+        goalContext: {
+          goal,
+          deadline,
+          currentLevel,
+          targetLevel,
+          fixedSchedule,
+          dailyHours,
+          timezone
+        },
         engine: "core",
         research: {
           research_summary: "Add GEMINI_API_KEY for AI reasoning and TAVILY_API_KEY for live web research.",
@@ -251,6 +260,15 @@ Return only JSON matching the schema.
     const parsed = JSON.parse(response.text);
     return NextResponse.json({
       ...parsed,
+      goalContext: {
+        goal,
+        deadline,
+        currentLevel,
+        targetLevel,
+        fixedSchedule,
+        dailyHours,
+        timezone
+      },
       researchSources: sourceLinks(research),
       engine: "gemini"
     });
