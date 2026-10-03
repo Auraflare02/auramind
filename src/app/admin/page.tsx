@@ -15,7 +15,7 @@ export default function Admin() {
   const [busy,setBusy]=useState(false);
   const [research,setResearch]=useState({research_summary:"",requirements:"",prerequisites:"",common_bottlenecks:"",strategy:""});
 
-  const openCount=useMemo(()=>requests.filter(r=>r.status==="pending"||r.status==="researching").length,[requests]);
+  const openCount=useMemo(()=>requests.filter(r=>r.status!=="ready"&&r.status!=="archived").length,[requests]);
 
   useEffect(()=>{ const saved=window.localStorage.getItem("auramind-admin-key"); if(saved) setKey(saved); },[]);
 
@@ -54,6 +54,8 @@ export default function Admin() {
       const data=await res.json();
       if(!res.ok) throw new Error(data.error||"Action failed.");
       setMessage(action==="generate-plan"?"30-day timetable generated. Review it, then release it to the user.":action==="release"?"Request released to the user.":"Saved.");
+      if (action === "generate-plan") setSelected(prev => prev ? { ...prev, status: "review", plan: data.plan || prev.plan } : prev);
+      if (action === "release") setSelected(prev => prev ? { ...prev, status: "ready" } : prev);
       await load();
     }catch(e){setMessage(e instanceof Error?e.message:"Admin action failed.");}
     finally{setBusy(false);}
