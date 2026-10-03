@@ -324,6 +324,19 @@ Return only JSON matching the schema.
 
       return NextResponse.json({
         ...demo,
+        goalContext: {
+          goal,
+          deadline,
+          currentLevel,
+          targetLevel,
+          fixedSchedule,
+          dailyHours,
+          timezone,
+          preferredFocusTime,
+          knownDistractions,
+          pastAttempts,
+          constraints
+        },
         engine: "core",
         research: {
           research_summary: "AI research was temporarily unavailable. AuraMind Core generated a usable plan from your real constraints.",
