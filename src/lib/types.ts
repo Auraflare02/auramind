@@ -68,6 +68,15 @@ export type DailyReport = {
   aiSummary?: string;
 };
 
+export type AdaptivePlan = {
+  adaptationSummary: string;
+  changes: string[];
+  weekly_focus: string;
+  success_definition: string;
+  schedule: PlanDay[];
+  engine?: "gemini" | "core";
+};
+
 export type WeeklyReport = {
   weekStart: string;
   weekEnd: string;
