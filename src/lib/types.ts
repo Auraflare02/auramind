@@ -29,7 +29,7 @@ export type ResearchSource = {
 };
 
 export type AuraPlan = {
-  engine?: "ai" | "core" | "openai" | "demo";
+  engine?: "gemini" | "ai" | "core" | "openai" | "demo";
   research?: ResearchBrief;
   researchSources?: ResearchSource[];
   milestones?: { title: string; outcome: string; timing: string }[];
