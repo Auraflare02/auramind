@@ -125,19 +125,43 @@ export default function Dashboard() {
     [date, logs, plan]
   );
 
-  function save(row: HourLog) {
+  async function save(row: HourLog) {
     saveLog(row);
     const xpResult = calculateXp(row);
     const award = awardXpOnce(row.id, xpResult.earned);
+
     if (award.awarded) {
       setXp(award.total);
-      setNotice("Saved · +" + xpResult.earned + " XP");
+      setNotice("Saved · +" + xpResult.earned + " XP · Coaching…");
     } else {
-      setNotice("Saved.");
+      setNotice("Saved · Coaching…");
     }
+
     setLogs(getLogsForDate(date));
     setPromptRow(null);
-    window.setTimeout(() => setNotice(""), 1800);
+
+    try {
+      const res = await fetch("/api/checkin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan,
+          log: row,
+          recentLogs: getLogsForDate(row.date)
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setNotice((data.coachMessage || data.immediateSolution || "Saved.") + " · +" + (award.awarded ? xpResult.earned : 0) + " XP");
+      } else {
+        setNotice(award.awarded ? "Saved · +" + xpResult.earned + " XP" : "Saved.");
+      }
+    } catch {
+      setNotice(award.awarded ? "Saved · +" + xpResult.earned + " XP" : "Saved.");
+    }
+
+    window.setTimeout(() => setNotice(""), 7000);
   }
 
   async function enableNotifications() {
@@ -314,7 +338,7 @@ export default function Dashboard() {
             <h2>{promptRow.hourStart} → {promptRow.hourEnd}</h2>
             <p className="muted">Your planned activity was:</p>
             <div className="notice"><strong>{promptRow.plannedActivity}</strong></div>
-            <p>Tell AuraMind what actually happened, then save the hour to earn XP.</p>
+            <p>Tell AuraMind what actually happened. After you save, AuraMind gives an immediate coaching response and awards XP based on the behavior you logged.</p>
             <HourRow row={promptRow} onSave={save} />
             <button className="navLink modalClose" onClick={() => setPromptRow(null)}>Remind me later</button>
           </div>
@@ -401,6 +425,7 @@ function WeeklyView({ report }: { report: WeeklyReport }) {
     <div className="notice"><strong>Best period:</strong> {report.bestPeriod}</div>
     <div className="notice"><strong>Risk period:</strong> {report.worstPeriod}</div>
     <div className="notice"><strong>Top distractions:</strong> {report.topDistractions.join(", ") || "Not enough data"}</div>
+    <div className="notice"><strong>Adaptive rule:</strong> AuraMind should change the next schedule when repeated evidence shows a timing, workload, difficulty, fatigue, or distraction problem.</div>
     <div className="notice"><strong>Recurring reasons:</strong> {report.recurringReasons.join(", ") || "Not enough data"}</div>
     <div className="notice"><strong>Patterns:</strong> {report.patterns.join(" · ") || "Not enough repeated patterns yet."}</div>
     <div className="notice"><strong>Next-week changes:</strong> {report.recommendations.join(" · ") || "Keep logging to unlock recommendations."}</div>
