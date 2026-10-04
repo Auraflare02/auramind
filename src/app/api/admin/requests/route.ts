@@ -202,6 +202,19 @@ export async function PATCH(request: Request) {
       if (!response.text) throw new Error("Gemini returned an empty 30-day plan.");
 
       const plan = JSON.parse(response.text);
+      plan.goalContext = {
+        goal: existing.data.goal,
+        deadline: existing.data.deadline,
+        currentLevel: existing.data.current_level,
+        targetLevel: existing.data.target_level,
+        fixedSchedule: existing.data.fixed_schedule,
+        dailyHours: existing.data.daily_hours,
+        timezone: existing.data.timezone,
+        preferredFocusTime: existing.data.preferred_focus_time,
+        knownDistractions: existing.data.known_distractions,
+        pastAttempts: existing.data.past_attempts,
+        constraints: existing.data.constraints
+      };
       const { error } = await db.from("goal_requests").update({
         plan,
         status: "review",
@@ -213,7 +226,7 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ error: "Plan was generated but could not be saved." }, { status: 500 });
       }
 
-      return NextResponse.json({ ok: true, status: "ready", plan });
+      return NextResponse.json({ ok: true, status: "review", plan });
     }
 
     return NextResponse.json({ error: "Unknown admin action." }, { status: 400 });
