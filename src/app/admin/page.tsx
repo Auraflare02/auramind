@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 type Request = {
   request_code: string; goal: string; deadline: string; current_level: string; target_level: string;
-  fixed_schedule: string; daily_hours: number; timezone: string; preferred_focus_time: string; known_distractions: string; past_attempts: string; constraints: string; status: "pending"|"researching"|"ready"|"archived"; research: any; plan: any; created_at: string; ready_at?: string|null;
+  fixed_schedule: string; daily_hours: number; timezone: string; preferred_focus_time: string; known_distractions: string; past_attempts: string; constraints: string; status: "pending"|"researching"|"review"|"ready"|"archived"; research: any; plan: any; created_at: string; ready_at?: string|null;
 };
 
 export default function Admin() {
