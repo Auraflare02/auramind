@@ -1,5 +1,5 @@
-import OpenAI from "openai";
 import { NextResponse } from "next/server";
+import { getGeminiClient, getGeminiModel } from "../../../lib/gemini";
 import { makeDemoPlan } from "../../../lib/demo-engine";
 
 const planSchema = {
@@ -12,6 +12,8 @@ const planSchema = {
     risk_notes: { type: "array", items: { type: "string" } },
     schedule: {
       type: "array",
+      minItems: 30,
+      maxItems: 30,
       items: {
         type: "object",
         additionalProperties: false,
@@ -28,106 +30,109 @@ const planSchema = {
                 end: { type: "string" },
                 activity: { type: "string" },
                 category: { type: "string" },
-                priority: { type: "string", enum: ["high","medium","low"] },
+                priority: { type: "string", enum: ["high", "medium", "low"] },
                 reason: { type: "string" }
               },
-              required: ["start","end","activity","category","priority","reason"]
+              required: ["start", "end", "activity", "category", "priority", "reason"]
             }
           }
         },
-        required: ["day","date","blocks"]
+        required: ["day", "date", "blocks"]
       }
     }
   },
-  required: ["goal_summary","success_definition","weekly_focus","risk_notes","schedule"]
+  required: ["goal_summary", "success_definition", "weekly_focus", "risk_notes", "schedule"]
 } as const;
 
+function demo(input: {
+  goal: string;
+  deadline: string;
+  currentLevel: string;
+  targetLevel: string;
+  fixedSchedule: string;
+  dailyHours: number;
+  timezone: string;
+}, reason?: string) {
+  return NextResponse.json({
+    ...makeDemoPlan(input),
+    engine: "demo-fallback",
+    ...(reason ? { fallbackReason: reason } : {})
+  });
+}
+
 export async function POST(request: Request) {
+  const body = await request.json().catch(() => ({}));
+
+  const goal = String(body?.goal ?? "").trim();
+  const deadline = String(body?.deadline ?? "").trim();
+  const currentLevel = String(body?.currentLevel ?? "").trim();
+  const targetLevel = String(body?.targetLevel ?? "").trim();
+  const fixedSchedule = String(body?.fixedSchedule ?? "").trim();
+  const dailyHours = Number(body?.dailyHours ?? 3);
+  const timezone = String(body?.timezone ?? "Asia/Kolkata").trim() || "Asia/Kolkata";
+
+  if (!goal || !deadline || !currentLevel || !targetLevel) {
+    return NextResponse.json(
+      { error: "Goal, deadline, current level and target level are required." },
+      { status: 400 }
+    );
+  }
+
+  const input = {
+    goal,
+    deadline,
+    currentLevel,
+    targetLevel,
+    fixedSchedule,
+    dailyHours: Number.isFinite(dailyHours) ? Math.max(1, Math.min(12, dailyHours)) : 3,
+    timezone
+  };
+
+  const aiMode = (process.env.AURAMIND_AI_MODE ?? "demo").toLowerCase();
+  const gemini = getGeminiClient();
+
+  // Keep AuraMind usable without paid API access.
+  if (aiMode !== "api" || !gemini) {
+    return demo(input);
+  }
+
+  const prompt = [
+    "You are AuraMind, an AI accountability planning engine.",
+    "Create a realistic personalized 30-day timetable around the user's actual constraints.",
+    "Treat goal, deadline, current level, target level, fixed commitments, daily available hours and timezone as hard constraints.",
+    "Use concrete, measurable tasks and keep focus blocks realistic.",
+    "Include sensible breaks and avoid overloading the user.",
+    "Progress through appropriate phases such as foundation, deliberate practice, application, error repair, checkpoints and consolidation.",
+    "Do not invent commitments, credentials, evidence or guarantees of success.",
+    "Return exactly 30 schedule days in the requested JSON structure."
+  ].join(" ");
+
   try {
-    const body = await request.json();
-    const goal = String(body.goal ?? "").trim();
-    const deadline = String(body.deadline ?? "").trim();
-    const currentLevel = String(body.currentLevel ?? "").trim();
-    const targetLevel = String(body.targetLevel ?? "").trim();
-    const fixedSchedule = String(body.fixedSchedule ?? "").trim();
-    const dailyHours = Number(body.dailyHours ?? 2);
-    const timezone = String(body.timezone ?? "Asia/Kolkata");
-
-    if (!goal || !deadline || !currentLevel || !targetLevel) {
-      return NextResponse.json(
-        { error: "Goal, deadline, current level and target level are required." },
-        { status: 400 }
-      );
-    }
-
-    const aiMode = (process.env.AURAMIND_AI_MODE ?? "demo").toLowerCase();
-
-    // Demo mode is the default so AuraMind works without API credits.
-    // Set AURAMIND_AI_MODE=api only when a funded API project is intentionally enabled.
-    if (aiMode !== "api" || !process.env.OPENAI_API_KEY) {
-      return NextResponse.json(makeDemoPlan({ goal, deadline, currentLevel, targetLevel, fixedSchedule, dailyHours, timezone }));
-    }
-
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    const configured = process.env.OPENAI_MODEL ?? "";
-    const model = configured.startsWith("gpt-6-") ? configured : "gpt-6-astra";
-
-    const system = [
-      "You are AuraMind, an AI accountability planning engine.",
-      "Create a realistic initial 7-day schedule around fixed commitments.",
-      "Treat the user's stated goal, deadline, current level and target level as the core constraints.",
-      "Prefer focused blocks of 25 to 60 minutes with sensible breaks.",
-      "Do not overload the user or invent commitments.",
-      "Do not promise that the user will achieve the goal.",
-      "The plan must be practical and easy to track hour by hour.",
-      "Return only the requested structured data."
-    ].join(" ");
-
-    const response = await openai.responses.create({
-      model,
-      input: [
-        { role: "system", content: system },
-        {
-          role: "user",
-          content: JSON.stringify({
-            goal,
-            deadline,
-            current_level: currentLevel,
-            target_level: targetLevel,
-            fixed_schedule: fixedSchedule,
-            daily_available_hours: dailyHours,
-            timezone
-          })
-        }
-      ],
-      text: {
-        format: {
-          type: "json_schema",
-          name: "auramind_plan",
-          strict: true,
-          schema: planSchema
-        }
+    const response = await gemini.models.generateContent({
+      model: getGeminiModel(),
+      contents: prompt + "\n\nUSER INPUT:\n" + JSON.stringify(input),
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: planSchema
       }
     });
 
-    return NextResponse.json({ ...JSON.parse(response.output_text), engine: "openai" });
+    if (!response.text) {
+      return demo(input, "Gemini returned an empty response.");
+    }
+
+    const parsed = JSON.parse(response.text);
+
+    if (!Array.isArray(parsed.schedule) || parsed.schedule.length !== 30) {
+      return demo(input, "Gemini returned an incomplete timetable.");
+    }
+
+    return NextResponse.json({ ...parsed, engine: "gemini" });
   } catch (error: any) {
-    console.error("AuraMind plan error:", error);
-
-    const status = Number(error?.status) || 500;
-    const code = typeof error?.code === "string" ? error.code : undefined;
-    const type = typeof error?.type === "string" ? error.type : undefined;
-    const message =
-      typeof error?.message === "string"
-        ? error.message
-        : "Unknown OpenAI/API error.";
-
-    return NextResponse.json(
-      {
-        error: "AuraMind could not generate the plan.",
-        details: { status, code, type, message }
-      },
-      { status: status >= 400 && status < 600 ? status : 500 }
+    console.error("AuraMind plan generation error:", error);
+    return demo(
+      input,
+      typeof error?.message === "string" ? error.message : "AI generation failed."
     );
   }
 }
