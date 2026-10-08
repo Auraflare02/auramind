@@ -128,12 +128,4 @@ export async function POST(request: Request) {
       typeof error?.message === "string" ? error.message : "AI generation failed."
     );
   }
-    return NextResponse.json({ ...parsed, engine: "gemini" });
-  } catch (error: any) {
-    console.error("AuraMind plan generation error:", error);
-    return demo(
-      input,
-      typeof error?.message === "string" ? error.message : "AI generation failed."
-    );
-  }
 }
