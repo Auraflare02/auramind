@@ -121,8 +121,6 @@ export async function POST(request: Request) {
       ...result,
       engine: "gemini"
     });
-    if (!response.text) throw new Error("Gemini returned an empty adaptive plan.");
-
   } catch (error: any) {
     console.error("AuraMind adaptive AI error; using Core fallback:", error);
     const context = body?.plan?.goalContext ?? body?.goalContext ?? {};
