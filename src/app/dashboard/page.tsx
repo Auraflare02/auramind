@@ -24,8 +24,18 @@ const hours = Array.from({ length: 17 }, (_, i) => i + 6);
 const distractionTypes = ["Social media","YouTube","Gaming","Messaging","Web browsing","Sleep","Family/interruption","Boredom","Other"];
 const reasons = ["Bored","Task was too difficult","Did not understand","Tired","Phone notification","Unexpected work","Lost focus","Environment","Other"];
 
-function localDate() {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
+function safeTimeZone(value?: string) {
+  const candidate = value || "Asia/Kolkata";
+  try {
+    Intl.DateTimeFormat("en-US", { timeZone: candidate }).format();
+    return candidate;
+  } catch {
+    return "Asia/Kolkata";
+  }
+}
+
+function localDate(timezone = "Asia/Kolkata") {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: safeTimeZone(timezone) }).format(new Date());
 }
 
 function hourLabel(hour: number) {
@@ -179,9 +189,10 @@ export default function Dashboard() {
 
     const checkHour = () => {
       const now = new Date();
-      const currentDate = localDate();
+      const timezone = safeTimeZone(plan?.goalContext?.timezone);
+      const currentDate = localDate(timezone);
       const hour = Number(new Intl.DateTimeFormat("en-US", {
-        timeZone: "Asia/Kolkata",
+        timeZone: timezone,
         hour: "2-digit",
         hour12: false
       }).format(now));
