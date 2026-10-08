@@ -89,8 +89,8 @@ export async function POST(request: Request) {
     timezone
   };
 
-  const aiMode = (process.env.AURAMIND_AI_MODE ?? (gemini ? "api" : "demo")).toLowerCase();
   const gemini = getGeminiClient();
+  const aiMode = (process.env.AURAMIND_AI_MODE ?? (gemini ? "api" : "demo")).toLowerCase();
 
   // Keep AuraMind usable without paid API access.
   if (aiMode !== "api" || !gemini) {
