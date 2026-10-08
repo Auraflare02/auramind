@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getGeminiClient, getGeminiModel } from "../../../lib/gemini";
+import { generateGeminiJson, getGeminiClient } from "../../../lib/ai";
+import { validateSchedule, cleanString, clampNumber, isIsoDate } from "../../../lib/validation";
 import { makeDemoPlan } from "../../../lib/demo-engine";
 
 const planSchema = {
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
   const dailyHours = Number(body?.dailyHours ?? 3);
   const timezone = String(body?.timezone ?? "Asia/Kolkata").trim() || "Asia/Kolkata";
 
-  if (!goal || !deadline || !currentLevel || !targetLevel) {
+  if (!goal || !deadline || !currentLevel || !targetLevel || !isIsoDate(deadline)) {
     return NextResponse.json(
       { error: "Goal, deadline, current level and target level are required." },
       { status: 400 }
@@ -108,25 +109,25 @@ export async function POST(request: Request) {
   ].join(" ");
 
   try {
-    const response = await gemini.models.generateContent({
-      model: getGeminiModel(),
+    const parsed = await generateGeminiJson<Record<string, unknown>>({
       contents: prompt + "\n\nUSER INPUT:\n" + JSON.stringify(input),
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: planSchema
-      }
+      responseSchema: planSchema,
+      thinkingLevel: "high",
+      systemInstruction: "You are AuraMind's strict planning engine. Return only the requested JSON, obey every hard constraint, and never promise success."
     });
 
-    if (!response.text) {
-      return demo(input, "Gemini returned an empty response.");
+    if (!validateSchedule(parsed.schedule, 30)) {
+      return demo(input, "Gemini returned an invalid 30-day timetable.");
     }
 
-    const parsed = JSON.parse(response.text);
-
-    if (!Array.isArray(parsed.schedule) || parsed.schedule.length !== 30) {
-      return demo(input, "Gemini returned an incomplete timetable.");
-    }
-
+    return NextResponse.json({ ...parsed, engine: "gemini" });
+  } catch (error: any) {
+    console.error("AuraMind plan generation error:", error);
+    return demo(
+      input,
+      typeof error?.message === "string" ? error.message : "AI generation failed."
+    );
+  }
     return NextResponse.json({ ...parsed, engine: "gemini" });
   } catch (error: any) {
     console.error("AuraMind plan generation error:", error);
