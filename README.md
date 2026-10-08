@@ -36,3 +36,34 @@ Open `/admin`, enter the same value configured as `AURAMIND_ADMIN_KEY`, load req
 ## Product principle
 
 AuraMind does not pretend that an instant generic AI response is the same thing as researched planning. The operator can research the goal first; AI is then used as a planning/analysis layer, while the accountability loop learns from the user's actual behavior.
+
+
+## Hardening upgrade
+
+The current hardening branch adds:
+
+- Persistent goal-run sessions, hourly logs and AI reports in Supabase.
+- A database-backed AuraMind knowledge layer with seeded planning, learning and behavior principles.
+- A goal-aware "Ask AuraMind" assistant with conversational memory.
+- Centralized Gemini JSON generation with structured output, retry handling and configurable thinking level.
+- Strict validation for 30-day and adaptive 7-day schedules.
+- Goal-specific timezone handling for hourly accountability.
+- A local-storage fallback so the dashboard remains usable when persistence is temporarily unavailable.
+
+### Additional environment variable
+
+```
+GEMINI_THINKING_LEVEL=medium
+```
+
+Use `low` for fast responses, `medium` for normal reasoning, and `high` for complex planning/adaptation.
+
+### Database
+
+Run `supabase/schema.sql` for a complete fresh setup. For an existing database, run:
+
+```
+supabase/migrations/20261008_aura_hardening.sql
+```
+
+The public app never receives the Supabase service-role key.
