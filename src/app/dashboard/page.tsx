@@ -228,6 +228,22 @@ export default function Dashboard() {
     [date, logs, plan]
   );
 
+  async function persistSession(payload: Record<string, unknown>) {
+    if (!sessionToken) return;
+    try {
+      await fetch("/api/session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-session-token": sessionToken
+        },
+        body: JSON.stringify(payload)
+      });
+    } catch {
+      // Local storage remains the fallback.
+    }
+  }
+
   async function save(row: HourLog) {
     saveLog(row);
     const xpResult = calculateXp(row);
@@ -242,6 +258,7 @@ export default function Dashboard() {
 
     setLogs(getLogsForDate(date));
     setPromptRow(null);
+    void persistSession({ action: "log", log: row });
 
     try {
       const res = await fetch("/api/checkin", {
@@ -288,6 +305,7 @@ export default function Dashboard() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Daily analysis failed.");
       saveDailyReport(data); setDaily(data);
+      void persistSession({ action: "report", reportType: "daily", reportKey: date, payload: data });
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "Daily analysis failed.");
     } finally { setBusy(""); }
@@ -314,6 +332,7 @@ export default function Dashboard() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Adaptive planning failed.");
       setAdaptive(data);
+      void persistSession({ action: "report", reportType: "adaptive", reportKey: String(data.schedule?.[0]?.date ?? date), payload: data });
       setNotice("Next week has been rebuilt from your behavior data.");
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "Adaptive planning failed.");
@@ -331,6 +350,7 @@ export default function Dashboard() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Weekly analysis failed.");
       saveWeeklyReport(data); setWeekly(data);
+      void persistSession({ action: "report", reportType: "weekly", reportKey: data.weekStart, payload: data });
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "Weekly analysis failed.");
     } finally { setBusy(""); }
