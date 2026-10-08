@@ -284,6 +284,43 @@ export default function Dashboard() {
     window.setTimeout(() => setNotice(""), 7000);
   }
 
+  async function askAuraMind() {
+    const question = assistantQuestion.trim();
+    if (!question) return;
+    setAssistantBusy(true);
+    setAssistantReply(null);
+
+    try {
+      const res = await fetch("/api/ask", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(sessionToken ? { "x-session-token": sessionToken } : {})
+        },
+        body: JSON.stringify({
+          question,
+          plan,
+          logs: getLogs().slice(-168),
+          reports: [daily, weekly].filter(Boolean)
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "AuraMind could not answer.");
+      setAssistantReply(data);
+      setAssistantQuestion("");
+    } catch (error) {
+      setAssistantReply({
+        answer: error instanceof Error ? error.message : "AuraMind could not answer right now.",
+        actions: ["Retry the question after checking your connection or AI configuration."],
+        caveat: "The answer was not generated.",
+        confidence: "needs_research"
+      });
+    } finally {
+      setAssistantBusy(false);
+    }
+  }
+
   async function enableNotifications() {
     if (!("Notification" in window)) {
       setNotice("Browser notifications are not supported here.");
