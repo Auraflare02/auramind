@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getGeminiClient, getGeminiModel } from "../../../../lib/gemini";
+import { generateGeminiJson, getGeminiClient } from "../../../../lib/ai";
 import { makeDemoDailyReport } from "../../../../lib/demo-engine";
 
 const schema = {
@@ -77,25 +77,26 @@ export async function POST(request: Request) {
       return NextResponse.json(makeDemoDailyReport(date, logs));
     }
 
-    const response = await gemini.models.generateContent({
-      model: getGeminiModel(),
+    const result = await generateGeminiJson<DailyReport>({
       contents: [
-        "You are AuraMind's daily behavioral coach.",
-        "Analyze the supplied plan and self-reported hourly logs.",
-        "Distinguish task difficulty, misunderstanding, fatigue, interruption, boredom, digital distraction, and planning mismatch.",
-        "Do not shame the user. A missed task is data, not proof of laziness.",
-        "Only call something a pattern when the supplied data supports it.",
+        "Analyze the supplied plan and self-reported hourly logs for one day.",
+        "Distinguish task difficulty, misunderstanding, fatigue, interruption, boredom, digital distraction and planning mismatch.",
+        "Only call something a pattern when the data supports it.",
         "Give one concrete change for tomorrow.",
         JSON.stringify({ date, plan, logs, calculated })
       ].join("\n\n"),
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: schema
-      }
+      responseSchema: schema,
+      thinkingLevel: "medium",
+      systemInstruction: "You are AuraMind's daily behavioral coach. Be evidence-based, practical and non-judgmental."
     });
 
-    if (!response.text) throw new Error("Gemini returned an empty daily report.");
-    return NextResponse.json(JSON.parse(response.text));
+    return NextResponse.json({
+      ...result,
+      date,
+      plannedMinutes: calculated.plannedMinutes,
+      focusedMinutes: calculated.focusedMinutes,
+      distractionMinutes: calculated.distractionMinutes
+    });
   } catch (error: any) {
     console.error("AuraMind daily report AI error; using Core fallback:", error);
     return NextResponse.json({
