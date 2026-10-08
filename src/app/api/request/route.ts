@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { getServerDb, dbUnavailableMessage } from "../../../lib/server-db";
+import { cleanString, clampNumber, isIsoDate } from "../../../lib/validation";
 
 function requestCode() {
   return "AM-" + crypto.randomBytes(8).toString("hex").toUpperCase();
@@ -10,23 +11,31 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const goal = String(body?.goal ?? "").trim();
-    const deadline = String(body?.deadline ?? "").trim();
-    const currentLevel = String(body?.currentLevel ?? "").trim();
-    const targetLevel = String(body?.targetLevel ?? "").trim();
-    const fixedSchedule = String(body?.fixedSchedule ?? "").trim();
-    const preferredFocusTime = String(body?.preferredFocusTime ?? "").trim();
-    const knownDistractions = String(body?.knownDistractions ?? "").trim();
-    const pastAttempts = String(body?.pastAttempts ?? "").trim();
-    const constraints = String(body?.constraints ?? "").trim();
-    const dailyHours = Math.max(1, Math.min(12, Number(body?.dailyHours ?? 3)));
-    const timezone = String(body?.timezone ?? "Asia/Kolkata").trim() || "Asia/Kolkata";
+    const goal = cleanString(body?.goal, 2000);
+    const deadline = cleanString(body?.deadline, 20);
+    const currentLevel = cleanString(body?.currentLevel, 500);
+    const targetLevel = cleanString(body?.targetLevel, 500);
+    const fixedSchedule = cleanString(body?.fixedSchedule, 3000);
+    const preferredFocusTime = cleanString(body?.preferredFocusTime, 200);
+    const knownDistractions = cleanString(body?.knownDistractions, 2000);
+    const pastAttempts = cleanString(body?.pastAttempts, 3000);
+    const constraints = cleanString(body?.constraints, 3000);
+    const dailyHours = clampNumber(body?.dailyHours, 1, 12, 3);
+    const timezone = cleanString(body?.timezone, 100) || "Asia/Kolkata";
 
     if (!goal || !deadline || !currentLevel || !targetLevel) {
       return NextResponse.json(
         { error: "Goal, deadline, current level and target level are required." },
         { status: 400 }
       );
+    }
+
+    if (!isIsoDate(deadline)) {
+      return NextResponse.json({ error: "Deadline must be a valid date." }, { status: 400 });
+    }
+
+    if (goal.length < 8) {
+      return NextResponse.json({ error: "Give AuraMind a little more detail about the goal." }, { status: 400 });
     }
 
     const db = getServerDb();

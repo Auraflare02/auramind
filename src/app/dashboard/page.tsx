@@ -1,7 +1,22 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { awardXpOnce, getLogs, getLogsForDate, getPlan, getXp, isGoalActive, saveDailyReport, saveLog, saveWeeklyReport } from "../../lib/storage";
+import {
+  awardXpOnce,
+  getLogs,
+  getLogsForDate,
+  getPlan,
+  getXp,
+  getDailyReportForDate,
+  getLatestWeeklyReport,
+  getSessionToken,
+  isGoalActive,
+  saveDailyReport,
+  saveLog,
+  savePlan,
+  saveSessionToken,
+  saveWeeklyReport
+} from "../../lib/storage";
 import { calculateXp } from "../../lib/xp";
 import type { AuraPlan, DailyReport, HourLog, WeeklyReport, AdaptivePlan } from "../../lib/types";
 
@@ -9,8 +24,18 @@ const hours = Array.from({ length: 17 }, (_, i) => i + 6);
 const distractionTypes = ["Social media","YouTube","Gaming","Messaging","Web browsing","Sleep","Family/interruption","Boredom","Other"];
 const reasons = ["Bored","Task was too difficult","Did not understand","Tired","Phone notification","Unexpected work","Lost focus","Environment","Other"];
 
-function localDate() {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
+function safeTimeZone(value?: string) {
+  const candidate = value || "Asia/Kolkata";
+  try {
+    Intl.DateTimeFormat("en-US", { timeZone: candidate }).format();
+    return candidate;
+  } catch {
+    return "Asia/Kolkata";
+  }
+}
+
+function localDate(timezone = "Asia/Kolkata") {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: safeTimeZone(timezone) }).format(new Date());
 }
 
 function hourLabel(hour: number) {
@@ -60,6 +85,25 @@ function newRow(plan: AuraPlan | null, date: string, hour: number): HourLog {
   };
 }
 
+function fromServerLog(row: any): HourLog {
+  return {
+    id: String(row.id ?? (String(row.logged_for) + "-" + String(row.hour_start))),
+    date: String(row.logged_for),
+    hourStart: String(row.hour_start),
+    hourEnd: String(row.hour_end),
+    plannedActivity: String(row.planned_activity ?? ""),
+    actualActivity: String(row.actual_activity ?? ""),
+    outcome: ["completed", "partial", "skipped", "different"].includes(String(row.outcome))
+      ? row.outcome
+      : "different",
+    focusedMinutes: Math.max(0, Math.min(60, Number(row.focused_minutes ?? 0))),
+    distractionMinutes: Math.max(0, Math.min(60, Number(row.distraction_minutes ?? 0))),
+    distractionCategory: String(row.distraction_category ?? ""),
+    distractionReason: String(row.distraction_reason ?? ""),
+    notes: String(row.notes ?? "")
+  };
+}
+
 export default function Dashboard() {
   const [plan, setPlan] = useState<AuraPlan | null>(null);
   const [date, setDate] = useState(localDate());
@@ -72,12 +116,70 @@ export default function Dashboard() {
   const [xp, setXp] = useState(0);
   const [active, setActive] = useState(false);
   const [promptRow, setPromptRow] = useState<HourLog | null>(null);
+  const [assistantQuestion, setAssistantQuestion] = useState("");
+  const [assistantReply, setAssistantReply] = useState<any>(null);
+  const [assistantBusy, setAssistantBusy] = useState(false);
+  const [sessionToken, setSessionToken] = useState("");
 
   useEffect(() => {
-    setPlan(getPlan());
-    setLogs(getLogsForDate(date));
+    const localPlan = getPlan();
+    const localLogs = getLogsForDate(date);
+    setPlan(localPlan);
+    setLogs(localLogs);
     setXp(getXp());
     setActive(isGoalActive());
+    setDaily(getDailyReportForDate(date));
+    setWeekly(getLatestWeeklyReport());
+    setSessionToken(getSessionToken());
+
+    const token = getSessionToken();
+    if (!token) return;
+
+    let cancelled = false;
+
+    fetch("/api/session", {
+      headers: { "x-session-token": token },
+      cache: "no-store"
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Session unavailable");
+        return res.json();
+      })
+      .then((data) => {
+        if (cancelled) return;
+        if (data.plan) {
+          savePlan(data.plan);
+          setPlan(data.plan);
+        }
+        if (Array.isArray(data.logs)) {
+          const mapped = data.logs.map(fromServerLog);
+          const dayLogs = mapped.filter((item: HourLog) => item.date === date);
+          setLogs(dayLogs);
+        }
+        if (Array.isArray(data.reports)) {
+          const dailyReport = [...data.reports]
+            .filter((item) => item.report_type === "daily" && item.report_key === date)
+            .at(-1);
+          if (dailyReport?.payload) {
+            saveDailyReport(dailyReport.payload);
+            setDaily(dailyReport.payload);
+          }
+          const weeklyReports = [...data.reports].filter((item) => item.report_type === "weekly");
+          const weeklyReport = weeklyReports.at(-1);
+          if (weeklyReport?.payload) {
+            saveWeeklyReport(weeklyReport.payload);
+            setWeekly(weeklyReport.payload);
+          }
+          const adaptiveReports = [...data.reports].filter((item) => item.report_type === "adaptive");
+          const adaptiveReport = adaptiveReports.at(-1);
+          if (adaptiveReport?.payload) setAdaptive(adaptiveReport.payload);
+        }
+      })
+      .catch(() => {
+        // Local storage remains the offline fallback.
+      });
+
+    return () => { cancelled = true; };
   }, [date]);
 
   useEffect(() => {
@@ -87,9 +189,10 @@ export default function Dashboard() {
 
     const checkHour = () => {
       const now = new Date();
-      const currentDate = localDate();
+      const timezone = safeTimeZone(plan?.goalContext?.timezone);
+      const currentDate = localDate(timezone);
       const hour = Number(new Intl.DateTimeFormat("en-US", {
-        timeZone: "Asia/Kolkata",
+        timeZone: timezone,
         hour: "2-digit",
         hour12: false
       }).format(now));
@@ -125,6 +228,22 @@ export default function Dashboard() {
     [date, logs, plan]
   );
 
+  async function persistSession(payload: Record<string, unknown>) {
+    if (!sessionToken) return;
+    try {
+      await fetch("/api/session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-session-token": sessionToken
+        },
+        body: JSON.stringify(payload)
+      });
+    } catch {
+      // Local storage remains the fallback.
+    }
+  }
+
   async function save(row: HourLog) {
     saveLog(row);
     const xpResult = calculateXp(row);
@@ -139,6 +258,7 @@ export default function Dashboard() {
 
     setLogs(getLogsForDate(date));
     setPromptRow(null);
+    void persistSession({ action: "log", log: row });
 
     try {
       const res = await fetch("/api/checkin", {
@@ -164,6 +284,43 @@ export default function Dashboard() {
     window.setTimeout(() => setNotice(""), 7000);
   }
 
+  async function askAuraMind() {
+    const question = assistantQuestion.trim();
+    if (!question) return;
+    setAssistantBusy(true);
+    setAssistantReply(null);
+
+    try {
+      const res = await fetch("/api/ask", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(sessionToken ? { "x-session-token": sessionToken } : {})
+        },
+        body: JSON.stringify({
+          question,
+          plan,
+          logs: getLogs().slice(-168),
+          reports: [daily, weekly].filter(Boolean)
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "AuraMind could not answer.");
+      setAssistantReply(data);
+      setAssistantQuestion("");
+    } catch (error) {
+      setAssistantReply({
+        answer: error instanceof Error ? error.message : "AuraMind could not answer right now.",
+        actions: ["Retry the question after checking your connection or AI configuration."],
+        caveat: "The answer was not generated.",
+        confidence: "needs_research"
+      });
+    } finally {
+      setAssistantBusy(false);
+    }
+  }
+
   async function enableNotifications() {
     if (!("Notification" in window)) {
       setNotice("Browser notifications are not supported here.");
@@ -185,6 +342,7 @@ export default function Dashboard() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Daily analysis failed.");
       saveDailyReport(data); setDaily(data);
+      void persistSession({ action: "report", reportType: "daily", reportKey: date, payload: data });
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "Daily analysis failed.");
     } finally { setBusy(""); }
@@ -211,6 +369,7 @@ export default function Dashboard() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Adaptive planning failed.");
       setAdaptive(data);
+      void persistSession({ action: "report", reportType: "adaptive", reportKey: String(data.schedule?.[0]?.date ?? date), payload: data });
       setNotice("Next week has been rebuilt from your behavior data.");
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "Adaptive planning failed.");
@@ -228,6 +387,7 @@ export default function Dashboard() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Weekly analysis failed.");
       saveWeeklyReport(data); setWeekly(data);
+      void persistSession({ action: "report", reportType: "weekly", reportKey: data.weekStart, payload: data });
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "Weekly analysis failed.");
     } finally { setBusy(""); }
@@ -264,6 +424,54 @@ export default function Dashboard() {
           <div className="stat"><small>Daily</small><strong>AI diagnosis</strong></div>
           <div className="stat"><small>Weekly</small><strong>Pattern report</strong></div>
         </div>
+      </section>
+
+      <section className="card assistantCard">
+        <div className="sectionHead">
+          <div>
+            <div className="kicker">Ask AuraMind</div>
+            <h2>Your goal-aware AI assistant</h2>
+            <p className="muted">Ask about your plan, a difficult task, rescheduling, today's progress, or any question related to your goal.</p>
+          </div>
+          <span className="assistantStatus">{assistantBusy ? "Thinking…" : "Ready"}</span>
+        </div>
+        <div className="assistantComposer">
+          <textarea
+            value={assistantQuestion}
+            onChange={(e) => setAssistantQuestion(e.target.value)}
+            onKeyDown={(e) => {
+              if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                e.preventDefault();
+                void askAuraMind();
+              }
+            }}
+            placeholder="Example: I keep getting stuck on this topic after 30 minutes. What should I change?"
+            maxLength={2000}
+          />
+          <button className="btn" onClick={() => void askAuraMind()} disabled={assistantBusy || !assistantQuestion.trim()}>
+            {assistantBusy ? "Thinking…" : "Ask AuraMind →"}
+          </button>
+        </div>
+        <div className="assistantChips">
+          {["Why am I losing focus?", "Make tomorrow easier", "Explain today's task", "How should I catch up?"].map((item) => (
+            <button key={item} className="navLink" onClick={() => setAssistantQuestion(item)}>{item}</button>
+          ))}
+        </div>
+        {assistantReply && (
+          <div className="assistantReply">
+            <div className="replyMeta">
+              <span>{assistantReply.intent || "AuraMind"}</span>
+              <span>{assistantReply.confidence || "reasoned"}</span>
+            </div>
+            <p>{assistantReply.answer}</p>
+            {Array.isArray(assistantReply.actions) && assistantReply.actions.length > 0 && (
+              <div className="assistantActions">
+                {assistantReply.actions.map((action: string, index: number) => <div key={index}>→ {action}</div>)}
+              </div>
+            )}
+            {assistantReply.caveat && <div className="notice">{assistantReply.caveat}</div>}
+          </div>
+        )}
       </section>
 
       <section className="card" style={{ marginTop: 18 }}>
@@ -329,7 +537,7 @@ export default function Dashboard() {
             <div className="empty">Run the weekly report first. Then AuraMind can rebuild the following week using evidence.</div>
           )}
         </section>
-      </section>
+      )}
 
       {promptRow && (
         <div className="modalBackdrop">

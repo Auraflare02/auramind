@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getGeminiClient, getGeminiModel } from "../../../../lib/gemini";
+import { generateGeminiJson, getGeminiClient } from "../../../../lib/ai";
+import { validateSchedule, dateAdd } from "../../../../lib/validation";
 import { makeDemoPlan } from "../../../../lib/demo-engine";
 
 const schema = {
@@ -73,19 +74,19 @@ export async function POST(request: Request) {
         ],
         weekly_focus: fallback.weekly_focus,
         success_definition: fallback.success_definition,
-        schedule: fallback.schedule,
+        schedule: fallback.schedule.slice(0, 7).map((day: any, index: number) => ({
+          ...day,
+          day: "Day " + (index + 1),
+          date: dateAdd(nextStart, index)
+        })),
         engine: "core"
       });
     }
 
-    const nextStart = new Date();
-    nextStart.setDate(nextStart.getDate() + 1);
+    const baseDate = weeklyReport?.weekEnd || plan?.schedule?.at(-1)?.date || new Date().toISOString().slice(0, 10);
+    const nextStart = dateAdd(String(baseDate), 1);
 
-    const nextDates = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(nextStart);
-      d.setDate(nextStart.getDate() + i);
-      return d.toISOString().slice(0, 10);
-    });
+    const nextDates = Array.from({ length: 7 }, (_, i) => dateAdd(nextStart, i));
 
     const prompt = [
       "You are AuraMind's Adaptive Planning Engine.",
@@ -109,20 +110,19 @@ export async function POST(request: Request) {
       })
     ].join("\n\n");
 
-    const response = await gemini.models.generateContent({
-      model: ["gemini-3.8-flash", "gemini-3.7-flash"].includes(getGeminiModel())
-        ? getGeminiModel()
-        : "gemini-3.8-flash",
+    const result = await generateGeminiJson<Record<string, any>>({
       contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: schema
-      }
+      responseSchema: schema,
+      thinkingLevel: "high",
+      systemInstruction: "You are AuraMind's strict adaptive planner. Only use evidence present in the supplied plan, report and logs. Return valid JSON."
     });
 
-    if (!response.text) throw new Error("Gemini returned an empty adaptive plan.");
+    if (!validateSchedule(result.schedule, 7)) {
+      throw new Error("Gemini returned an invalid 7-day adaptive schedule.");
+    }
+
     return NextResponse.json({
-      ...JSON.parse(response.text),
+      ...result,
       engine: "gemini"
     });
   } catch (error: any) {

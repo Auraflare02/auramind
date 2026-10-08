@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { savePlan, setGoalActive } from "../lib/storage";
+import { savePlan, saveSessionToken, setGoalActive } from "../lib/storage";
 
 type Plan = {
   goal_summary: string;
@@ -62,8 +62,27 @@ export default function Home() {
     } finally { setLoading(false); }
   }
 
-  function startGoal(plan: Plan) {
-    savePlan(plan as any); setGoalActive(true); window.location.href = "/dashboard";
+  async function startGoal(plan: Plan) {
+    savePlan(plan as any);
+    setGoalActive(true);
+
+    try {
+      const res = await fetch("/api/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "create", requestId })
+      });
+      const data = await res.json();
+
+      if (res.ok && data.sessionToken) {
+        saveSessionToken(data.sessionToken);
+        if (data.plan) savePlan(data.plan);
+      }
+    } catch {
+      // Local plan remains usable if persistent storage is temporarily unavailable.
+    }
+
+    window.location.href = "/dashboard";
   }
 
   async function copyId() {
@@ -169,7 +188,7 @@ export default function Home() {
             {eta && status.status !== "ready" && <div className="notice"><strong>Research target:</strong> {eta}</div>}
             {status.readyAt && <div className="notice"><strong>Ready:</strong> {new Date(status.readyAt).toLocaleString()}</div>}
             {status.status === "ready" && status.plan ? (
-              <button className="btn" onClick={()=>startGoal(status.plan)}>Start 30-Day Goal →</button>
+              <button className="btn" onClick={()=>void startGoal(status.plan)}>Start 30-Day Goal →</button>
             ) : (
               <div className="empty">Your 30-day timetable will appear here when the research is completed.</div>
             )}

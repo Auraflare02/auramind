@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getGeminiClient, getGeminiModel } from "../../../../lib/gemini";
+import { generateGeminiJson, getGeminiClient } from "../../../../lib/ai";
+import { validateSchedule } from "../../../../lib/validation";
 import { requireAdminKey, getServerDb, dbUnavailableMessage } from "../../../../lib/server-db";
 
 const schema = {
@@ -188,20 +189,16 @@ export async function PATCH(request: Request) {
         })
       ].join("\n\n");
 
-      const response = await gemini.models.generateContent({
-        model: ["gemini-3.8-flash", "gemini-3.7-flash"].includes(getGeminiModel())
-          ? getGeminiModel()
-          : "gemini-3.8-flash",
+      const plan = await generateGeminiJson<Record<string, any>>({
         contents: prompt,
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: schema
-        }
+        responseSchema: schema,
+        thinkingLevel: "high",
+        systemInstruction: "You are AuraMind's strict schedule architect. The human research is authoritative context. Return only valid JSON and never invent evidence."
       });
 
-      if (!response.text) throw new Error("Gemini returned an empty 30-day plan.");
-
-      const plan = JSON.parse(response.text);
+      if (!validateSchedule(plan.schedule, 30)) {
+        return NextResponse.json({ error: "Gemini returned an invalid 30-day timetable. Retry generation." }, { status: 502 });
+      }
       plan.goalContext = {
         goal: existing.data.goal,
         deadline: existing.data.deadline,

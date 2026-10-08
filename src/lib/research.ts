@@ -77,3 +77,70 @@ export async function researchGoal(goal: string, currentLevel: string, targetLev
           : "Live research was unavailable; AuraMind will continue with Gemini/Core reasoning."
   };
 }
+
+
+export type QuestionResearchResult = {
+  available: boolean;
+  searches: ResearchResult[];
+  note: string;
+};
+
+export async function researchQuestion(question: string): Promise<QuestionResearchResult> {
+  const key = process.env.TAVILY_API_KEY;
+  if (!key) {
+    return {
+      available: false,
+      searches: [],
+      note: "No live web-search provider is configured."
+    };
+  }
+
+  const queries = [
+    question,
+    question + " official source"
+  ];
+
+  const settled = await Promise.allSettled(
+    queries.map(async (query) => {
+      const response = await fetch("https://api.tavily.com/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          api_key: key,
+          query,
+          search_depth: "basic",
+          max_results: 5,
+          include_answer: false
+        }),
+        cache: "no-store",
+        signal: AbortSignal.timeout(8000)
+      });
+
+      if (!response.ok) throw new Error(`Research provider returned ${response.status}`);
+
+      const data = await response.json();
+      return {
+        query,
+        results: Array.isArray(data?.results)
+          ? data.results.map((item: SearchResult) => ({
+              title: clean(item.title, 180),
+              url: clean(item.url, 500),
+              content: clean(item.content)
+            }))
+          : []
+      } satisfies ResearchResult;
+    })
+  );
+
+  const searches = settled
+    .filter((item): item is PromiseFulfilledResult<ResearchResult> => item.status === "fulfilled")
+    .map((item) => item.value);
+
+  return {
+    available: searches.length > 0,
+    searches,
+    note: searches.length
+      ? "Live web research was retrieved for this question."
+      : "Live web research was unavailable."
+  };
+}

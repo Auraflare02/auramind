@@ -28,8 +28,23 @@ export type ResearchSource = {
   url: string;
 };
 
+export type GoalContext = {
+  goal: string;
+  deadline: string;
+  currentLevel: string;
+  targetLevel: string;
+  fixedSchedule: string;
+  dailyHours: number;
+  timezone: string;
+  preferredFocusTime?: string;
+  knownDistractions?: string;
+  pastAttempts?: string;
+  constraints?: string;
+};
+
 export type AuraPlan = {
   engine?: "gemini" | "ai" | "core" | "openai" | "demo";
+  goalContext?: GoalContext;
   research?: ResearchBrief;
   researchSources?: ResearchSource[];
   milestones?: { title: string; outcome: string; timing: string }[];
