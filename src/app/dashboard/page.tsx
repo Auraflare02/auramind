@@ -75,6 +75,25 @@ function newRow(plan: AuraPlan | null, date: string, hour: number): HourLog {
   };
 }
 
+function fromServerLog(row: any): HourLog {
+  return {
+    id: String(row.id ?? (String(row.logged_for) + "-" + String(row.hour_start))),
+    date: String(row.logged_for),
+    hourStart: String(row.hour_start),
+    hourEnd: String(row.hour_end),
+    plannedActivity: String(row.planned_activity ?? ""),
+    actualActivity: String(row.actual_activity ?? ""),
+    outcome: ["completed", "partial", "skipped", "different"].includes(String(row.outcome))
+      ? row.outcome
+      : "different",
+    focusedMinutes: Math.max(0, Math.min(60, Number(row.focused_minutes ?? 0))),
+    distractionMinutes: Math.max(0, Math.min(60, Number(row.distraction_minutes ?? 0))),
+    distractionCategory: String(row.distraction_category ?? ""),
+    distractionReason: String(row.distraction_reason ?? ""),
+    notes: String(row.notes ?? "")
+  };
+}
+
 export default function Dashboard() {
   const [plan, setPlan] = useState<AuraPlan | null>(null);
   const [date, setDate] = useState(localDate());
