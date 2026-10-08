@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getGeminiClient, getGeminiModel } from "../../../../lib/gemini";
+import { generateGeminiJson, getGeminiClient } from "../../../../lib/ai";
 import { makeDemoWeeklyReport } from "../../../../lib/demo-engine";
 
 const schema = {
@@ -102,25 +102,27 @@ export async function POST(request: Request) {
       return NextResponse.json(makeDemoWeeklyReport(anchorDate, allLogs));
     }
 
-    const response = await gemini.models.generateContent({
-      model: getGeminiModel(),
+    const result = await generateGeminiJson<Record<string, any>>({
       contents: [
-        "You are AuraMind's weekly behavioral intelligence coach.",
         "Analyze seven days of self-reported hourly data.",
-        "A pattern requires repetition across multiple days or multiple entries; do not infer a pattern from one miss.",
-        "Distinguish workload, task difficulty, misunderstanding, fatigue, interruptions, boredom, digital distraction, and schedule mismatch.",
-        "Identify useful time windows and concrete changes for the next week.",
-        "Do not shame the user or equate a missed task with laziness.",
+        "A pattern requires repetition across multiple days or entries.",
+        "Distinguish workload, task difficulty, misunderstanding, fatigue, interruptions, boredom, digital distraction and schedule mismatch.",
+        "Identify useful time windows and concrete next-week changes.",
+        "Do not shame the user or equate missed work with laziness.",
         JSON.stringify({ weekStart, weekEnd, logs: weekLogs, calculated })
       ].join("\n\n"),
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: schema
-      }
+      responseSchema: schema,
+      thinkingLevel: "medium",
+      systemInstruction: "You are AuraMind's weekly behavioral intelligence coach. Be evidence-based and conservative about patterns."
     });
 
-    if (!response.text) throw new Error("Gemini returned an empty weekly report.");
-    return NextResponse.json(JSON.parse(response.text));
+    return NextResponse.json({
+      ...result,
+      weekStart,
+      weekEnd,
+      focusedMinutes: calculated.focusedMinutes,
+      distractionMinutes: calculated.distractionMinutes
+    });
   } catch (error: any) {
     console.error("AuraMind weekly report AI error; using Core fallback:", error);
     return NextResponse.json({
