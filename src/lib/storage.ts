@@ -39,11 +39,18 @@ export function saveDailyReport(report: DailyReport) {
   reports.push(report);
   write(DAILY_KEY, reports);
 }
+export function getDailyReportForDate(date: string) {
+  return read<DailyReport[]>(DAILY_KEY, []).find((item) => item.date === date) ?? null;
+}
 
 export function saveWeeklyReport(report: WeeklyReport) {
   const reports = read<WeeklyReport[]>(WEEKLY_KEY, []).filter((item) => item.weekStart !== report.weekStart);
   reports.push(report);
   write(WEEKLY_KEY, reports);
+}
+export function getLatestWeeklyReport() {
+  const reports = read<WeeklyReport[]>(WEEKLY_KEY, []);
+  return reports.at(-1) ?? null;
 }
 
 
