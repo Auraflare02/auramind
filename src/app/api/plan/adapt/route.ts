@@ -74,7 +74,11 @@ export async function POST(request: Request) {
         ],
         weekly_focus: fallback.weekly_focus,
         success_definition: fallback.success_definition,
-        schedule: fallback.schedule,
+        schedule: fallback.schedule.slice(0, 7).map((day: any, index: number) => ({
+          ...day,
+          day: "Day " + (index + 1),
+          date: dateAdd(nextStart, index)
+        })),
         engine: "core"
       });
     }
