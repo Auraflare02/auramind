@@ -55,7 +55,7 @@ export async function generateGeminiJson<T>({
         config: {
           responseMimeType: "application/json",
           responseSchema,
-          thinkingConfig: { thinkingLevel },
+          thinkingConfig: { thinkingLevel: thinkingLevel as any },
           ...(systemInstruction ? { systemInstruction } : {})
         }
       });
