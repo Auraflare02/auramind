@@ -7,6 +7,7 @@ const WEEKLY_KEY = "auramind:weekly-reports";
 const ACTIVE_KEY = "auramind:active-goal";
 const XP_KEY = "auramind:xp";
 const XP_EVENTS_KEY = "auramind:xp-events";
+const SESSION_KEY = "auramind:session-token";
 
 function read<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -57,4 +58,10 @@ export function awardXpOnce(eventId: string, points: number) {
   events.push(eventId);
   write(XP_EVENTS_KEY, events);
   return { awarded: true, total: addXp(points) };
+}
+
+export function getSessionToken() { return read<string>(SESSION_KEY, ""); }
+export function saveSessionToken(token: string) { write(SESSION_KEY, token); }
+export function clearSessionToken() {
+  if (typeof window !== "undefined") window.localStorage.removeItem(SESSION_KEY);
 }
