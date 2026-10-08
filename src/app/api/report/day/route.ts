@@ -77,7 +77,7 @@ export async function POST(request: Request) {
       return NextResponse.json(makeDemoDailyReport(date, logs));
     }
 
-    const result = await generateGeminiJson<DailyReport>({
+    const result = await generateGeminiJson<Record<string, any>>({
       contents: [
         "Analyze the supplied plan and self-reported hourly logs for one day.",
         "Distinguish task difficulty, misunderstanding, fatigue, interruption, boredom, digital distraction and planning mismatch.",
