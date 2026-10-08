@@ -1,7 +1,22 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { awardXpOnce, getLogs, getLogsForDate, getPlan, getXp, isGoalActive, saveDailyReport, saveLog, saveWeeklyReport } from "../../lib/storage";
+import {
+  awardXpOnce,
+  getLogs,
+  getLogsForDate,
+  getPlan,
+  getXp,
+  getDailyReportForDate,
+  getLatestWeeklyReport,
+  getSessionToken,
+  isGoalActive,
+  saveDailyReport,
+  saveLog,
+  savePlan,
+  saveSessionToken,
+  saveWeeklyReport
+} from "../../lib/storage";
 import { calculateXp } from "../../lib/xp";
 import type { AuraPlan, DailyReport, HourLog, WeeklyReport, AdaptivePlan } from "../../lib/types";
 
