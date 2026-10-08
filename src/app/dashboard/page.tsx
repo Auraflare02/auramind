@@ -426,6 +426,54 @@ export default function Dashboard() {
         </div>
       </section>
 
+      <section className="card assistantCard">
+        <div className="sectionHead">
+          <div>
+            <div className="kicker">Ask AuraMind</div>
+            <h2>Your goal-aware AI assistant</h2>
+            <p className="muted">Ask about your plan, a difficult task, rescheduling, today's progress, or any question related to your goal.</p>
+          </div>
+          <span className="assistantStatus">{assistantBusy ? "Thinking…" : "Ready"}</span>
+        </div>
+        <div className="assistantComposer">
+          <textarea
+            value={assistantQuestion}
+            onChange={(e) => setAssistantQuestion(e.target.value)}
+            onKeyDown={(e) => {
+              if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                e.preventDefault();
+                void askAuraMind();
+              }
+            }}
+            placeholder="Example: I keep getting stuck on this topic after 30 minutes. What should I change?"
+            maxLength={2000}
+          />
+          <button className="btn" onClick={() => void askAuraMind()} disabled={assistantBusy || !assistantQuestion.trim()}>
+            {assistantBusy ? "Thinking…" : "Ask AuraMind →"}
+          </button>
+        </div>
+        <div className="assistantChips">
+          {["Why am I losing focus?", "Make tomorrow easier", "Explain today's task", "How should I catch up?"].map((item) => (
+            <button key={item} className="navLink" onClick={() => setAssistantQuestion(item)}>{item}</button>
+          ))}
+        </div>
+        {assistantReply && (
+          <div className="assistantReply">
+            <div className="replyMeta">
+              <span>{assistantReply.intent || "AuraMind"}</span>
+              <span>{assistantReply.confidence || "reasoned"}</span>
+            </div>
+            <p>{assistantReply.answer}</p>
+            {Array.isArray(assistantReply.actions) && assistantReply.actions.length > 0 && (
+              <div className="assistantActions">
+                {assistantReply.actions.map((action: string, index: number) => <div key={index}>→ {action}</div>)}
+              </div>
+            )}
+            {assistantReply.caveat && <div className="notice">{assistantReply.caveat}</div>}
+          </div>
+        )}
+      </section>
+
       <section className="card" style={{ marginTop: 18 }}>
         <div className="sectionHead">
           <div><h2>Hour-by-hour check-in</h2><p className="muted">Tell AuraMind what really happened. This is self-reported tracking; the app does not secretly monitor your device.</p></div>
