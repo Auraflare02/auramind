@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getGeminiClient, getGeminiModel } from "../../../lib/gemini";
+import { generateGeminiJson, getGeminiClient } from "../../../lib/ai";
 import { calculateXp } from "../../../lib/xp";
 
 const schema = {
@@ -90,33 +90,33 @@ export async function POST(request: Request) {
       });
     }
 
-    const response = await gemini.models.generateContent({
-      model: getGeminiModel(),
+    const result = await generateGeminiJson<{
+      responseType: "continue" | "recover" | "reschedule";
+      diagnosis: string;
+      immediateSolution: string;
+      nextAction: string;
+      coachMessage: string;
+    }>({
       contents: [
-        "You are AuraMind's real-time hourly accountability coach.",
         "A user just checked in after one planned hour.",
         "Respond to what actually happened, not what should have happened.",
         "Do not shame the user or call them lazy.",
-        "If there was a distraction, diagnose the likely mechanism and give one realistic environmental or task-design change.",
-        "If the task was too difficult or unclear, change the task shape before blaming motivation.",
-        "If fatigue is present, reduce cognitive load and consider rescheduling harder work.",
+        "When the task is difficult or unclear, change the task shape before blaming motivation.",
+        "When fatigue is present, reduce cognitive load and move harder work when appropriate.",
         "Use recent logs only as context; one hour is not enough to declare a long-term pattern.",
-        "The response should feel like a human coach speaking after this exact hour.",
         JSON.stringify({ plan, log, recentLogs })
       ].join("\n\n"),
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: schema
-      }
+      responseSchema: schema,
+      thinkingLevel: "low",
+      systemInstruction: "You are AuraMind's real-time accountability coach. Be precise, practical, humane and concise."
     });
 
-    if (!response.text) throw new Error("Gemini returned an empty check-in response.");
-
     return NextResponse.json({
-      ...JSON.parse(response.text),
+      ...result,
       xp: calculateXp(log).earned,
       engine: "gemini"
     });
+
   } catch (error: any) {
     console.error("AuraMind check-in AI error; using Core fallback:", error);
     return NextResponse.json({
