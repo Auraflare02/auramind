@@ -537,6 +537,7 @@ export default function Dashboard() {
             <div className="empty">Run the weekly report first. Then AuraMind can rebuild the following week using evidence.</div>
           )}
         </section>
+      )}
 
       {promptRow && (
         <div className="modalBackdrop">
