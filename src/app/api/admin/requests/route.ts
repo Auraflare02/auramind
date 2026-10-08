@@ -199,7 +199,6 @@ export async function PATCH(request: Request) {
       if (!validateSchedule(plan.schedule, 30)) {
         return NextResponse.json({ error: "Gemini returned an invalid 30-day timetable. Retry generation." }, { status: 502 });
       }
-      const plan = JSON.parse(response.text);
       plan.goalContext = {
         goal: existing.data.goal,
         deadline: existing.data.deadline,
