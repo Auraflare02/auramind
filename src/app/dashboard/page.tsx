@@ -106,12 +106,70 @@ export default function Dashboard() {
   const [xp, setXp] = useState(0);
   const [active, setActive] = useState(false);
   const [promptRow, setPromptRow] = useState<HourLog | null>(null);
+  const [assistantQuestion, setAssistantQuestion] = useState("");
+  const [assistantReply, setAssistantReply] = useState<any>(null);
+  const [assistantBusy, setAssistantBusy] = useState(false);
+  const [sessionToken, setSessionToken] = useState("");
 
   useEffect(() => {
-    setPlan(getPlan());
-    setLogs(getLogsForDate(date));
+    const localPlan = getPlan();
+    const localLogs = getLogsForDate(date);
+    setPlan(localPlan);
+    setLogs(localLogs);
     setXp(getXp());
     setActive(isGoalActive());
+    setDaily(getDailyReportForDate(date));
+    setWeekly(getLatestWeeklyReport());
+    setSessionToken(getSessionToken());
+
+    const token = getSessionToken();
+    if (!token) return;
+
+    let cancelled = false;
+
+    fetch("/api/session", {
+      headers: { "x-session-token": token },
+      cache: "no-store"
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Session unavailable");
+        return res.json();
+      })
+      .then((data) => {
+        if (cancelled) return;
+        if (data.plan) {
+          savePlan(data.plan);
+          setPlan(data.plan);
+        }
+        if (Array.isArray(data.logs)) {
+          const mapped = data.logs.map(fromServerLog);
+          const dayLogs = mapped.filter((item: HourLog) => item.date === date);
+          setLogs(dayLogs);
+        }
+        if (Array.isArray(data.reports)) {
+          const dailyReport = [...data.reports]
+            .filter((item) => item.report_type === "daily" && item.report_key === date)
+            .at(-1);
+          if (dailyReport?.payload) {
+            saveDailyReport(dailyReport.payload);
+            setDaily(dailyReport.payload);
+          }
+          const weeklyReports = [...data.reports].filter((item) => item.report_type === "weekly");
+          const weeklyReport = weeklyReports.at(-1);
+          if (weeklyReport?.payload) {
+            saveWeeklyReport(weeklyReport.payload);
+            setWeekly(weeklyReport.payload);
+          }
+          const adaptiveReports = [...data.reports].filter((item) => item.report_type === "adaptive");
+          const adaptiveReport = adaptiveReports.at(-1);
+          if (adaptiveReport?.payload) setAdaptive(adaptiveReport.payload);
+        }
+      })
+      .catch(() => {
+        // Local storage remains the offline fallback.
+      });
+
+    return () => { cancelled = true; };
   }, [date]);
 
   useEffect(() => {
