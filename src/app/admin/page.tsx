@@ -116,7 +116,7 @@ export default function Admin() {
           <button className="btn" onClick={()=>update("start")} disabled={busy}>Start research</button>
           <button className="btn" onClick={()=>update("save-research")} disabled={busy}>Save research</button>
           <button className="btn" onClick={()=>update("generate-plan")} disabled={busy}>Generate 30-day timetable</button>
-            <button className="btn" onClick={()=>update("release")} disabled={busy || selected.status !== "review"}>Release to user</button>
+            <button className="btn" onClick={()=>update("release")} disabled={busy || !selected.plan || selected.status === "ready" || selected.status === "archived"} title={!selected.plan ? "Generate the 30-day timetable before releasing." : undefined}>Release to user</button>
         </div>
 
         {selected.plan&&<div className="notice"><strong>Timetable already saved:</strong> {selected.plan.schedule?.length||0} days.</div>}
