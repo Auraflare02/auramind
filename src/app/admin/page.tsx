@@ -53,7 +53,13 @@ export default function Admin() {
       });
       const data=await res.json();
       if(!res.ok) throw new Error(data.error||"Action failed.");
-      setMessage(action==="generate-plan"?"30-day timetable generated. Review it, then release it to the user.":action==="release"?"Request released to the user.":"Saved.");
+      if (action === "generate-plan") {
+        setMessage(data.engine === "demo-fallback"
+          ? "A 30-day starter timetable was created using fallback mode because Gemini was unavailable. Review it carefully before releasing."
+          : "30-day timetable generated. Review it, then release it to the user.");
+      } else {
+        setMessage(action === "release" ? "Request released to the user." : "Saved.");
+      }
       if (action === "generate-plan") setSelected(prev => prev ? { ...prev, status: "review", plan: data.plan || prev.plan } : prev);
       if (action === "release") setSelected(prev => prev ? { ...prev, status: "ready" } : prev);
       await load();
