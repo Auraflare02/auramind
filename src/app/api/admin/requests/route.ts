@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { generateGeminiJson, getGeminiClient } from "../../../../lib/ai";
 import { validateSchedule } from "../../../../lib/validation";
+import { makeDemoPlan } from "../../../../lib/demo-engine";
 import { requireAdminKey, getServerDb, dbUnavailableMessage } from "../../../../lib/server-db";
 
 const schema = {
@@ -172,9 +173,11 @@ export async function PATCH(request: Request) {
 
     if (action === "generate-plan") {
       const gemini = getGeminiClient();
-      if (!gemini) return NextResponse.json({ error: "GEMINI_API_KEY is not configured." }, { status: 503 });
+      const r = (existing.data.research ?? {}) as Record<string, unknown>;
+      let plan: Record<string, any> | null = null;
+      let engine: "gemini" | "demo-fallback" = "gemini";
+      let fallbackReason = "";
 
-      const r = existing.data.research ?? {};
       const prompt = [
         "You are AuraMind's schedule architect.",
         "A human researcher has prepared research for this goal. Treat the research as the primary evidence.",
@@ -201,16 +204,69 @@ export async function PATCH(request: Request) {
         })
       ].join("\n\n");
 
-      const plan = await generateGeminiJson<Record<string, any>>({
-        contents: prompt,
-        responseSchema: schema,
-        thinkingLevel: "high",
-        systemInstruction: "You are AuraMind's strict schedule architect. The human research is authoritative context. Return only valid JSON and never invent evidence."
-      });
+      if (gemini) {
+        try {
+          const generated = await generateGeminiJson<Record<string, any>>({
+            contents: prompt,
+            responseSchema: schema,
+            thinkingLevel: "high",
+            systemInstruction: "You are AuraMind's strict schedule architect. The human research is authoritative context. Return only valid JSON and never invent evidence."
+          });
+
+          if (!validateSchedule(generated.schedule, 30)) {
+            throw new Error("Gemini returned an invalid 30-day timetable.");
+          }
+          plan = generated;
+        } catch (generationError: any) {
+          fallbackReason = typeof generationError?.message === "string"
+            ? generationError.message
+            : "Gemini timetable generation failed.";
+          console.error("AuraMind admin timetable generation error:", generationError);
+        }
+      } else {
+        fallbackReason = "GEMINI_API_KEY is not configured.";
+      }
+
+      // Never leave the request stuck simply because the AI provider is unavailable.
+      // Generate a clearly labelled rule-based 30-day starter timetable as a fallback.
+      if (!plan) {
+        engine = "demo-fallback";
+        const fallback = makeDemoPlan({
+          goal: existing.data.goal,
+          deadline: existing.data.deadline,
+          currentLevel: existing.data.current_level,
+          targetLevel: existing.data.target_level,
+          fixedSchedule: existing.data.fixed_schedule || "",
+          dailyHours: Number(existing.data.daily_hours) || 3,
+          timezone: existing.data.timezone || "Asia/Kolkata"
+        });
+
+        plan = {
+          ...fallback,
+          engine,
+          fallbackReason,
+          milestones: [
+            { title: "Foundation", outcome: "Establish and assess essential prerequisites.", timing: "Days 1–7" },
+            { title: "Deliberate practice", outcome: "Practise core skills and record recurring errors.", timing: "Days 8–14" },
+            { title: "Application and repair", outcome: "Apply skills to practical tasks and repair weak areas.", timing: "Days 15–23" },
+            { title: "Consolidation", outcome: "Review evidence and complete a final checkpoint.", timing: "Days 24–30" }
+          ],
+          research: {
+            research_summary: String(r.research_summary ?? "No saved research summary was provided. This is a rule-based starter timetable, not a research-verified plan."),
+            requirements: Array.isArray(r.requirements) ? r.requirements : [],
+            prerequisites: Array.isArray(r.prerequisites) ? r.prerequisites : [],
+            common_bottlenecks: Array.isArray(r.common_bottlenecks) ? r.common_bottlenecks : [],
+            strategy: Array.isArray(r.strategy) ? r.strategy : []
+          }
+        };
+      }
 
       if (!validateSchedule(plan.schedule, 30)) {
-        return NextResponse.json({ error: "Gemini returned an invalid 30-day timetable. Retry generation." }, { status: 502 });
+        return NextResponse.json({ error: "AuraMind could not produce a valid 30-day timetable. Please retry." }, { status: 502 });
       }
+
+      plan.engine = engine;
+      if (fallbackReason) plan.fallbackReason = fallbackReason;
       plan.goalContext = {
         goal: existing.data.goal,
         deadline: existing.data.deadline,
@@ -224,6 +280,7 @@ export async function PATCH(request: Request) {
         pastAttempts: existing.data.past_attempts,
         constraints: existing.data.constraints
       };
+
       const { error } = await db.from("goal_requests").update({
         plan,
         status: "review",
@@ -235,9 +292,8 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ error: "Plan was generated but could not be saved." }, { status: 500 });
       }
 
-      return NextResponse.json({ ok: true, status: "review", plan });
+      return NextResponse.json({ ok: true, status: "review", plan, engine, ...(fallbackReason ? { fallbackReason } : {}) });
     }
-
     return NextResponse.json({ error: "Unknown admin action." }, { status: 400 });
   } catch (error: any) {
     console.error("AuraMind admin update error:", error);
