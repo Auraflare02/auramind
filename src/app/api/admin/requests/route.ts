@@ -150,12 +150,24 @@ export async function PATCH(request: Request) {
 
     if (action === "release") {
       if (!existing.data.plan) return NextResponse.json({ error: "Generate and review the plan before releasing it." }, { status: 400 });
-      const { error } = await db.from("goal_requests").update({
-        status: "ready",
-        ready_at: new Date().toISOString()
-      }).eq("request_code", requestId);
-      if (error) return NextResponse.json({ error: "Could not release the plan." }, { status: 500 });
-      return NextResponse.json({ ok: true, status: "ready" });
+      const { data: released, error } = await db
+        .from("goal_requests")
+        .update({
+          status: "ready",
+          ready_at: new Date().toISOString()
+        })
+        .eq("request_code", requestId)
+        .select("request_code,status,ready_at")
+        .maybeSingle();
+
+      if (error) {
+        console.error("AuraMind release error:", error);
+        return NextResponse.json({ error: "Could not release the plan. Check the server logs for the database error." }, { status: 500 });
+      }
+      if (!released) {
+        return NextResponse.json({ error: "The request was found but its status was not updated. Check Supabase permissions and the request ID." }, { status: 500 });
+      }
+      return NextResponse.json({ ok: true, status: released.status, readyAt: released.ready_at });
     }
 
     if (action === "generate-plan") {
