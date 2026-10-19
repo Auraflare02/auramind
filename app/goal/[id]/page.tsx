@@ -59,6 +59,8 @@ export default function GoalHub() {
   const [timerTask, setTimerTask] = useState("");
   const [completedSessionsCount, setCompletedSessionsCount] = useState(0);
   const [timerAlert, setTimerAlert] = useState("");
+  const [fullscreenFocus, setFullscreenFocus] = useState(false);
+  const [taskCategoryFilter, setTaskCategoryFilter] = useState("all");
   const timerExpectedEndRef = useRef<number | null>(null);
 
   // Check-in State
@@ -259,6 +261,31 @@ export default function GoalHub() {
     persistTimerState("idle", defaultSec, null);
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLSelectElement
+      ) {
+        return;
+      }
+      if (e.code === "Space" && activeTab === "timer") {
+        e.preventDefault();
+        if (timerStatus === "running") pauseTimer();
+        else startTimer();
+      } else if (e.key.toLowerCase() === "r" && activeTab === "timer") {
+        resetTimer();
+      } else if (e.key.toLowerCase() === "f" && activeTab === "timer") {
+        setFullscreenFocus((prev) => !prev);
+      } else if (e.key === "Escape" && fullscreenFocus) {
+        setFullscreenFocus(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeTab, timerStatus, timerRemainingSec, timerDurationMin, fullscreenFocus]);
+
   const selectTimerPreset = (minutes: number, mode: "focus" | "break" = "focus") => {
     timerExpectedEndRef.current = null;
     setTimerDurationMin(minutes);
@@ -270,7 +297,56 @@ export default function GoalHub() {
     persistTimerState("idle", sec, null);
   };
 
+  const playTimerChime = () => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.6);
+    } catch {
+      // Audio autoplay restrictions
+    }
+  };
+
+  const exportTimetableMarkdown = (goal: string, plan: any) => {
+    if (!plan?.days) return;
+    let md = `# AuraMind 30-Day Plan: ${goal}\n\n`;
+    md += `## Goal Summary\n${plan.goal_summary}\n\n`;
+    md += `## Definition of Success\n${plan.definition_of_success}\n\n`;
+    md += `## 4-Week Milestones\n`;
+    plan.weekly_focus?.forEach((w: any) => {
+      md += `- **Week ${w.week}: ${w.title}**: ${w.focus} (Expected: ${w.expected_outcome})\n`;
+    });
+    md += `\n---\n\n## 30-Day Schedule\n\n`;
+    plan.days.forEach((d: any) => {
+      md += `### ${d.day_label || `Day ${d.day}`} (${d.calendar_date}) — ${d.phase}\n`;
+      d.blocks.forEach((b: any) => {
+        md += `- **${b.start} - ${b.end}** [${b.category.toUpperCase()}] (${b.priority} priority): ${b.activity}\n  *Reason: ${b.reason}*\n`;
+      });
+      md += `\n`;
+    });
+
+    const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `AuraMind-Plan-${goal.slice(0, 20).replace(/[^a-zA-Z0-9]/g, "-")}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleTimerComplete = async () => {
+    playTimerChime();
     setTimerStatus("completed");
     timerExpectedEndRef.current = null;
 
@@ -810,22 +886,53 @@ export default function GoalHub() {
                 </h2>
               </div>
 
-              <button
-                type="button"
-                className="btn btn-outline-yellow btn-sm"
-                onClick={() => {
-                  if (activeDayPlan?.blocks?.[0]) {
-                    setTimerTask(activeDayPlan.blocks[0].activity);
-                    setActiveTab("timer");
-                  }
-                }}
-              >
-                Start Priority in Focus Timer &rarr;
-              </button>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => exportTimetableMarkdown(goalData.goal, plan)}
+                >
+                  &#x2913; Export Plan (.md)
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline-yellow btn-sm"
+                  onClick={() => {
+                    if (activeDayPlan?.blocks?.[0]) {
+                      setTimerTask(activeDayPlan.blocks[0].activity);
+                      setActiveTab("timer");
+                    }
+                  }}
+                >
+                  Start Priority in Focus Timer &rarr;
+                </button>
+              </div>
+            </div>
+
+            {/* CATEGORY FILTER */}
+            <div style={{ display: "flex", gap: "6px", marginBottom: "16px", flexWrap: "wrap" }}>
+              {["all", "learn", "practice", "review", "repair", "checkpoint"].map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  className={`badge ${taskCategoryFilter === cat ? "badge-yellow" : "badge-gray"}`}
+                  style={{
+                    cursor: "pointer",
+                    border: taskCategoryFilter === cat ? "1px solid var(--yellow-primary)" : "1px solid var(--border-color)",
+                    backgroundColor: taskCategoryFilter === cat ? "var(--yellow-muted)" : "var(--bg-secondary)",
+                    color: taskCategoryFilter === cat ? "var(--yellow-primary)" : "var(--text-secondary)",
+                  }}
+                  onClick={() => setTaskCategoryFilter(cat)}
+                >
+                  {cat.toUpperCase()}
+                </button>
+              ))}
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {activeDayPlan?.blocks?.map((block: any, idx: number) => (
+              {activeDayPlan?.blocks
+                ?.filter((b: any) => (taskCategoryFilter === "all" ? true : b.category === taskCategoryFilter))
+                ?.map((block: any, idx: number) => (
                 <div
                   key={idx}
                   className={`task-block ${
@@ -907,11 +1014,19 @@ export default function GoalHub() {
       {activeTab === "timer" && (
         <div className="container-narrow">
           <div className="card card-highlight" style={{ textAlign: "center", padding: "36px 20px" }}>
-            <div className="flex-between" style={{ justifyContent: "center", gap: "8px", marginBottom: "16px" }}>
+            <div className="flex-between" style={{ justifyContent: "center", gap: "8px", marginBottom: "16px", flexWrap: "wrap" }}>
               <span className={`badge ${timerMode === "focus" ? "badge-yellow" : "badge-gray"}`}>
                 {timerMode === "focus" ? "Deep Focus Session" : "Restorative Break"}
               </span>
               <span className="badge badge-gray">{completedSessionsCount} Completed Today</span>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                style={{ fontSize: "0.75rem", padding: "4px 10px", minHeight: "28px" }}
+                onClick={() => setFullscreenFocus(true)}
+              >
+                &#x26F6; Focus Mode [F]
+              </button>
             </div>
 
             {/* TASK ATTACHMENT */}
@@ -947,7 +1062,7 @@ export default function GoalHub() {
             </div>
 
             {/* CONTROLS */}
-            <div style={{ display: "flex", gap: "12px", justifyContent: "center", marginBottom: "28px" }}>
+            <div style={{ display: "flex", gap: "12px", justifyContent: "center", marginBottom: "16px" }}>
               {timerStatus !== "running" ? (
                 <button
                   type="button"
@@ -972,6 +1087,76 @@ export default function GoalHub() {
                 Reset
               </button>
             </div>
+
+            <div className="text-xs text-muted" style={{ marginBottom: "24px" }}>
+              Shortcuts: <kbd style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--bg-elevated)", border: "1px solid var(--border-color)" }}>Space</kbd> Start/Pause &bull; <kbd style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--bg-elevated)", border: "1px solid var(--border-color)" }}>R</kbd> Reset &bull; <kbd style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--bg-elevated)", border: "1px solid var(--border-color)" }}>F</kbd> Focus Mode
+            </div>
+
+            {fullscreenFocus && (
+              <div
+                style={{
+                  position: "fixed",
+                  top: 0,
+                  left: 0,
+                  width: "100vw",
+                  height: "100vh",
+                  backgroundColor: "#0A0A0A",
+                  zIndex: 9999,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "24px",
+                }}
+              >
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  style={{ position: "absolute", top: "24px", right: "24px" }}
+                  onClick={() => setFullscreenFocus(false)}
+                >
+                  &times; Exit Focus Mode [Esc]
+                </button>
+
+                <span className="badge badge-yellow" style={{ marginBottom: "12px" }}>
+                  {timerMode === "focus" ? "Deep Work Session" : "Break"}
+                </span>
+
+                <h2 style={{ fontSize: "1.8rem", color: "var(--text-primary)", maxWidth: "600px", textAlign: "center", marginBottom: "20px" }}>
+                  {timerTask || "Deliberate Practice"}
+                </h2>
+
+                <div
+                  style={{
+                    fontSize: "8rem",
+                    fontWeight: 900,
+                    fontFamily: "ui-monospace, monospace",
+                    letterSpacing: "-0.04em",
+                    color: timerStatus === "running" ? "var(--yellow-primary)" : "var(--text-primary)",
+                    lineHeight: 1,
+                    marginBottom: "36px",
+                    textShadow: timerStatus === "running" ? "0 0 40px rgba(255, 214, 0, 0.3)" : "none",
+                  }}
+                >
+                  {formatTimer(timerRemainingSec)}
+                </div>
+
+                <div style={{ display: "flex", gap: "16px" }}>
+                  {timerStatus !== "running" ? (
+                    <button type="button" className="btn btn-primary btn-lg" onClick={startTimer} style={{ minWidth: "180px" }}>
+                      {timerStatus === "paused" ? "Resume" : "Start Focus"}
+                    </button>
+                  ) : (
+                    <button type="button" className="btn btn-secondary btn-lg" onClick={pauseTimer} style={{ minWidth: "180px" }}>
+                      Pause
+                    </button>
+                  )}
+                  <button type="button" className="btn btn-secondary btn-lg" onClick={resetTimer}>
+                    Reset
+                  </button>
+                </div>
+              </div>
+            )}
 
             {timerAlert && (
               <div className="alert alert-info" style={{ maxWidth: "480px", margin: "0 auto 24px", textAlign: "left" }}>

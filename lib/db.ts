@@ -52,8 +52,8 @@ export function ok<T>(r: DbResult<T>): T {
 
     if (code === "42501") {
       msg = `Database permission error (42501). Row-level security prevented this operation. Ensure SUPABASE_SERVICE_ROLE_KEY is the secret service_role key, and that schema migrations have granted permissions to service_role. Details: ${r.error.details || r.error.message}`;
-    } else if (code === "42P01") {
-      msg = `Database table missing (42P01). The required table does not exist. Please run supabase/schema.sql in your Supabase SQL Editor. Details: ${r.error.details || r.error.message}`;
+    } else if (code === "42P01" || code === "PGRST205") {
+      msg = `Database table missing (${code}). The required table does not exist in your Supabase project. Please copy and run supabase/schema.sql in your Supabase SQL Editor. Details: ${r.error.details || r.error.message}`;
     } else if (code === "23505") {
       msg = `Database unique constraint violation (23505): ${r.error.details || r.error.message}`;
     }
@@ -87,8 +87,8 @@ export async function testDbConnection(): Promise<{ ok: boolean; message: string
     const client = db();
     const { error } = await client.from("requests").select("id").limit(1);
     if (error) {
-      if (error.code === "42P01") {
-        return { ok: false, message: "Connected to Supabase, but 'requests' table does not exist. Run schema.sql." };
+      if (error.code === "42P01" || error.code === "PGRST205") {
+        return { ok: false, message: "Connected to Supabase! The database is online, but tables have not been created yet. Please copy and run supabase/schema.sql in your Supabase SQL Editor." };
       }
       if (error.code === "42501") {
         return { ok: false, message: "Permission denied (42501). Check that SUPABASE_SERVICE_ROLE_KEY has service_role privileges." };
