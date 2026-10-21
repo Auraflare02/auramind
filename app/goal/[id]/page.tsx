@@ -43,6 +43,7 @@ export default function GoalHub() {
   const [errorMsg, setErrorMsg] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isStarting, setIsStarting] = useState(false);
+  const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
 
   // Active Tab
   const [activeTab, setActiveTab] = useState<"plan" | "timer" | "checkin" | "chat" | "reports" | "adaptive" | "xp">("plan");
@@ -391,6 +392,27 @@ export default function GoalHub() {
     persistTimerState("completed", 0, null);
   };
 
+  // GENERATE PLAN INSTANTLY WITH AI
+  const handleGeneratePlanNow = async () => {
+    if (!goalData?.id || isGeneratingPlan) return;
+    setIsGeneratingPlan(true);
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/requests", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "generate_now", id: goalData.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to synthesize timetable.");
+      await loadGoal();
+    } catch (e: any) {
+      setErrorMsg(e.message || "Failed to synthesize timetable.");
+    } finally {
+      setIsGeneratingPlan(false);
+    }
+  };
+
   // START 30-DAY GOAL ACTION
   const handleStartGoal = async () => {
     if (!goalData?.id) return;
@@ -572,16 +594,8 @@ export default function GoalHub() {
       <div className="container-narrow" style={{ paddingTop: "60px", paddingBottom: "80px" }}>
         <div className="card card-highlight" style={{ textAlign: "center", padding: "40px 24px" }}>
           <div className="flex-center" style={{ gap: "8px", marginBottom: "16px" }}>
-            <span
-              className={`badge ${
-                goalData.status === "review"
-                  ? "badge-yellow"
-                  : goalData.status === "researching"
-                  ? "badge-yellow"
-                  : "badge-gray"
-              }`}
-            >
-              Status: {goalData.status.toUpperCase()}
+            <span className="badge badge-yellow">
+              {isArchived ? "Archived" : "Action Required"}
             </span>
             <span className="font-mono text-xs text-yellow">{goalData.request_code}</span>
           </div>
@@ -593,88 +607,26 @@ export default function GoalHub() {
               <p>This goal request has been archived.</p>
             ) : (
               <div>
-                <p>
-                  Your goal is currently in our learning-science research and timetable synthesis pipeline.
-                  Plans undergo structured pedagogical verification before being released to you.
+                <p style={{ color: "var(--text-secondary)", marginBottom: "24px" }}>
+                  Your goal is registered. Click below to immediately synthesize your full 30-day curriculum with AI.
                 </p>
 
-                {/* Progress Pipeline Visualization */}
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(3, 1fr)",
-                    gap: "8px",
-                    margin: "24px 0",
-                    textAlign: "center",
-                  }}
-                >
-                  <div
-                    style={{
-                      padding: "10px",
-                      borderRadius: "6px",
-                      backgroundColor: "var(--bg-elevated)",
-                      border: "1px solid var(--yellow-primary)",
-                      color: "var(--yellow-primary)",
-                      fontSize: "0.8rem",
-                      fontWeight: 600,
-                    }}
-                  >
-                    1. Queued &#10003;
-                  </div>
-                  <div
-                    style={{
-                      padding: "10px",
-                      borderRadius: "6px",
-                      backgroundColor:
-                        goalData.status === "researching" || goalData.status === "review"
-                          ? "var(--bg-elevated)"
-                          : "var(--bg-secondary)",
-                      border:
-                        goalData.status === "researching" || goalData.status === "review"
-                          ? "1px solid var(--yellow-primary)"
-                          : "1px solid var(--border-color)",
-                      color:
-                        goalData.status === "researching" || goalData.status === "review"
-                          ? "var(--yellow-primary)"
-                          : "var(--text-muted)",
-                      fontSize: "0.8rem",
-                      fontWeight: 600,
-                    }}
-                  >
-                    2. Researching
-                  </div>
-                  <div
-                    style={{
-                      padding: "10px",
-                      borderRadius: "6px",
-                      backgroundColor:
-                        goalData.status === "review" ? "var(--bg-elevated)" : "var(--bg-secondary)",
-                      border:
-                        goalData.status === "review"
-                          ? "1px solid var(--yellow-primary)"
-                          : "1px solid var(--border-color)",
-                      color: goalData.status === "review" ? "var(--yellow-primary)" : "var(--text-muted)",
-                      fontSize: "0.8rem",
-                      fontWeight: 600,
-                    }}
-                  >
-                    3. Final Review
-                  </div>
-                </div>
+                {errorMsg && <div className="alert alert-error" style={{ marginBottom: "16px" }}>{errorMsg}</div>}
 
-                <div className="alert alert-info" style={{ textAlign: "left" }}>
-                  <div>
-                    <strong>Verification Window:</strong> Comprehensive research and 30-day curriculum design can take up to <strong>12 hours</strong>. This page automatically updates every few seconds once your plan is ready.
-                  </div>
-                </div>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-lg"
+                  disabled={isGeneratingPlan}
+                  onClick={handleGeneratePlanNow}
+                  style={{ width: "100%", maxWidth: "380px", margin: "0 auto 16px" }}
+                >
+                  {isGeneratingPlan ? "⚡ Synthesizing 30-Day Plan…" : "⚡ Synthesize 30-Day Plan with AI Now \u2192"}
+                </button>
               </div>
             )}
           </div>
 
           <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-            <button type="button" className="btn btn-secondary btn-sm" onClick={() => loadGoal()}>
-              &#x21bb; Check Now
-            </button>
             <Link href="/" className="btn btn-secondary btn-sm">
               &larr; Back to Home
             </Link>

@@ -1,9 +1,122 @@
 import { db, ok, maybeOk } from "@/lib/db";
 import { J, guard, isUuid, isRequestCode, generateRequestCode } from "@/lib/http";
-import { Ctx } from "@/lib/schemas";
+import { Ctx, Plan, ResearchSchema } from "@/lib/schemas";
+import { researchGoal, generatePlan, isGeminiConfigured } from "@/lib/gemini";
+import { fallbackPlan } from "@/lib/fallback";
+import { searchTavily } from "@/lib/tavily";
+
+export const maxDuration = 60;
+
+/**
+ * Instantly synthesizes comprehensive learning-science research
+ * and an exact 30-day timetable using Gemini AI with robust deterministic fallback.
+ */
+async function synthesizePlan(ctx: Ctx): Promise<{ researchData: any; plan: Plan; planSource: "ai" | "fallback" }> {
+  let researchData: any = null;
+  let externalEvidence = "";
+
+  // 1. External Evidence Search (Tavily if configured)
+  try {
+    const searchResults = await searchTavily(`${ctx.goal} curriculum milestones deliberate practice`);
+    if (searchResults.length) {
+      externalEvidence = searchResults.map((s) => `Title: ${s.title}\nContent: ${s.content}`).join("\n\n");
+    }
+  } catch (err) {
+    console.warn("[requests-api] Tavily search skipped:", err);
+  }
+
+  // 2. Deep Pedagogical Research Breakdown
+  if (isGeminiConfigured()) {
+    try {
+      researchData = await Promise.race([
+        researchGoal(ctx, externalEvidence),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Research timeout")), 12000)),
+      ]);
+    } catch (err) {
+      console.warn("[requests-api] Gemini research error or timeout, using structured fallback:", err);
+    }
+  }
+
+  if (!researchData) {
+    researchData = {
+      summary: `Structured pedagogical roadmap for ${ctx.goal}. Balances foundation acquisition with deliberate practice drills.`,
+      requirements: ["Daily focused practice", "Active retrieval drills", "Milestone checkpoints"],
+      prerequisites: ["Foundational domain awareness"],
+      common_bottlenecks: ["Passive consumption over active exercises", "Fatigue during unstructured hours"],
+      strategy: "30-day phased architecture: Days 1-7 Foundation, 8-15 Deliberate Practice, 16-22 Application, 23-27 Error Repair, 28-30 Consolidation.",
+      sources: ["Cognitive Load Theory", "Spaced Retrieval Practice Standards"],
+    };
+  }
+
+  // 3. 30-Day Phased Curriculum Synthesis
+  let plan: Plan;
+  let planSource: "ai" | "fallback" = "ai";
+
+  if (isGeminiConfigured()) {
+    try {
+      plan = await Promise.race([
+        generatePlan(ctx, researchData.summary),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Plan generation timeout")), 25000)),
+      ]);
+      planSource = "ai";
+    } catch (err) {
+      console.warn("[requests-api] Gemini plan generation failed or timed out, invoking deterministic planner:", err);
+      plan = fallbackPlan(ctx);
+      planSource = "fallback";
+    }
+  } else {
+    plan = fallbackPlan(ctx);
+    planSource = "fallback";
+  }
+
+  return { researchData, plan, planSource };
+}
 
 export const POST = guard(async (req) => {
   const body = await req.json().catch(() => null);
+
+  // Allow generating an existing pending goal on-demand
+  if (body?.action === "generate_now" && body?.id && isUuid(body.id)) {
+    const client = db();
+    const fetchRes = await client.from("requests").select("*").eq("id", body.id).maybeSingle();
+    const existing = maybeOk(fetchRes);
+
+    if (!existing) {
+      return J({ error: "Goal request not found." }, 404);
+    }
+
+    const ctx = Ctx.parse(existing.context);
+    const { researchData, plan, planSource } = await synthesizePlan(ctx);
+    const nowIso = new Date().toISOString();
+
+    const updateRes = await client
+      .from("requests")
+      .update({
+        status: "ready",
+        research: researchData.summary,
+        research_data: researchData,
+        plan,
+        plan_source: planSource,
+        ready_at: nowIso,
+        updated_at: nowIso,
+      })
+      .eq("id", body.id)
+      .select("*")
+      .single();
+
+    const row = ok(updateRes);
+    return J({
+      ok: true,
+      id: row.id,
+      request_code: row.request_code,
+      status: row.status,
+      plan: row.plan,
+      research_data: row.research_data,
+      ready_at: row.ready_at,
+    });
+  }
+
+  // Standard Goal Submission
   const p = Ctx.safeParse(body);
 
   if (!p.success) {
@@ -21,20 +134,31 @@ export const POST = guard(async (req) => {
   }
 
   const requestCode = generateRequestCode();
-  const client = db();
+  const nowIso = new Date().toISOString();
 
+  // Instant AI Synthesis in front of user
+  const { researchData, plan, planSource } = await synthesizePlan(p.data);
+
+  const client = db();
   const insertRes = await client
     .from("requests")
     .insert({
       request_code: requestCode,
-      status: "pending",
+      status: "ready", // IMMEDIATELY ready! No 12-hour wait!
       category,
       current_level,
       target_level,
       timezone,
       context: p.data,
+      research: researchData.summary,
+      research_data: researchData,
+      plan,
+      plan_source: planSource,
+      ready_at: nowIso,
+      created_at: nowIso,
+      updated_at: nowIso,
     })
-    .select("id, request_code, status, created_at")
+    .select("id, request_code, status, plan, research_data, created_at, ready_at")
     .single();
 
   const row = ok(insertRes);
@@ -44,7 +168,10 @@ export const POST = guard(async (req) => {
       id: row.id,
       request_code: row.request_code,
       status: row.status,
+      plan: row.plan,
+      research_data: row.research_data,
       created_at: row.created_at,
+      ready_at: row.ready_at,
     },
     201
   );
@@ -91,7 +218,7 @@ export const GET = guard(async (req) => {
     ready_at: r.ready_at,
     plan_source: r.plan_source,
     research_summary: r.research_data?.summary || r.research,
-    plan: r.status === "ready" ? r.plan : null,
+    plan: r.plan,
     has_plan: Boolean(r.plan),
     has_session: Boolean(r.started_at),
   });

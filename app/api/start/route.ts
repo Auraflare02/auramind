@@ -1,5 +1,7 @@
 import { db, ok, maybeOk } from "@/lib/db";
 import { J, guard, isUuid, generateSessionToken } from "@/lib/http";
+import { Ctx, Plan } from "@/lib/schemas";
+import { fallbackPlan } from "@/lib/fallback";
 
 export const POST = guard(async (req) => {
   const body = await req.json().catch(() => ({}));
@@ -11,10 +13,10 @@ export const POST = guard(async (req) => {
 
   const client = db();
 
-  // 1. Verify request is ready and retrieve status
+  // 1. Verify request and retrieve status
   const rRes = await client
     .from("requests")
-    .select("id, status, plan, started_at, session_token")
+    .select("id, status, plan, started_at, session_token, context")
     .eq("id", id)
     .maybeSingle();
 
@@ -23,18 +25,28 @@ export const POST = guard(async (req) => {
     return J({ error: "Goal request not found." }, 404);
   }
 
-  if (r.status !== "ready") {
-    return J(
-      {
-        error: `Cannot start goal: Request status is '${r.status}'. The timetable must be reviewed and released by an admin first.`,
-      },
-      409
-    );
+  const nowIso = new Date().toISOString();
+
+  // If plan was not generated yet, generate it instantly
+  if (r.status !== "ready" || !r.plan) {
+    const ctx = Ctx.parse(r.context);
+    const plan = fallbackPlan(ctx);
+    await client
+      .from("requests")
+      .update({
+        status: "ready",
+        plan,
+        plan_source: "fallback",
+        ready_at: nowIso,
+        updated_at: nowIso,
+      })
+      .eq("id", id);
+    r.plan = plan;
+    r.status = "ready";
   }
 
   // 2. If already started, reuse existing session (Idempotent)
   if (r.started_at && r.session_token) {
-    // Also ensure auramind_goal_runs record exists
     const runRes = await client
       .from("auramind_goal_runs")
       .select("*")
@@ -60,7 +72,6 @@ export const POST = guard(async (req) => {
   }
 
   // 3. New Goal Run Session initialization
-  const nowIso = new Date().toISOString();
   const sessionToken = generateSessionToken();
 
   // Update requests table

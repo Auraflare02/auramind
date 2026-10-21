@@ -27,10 +27,17 @@ export default function HomePage() {
   // Lookup state
   const [lookupCode, setLookupCode] = useState("");
 
-  // Submission state
+  // Submission state & AI Synthesis state
   const [busy, setBusy] = useState(false);
+  const [generationStep, setGenerationStep] = useState(0);
   const [err, setErr] = useState("");
-  const [createdRequest, setCreatedRequest] = useState<{ id: string; requestCode: string } | null>(null);
+  const [createdRequest, setCreatedRequest] = useState<{
+    id: string;
+    requestCode: string;
+    plan?: any;
+    researchData?: any;
+  } | null>(null);
+  const [isStartingDirectly, setIsStartingDirectly] = useState(false);
 
   // Auto-detect timezone
   useEffect(() => {
@@ -41,6 +48,18 @@ export default function HomePage() {
       // Default to UTC
     }
   }, []);
+
+  // Animate generation steps while busy
+  useEffect(() => {
+    if (!busy) {
+      setGenerationStep(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setGenerationStep((prev) => (prev < 3 ? prev + 1 : prev));
+    }, 1800);
+    return () => clearInterval(interval);
+  }, [busy]);
 
   // Update level defaults when category changes
   const activeCategoryConfig = getCategoryConfig(category);
@@ -60,6 +79,7 @@ export default function HomePage() {
     if (busy) return;
     setBusy(true);
     setErr("");
+    setGenerationStep(0);
 
     try {
       const payload = {
@@ -90,12 +110,14 @@ export default function HomePage() {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Failed to create goal request.");
+        throw new Error(data.error || "Failed to generate goal timetable.");
       }
 
       setCreatedRequest({
         id: data.id,
         requestCode: data.request_code,
+        plan: data.plan,
+        researchData: data.research_data,
       });
     } catch (e: any) {
       setErr(e.message || "An unexpected error occurred. Please check your connection.");
@@ -103,6 +125,32 @@ export default function HomePage() {
       setBusy(false);
     }
   }
+
+  async function launchDay1Now(id: string) {
+    if (isStartingDirectly) return;
+    setIsStartingDirectly(true);
+    try {
+      const res = await fetch("/api/start", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json();
+      if (data.session_token) {
+        localStorage.setItem(`auramind_session_${id}`, data.session_token);
+      }
+      window.location.href = `/goal/${id}`;
+    } catch {
+      window.location.href = `/goal/${id}`;
+    }
+  }
+
+  const GEN_STEPS = [
+    { title: "Analyzing Baseline & Cognitive Window", desc: `Calibrating daily ${hours}h budget during your ${focus} energy window...` },
+    { title: "Conducting Pedagogical Research", desc: "Modeling skill acquisition dynamics and common behavioral failure modes..." },
+    { title: "Synthesizing 30-Day Phased Architecture", desc: "Constructing daily deliberate practice drills and active recall blocks..." },
+    { title: "Finalizing Timetable & Check-In Loops", desc: "Structuring 7-day recovery buffers and diagnostic milestones..." },
+  ];
 
   return (
     <div className="container" style={{ paddingTop: "40px", paddingBottom: "80px" }}>
@@ -124,7 +172,7 @@ export default function HomePage() {
           }}
         >
           <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--yellow-primary)" }} />
-          Learning Science &bull; Behavioral Accountability &bull; Google Gemini
+          Learning Science &bull; Behavioral Accountability &bull; Instant AI Synthesis
         </div>
 
         <h1 style={{ fontSize: "2.8rem", maxWidth: "860px", margin: "0 auto 20px" }}>
@@ -133,12 +181,12 @@ export default function HomePage() {
         </h1>
 
         <p style={{ fontSize: "1.2rem", maxWidth: "700px", margin: "0 auto 32px", color: "var(--text-secondary)" }}>
-          AuraMind is a research-first AI accountability platform. We research your goal, engineer a personalized 30-day timetable, and adapt your schedule based on what actually happens in reality.
+          AuraMind researches your goal, instantly engineers a personalized 30-day timetable in front of you, and adapts your schedule based on what actually happens in reality.
         </p>
 
         <div style={{ display: "flex", justifyContent: "center", gap: "16px", flexWrap: "wrap" }}>
           <a href="#create-goal" className="btn btn-primary btn-lg">
-            Start Your Goal
+            Create Your 30-Day Goal Now &rarr;
           </a>
           <a href="#how-it-works" className="btn btn-secondary btn-lg">
             How It Works
@@ -156,12 +204,12 @@ export default function HomePage() {
         <div className="grid-4">
           <div className="card card-highlight">
             <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--yellow-primary)", marginBottom: "8px" }}>01</div>
-            <h3>Deep Research</h3>
+            <h3>Instant AI Research</h3>
             <p className="text-sm">We analyze prerequisites, skill acquisition stages, and common failure modes for your specific starting level.</p>
           </div>
           <div className="card card-highlight">
             <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--yellow-primary)", marginBottom: "8px" }}>02</div>
-            <h3>Personalized Plan</h3>
+            <h3>Live Timetable Synthesis</h3>
             <p className="text-sm">Gemini generates an exact 30-day curriculum respecting your available hours, peak focus window, and existing commitments.</p>
           </div>
           <div className="card card-highlight">
@@ -182,7 +230,7 @@ export default function HomePage() {
         <div className="card" style={{ backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)" }}>
           <div className="flex-between" style={{ marginBottom: "16px", flexWrap: "wrap" }}>
             <div>
-              <span className="badge badge-yellow" style={{ marginBottom: "8px" }}>Curriculum Preview</span>
+              <span className="badge badge-yellow" style={{ marginBottom: "8px" }}>Curriculum Architecture</span>
               <h3 style={{ margin: 0 }}>Sample 30-Day Phased Architecture</h3>
             </div>
             <span className="text-xs text-muted">Days 1&ndash;7: Foundation &bull; Days 8&ndash;15: Deliberate Practice &bull; Days 16&ndash;22: Application</span>
@@ -208,9 +256,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* GOAL CREATION FORM */}
+      {/* GOAL CREATION & LIVE SYNTHESIS */}
       <section id="create-goal" style={{ marginBottom: "80px" }}>
         <div className="container-narrow">
+          {/* STATE 1: INSTANT TIMETABLE READY */}
           {createdRequest ? (
             <div className="card card-highlight" style={{ textAlign: "center", padding: "40px 24px" }}>
               <div
@@ -225,63 +274,202 @@ export default function HomePage() {
                   justifyContent: "center",
                   fontSize: "24px",
                   color: "var(--yellow-primary)",
-                  margin: "0 auto 20px",
+                  margin: "0 auto 16px",
                 }}
               >
                 &#10003;
               </div>
 
-              <h2 style={{ fontSize: "1.8rem", marginBottom: "12px" }}>Goal Request Submitted!</h2>
-              <p style={{ maxWidth: "540px", margin: "0 auto 24px" }}>
-                Your goal has been successfully queued for expert learning-science research and timetable synthesis.
+              <span className="badge badge-yellow" style={{ marginBottom: "10px" }}>AI Synthesis Complete</span>
+              <h2 style={{ fontSize: "2rem", marginBottom: "8px" }}>Your 30-Day Timetable is Ready!</h2>
+              <p style={{ maxWidth: "560px", margin: "0 auto 20px", color: "var(--text-secondary)" }}>
+                Our AI has researched your learning path, resolved common bottlenecks, and engineered an exact day-by-day plan tailored to your available hours.
               </p>
 
+              {/* Unique Request Code Pill */}
               <div
                 style={{
                   backgroundColor: "var(--bg-elevated)",
                   border: "1px solid var(--yellow-border)",
                   borderRadius: "var(--radius-md)",
-                  padding: "18px",
+                  padding: "12px 24px",
                   marginBottom: "24px",
                   display: "inline-block",
                 }}
               >
-                <div className="text-xs text-muted" style={{ textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>
-                  Your Unique Request Code
+                <div className="text-xs text-muted" style={{ textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>
+                  Your Unique Access Code
                 </div>
-                <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--yellow-primary)", fontFamily: "monospace" }}>
+                <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--yellow-primary)", fontFamily: "monospace" }}>
                   {createdRequest.requestCode}
                 </div>
               </div>
 
-              <div className="alert alert-info" style={{ textAlign: "left", maxWidth: "560px", margin: "0 auto 24px" }}>
-                <div>
-                  <strong>Important Notice:</strong> Our structured research and curriculum verification process can take up to <strong>12 hours</strong>. Please save your Request Code or bookmark your goal page.
-                </div>
-              </div>
+              {/* Plan Overview Preview */}
+              {createdRequest.plan && (
+                <div
+                  style={{
+                    backgroundColor: "var(--bg-secondary)",
+                    border: "1px solid var(--border-color)",
+                    borderRadius: "8px",
+                    padding: "20px",
+                    textAlign: "left",
+                    marginBottom: "24px",
+                  }}
+                >
+                  <div style={{ color: "var(--yellow-primary)", fontWeight: 700, fontSize: "0.95rem", marginBottom: "6px" }}>
+                    Executive Curriculum Roadmap:
+                  </div>
+                  <p style={{ fontSize: "0.9rem", color: "var(--text-primary)", marginBottom: "16px" }}>
+                    {createdRequest.plan.goal_summary}
+                  </p>
 
+                  <div style={{ color: "var(--yellow-primary)", fontWeight: 700, fontSize: "0.95rem", marginBottom: "8px" }}>
+                    4-Week Phased Milestones:
+                  </div>
+                  <div className="grid-2" style={{ gap: "8px" }}>
+                    {createdRequest.plan.weekly_focus?.map((wf: any) => (
+                      <div
+                        key={wf.week}
+                        style={{
+                          backgroundColor: "var(--bg-elevated)",
+                          padding: "10px 12px",
+                          borderRadius: "6px",
+                          border: "1px solid var(--border-color)",
+                        }}
+                      >
+                        <strong style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}>
+                          Week {wf.week}: {wf.title}
+                        </strong>
+                        <div className="text-xs text-muted" style={{ marginTop: "2px" }}>
+                          {wf.expected_outcome}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Primary Call to Action Buttons */}
               <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
-                <Link href={`/goal/${createdRequest.id}`} className="btn btn-primary">
-                  View Goal Status Page &rarr;
+                <button
+                  type="button"
+                  className="btn btn-primary btn-lg"
+                  disabled={isStartingDirectly}
+                  onClick={() => launchDay1Now(createdRequest.id)}
+                  style={{ minWidth: "220px" }}
+                >
+                  {isStartingDirectly ? "Starting Day 1…" : "Start Day 1 Now \u2192"}
+                </button>
+                <Link href={`/goal/${createdRequest.id}`} className="btn btn-secondary btn-lg">
+                  Review 30-Day Plan &rarr;
                 </Link>
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="btn btn-secondary btn-lg"
                   onClick={() => {
                     setCreatedRequest(null);
                     setGoal("");
                   }}
                 >
-                  Submit Another Goal
+                  Create Another Goal
                 </button>
               </div>
             </div>
+          ) : busy ? (
+            /* STATE 2: LIVE AI SYNTHESIS IN PROGRESS */
+            <div className="card card-highlight" style={{ padding: "40px 24px", textAlign: "center" }}>
+              <div
+                style={{
+                  width: "56px",
+                  height: "56px",
+                  borderRadius: "50%",
+                  backgroundColor: "var(--yellow-muted)",
+                  border: "2px solid var(--yellow-primary)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "24px",
+                  color: "var(--yellow-primary)",
+                  margin: "0 auto 20px",
+                  animation: "pulse 1.5s infinite",
+                }}
+              >
+                &#9889;
+              </div>
+
+              <h2 style={{ fontSize: "1.9rem", marginBottom: "8px" }}>Engineering Your 30-Day Timetable</h2>
+              <p style={{ maxWidth: "520px", margin: "0 auto 28px", color: "var(--text-secondary)" }}>
+                AuraMind AI is actively analyzing your starting baseline and architecting your daily deliberate practice curriculum.
+              </p>
+
+              {/* Dynamic Step Progress */}
+              <div style={{ maxWidth: "520px", margin: "0 auto 28px", textAlign: "left" }}>
+                {GEN_STEPS.map((step, idx) => {
+                  const isDone = idx < generationStep;
+                  const isCurrent = idx === generationStep;
+                  return (
+                    <div
+                      key={idx}
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: "12px",
+                        padding: "10px 14px",
+                        borderRadius: "8px",
+                        marginBottom: "8px",
+                        backgroundColor: isCurrent ? "var(--bg-elevated)" : "transparent",
+                        border: isCurrent ? "1px solid var(--yellow-border)" : "1px solid transparent",
+                        transition: "all 0.3s ease",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "24px",
+                          height: "24px",
+                          borderRadius: "50%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "0.8rem",
+                          fontWeight: 700,
+                          backgroundColor: isDone ? "var(--yellow-primary)" : isCurrent ? "var(--yellow-muted)" : "var(--bg-secondary)",
+                          color: isDone ? "#0A0A0A" : isCurrent ? "var(--yellow-primary)" : "var(--text-muted)",
+                          border: isCurrent ? "1px solid var(--yellow-primary)" : "1px solid var(--border-color)",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {isDone ? "\u2713" : idx + 1}
+                      </div>
+                      <div>
+                        <strong
+                          style={{
+                            fontSize: "0.95rem",
+                            color: isCurrent ? "var(--yellow-primary)" : isDone ? "var(--text-primary)" : "var(--text-muted)",
+                          }}
+                        >
+                          {step.title}
+                        </strong>
+                        <div className="text-xs text-secondary" style={{ marginTop: "2px" }}>
+                          {step.desc}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="text-xs text-muted">
+                Synthesizing with Gemini learning-science models... takes only a few seconds.
+              </div>
+            </div>
           ) : (
+            /* STATE 3: GOAL CREATION FORM */
             <div className="card card-highlight">
               <div style={{ marginBottom: "24px", borderBottom: "1px solid var(--border-color)", paddingBottom: "16px" }}>
-                <span className="badge badge-yellow" style={{ marginBottom: "8px" }}>Step 1 of 2</span>
+                <span className="badge badge-yellow" style={{ marginBottom: "8px" }}>Instant AI Planner</span>
                 <h2 style={{ fontSize: "1.8rem", margin: "4px 0" }}>Create Your 30-Day Goal</h2>
-                <p style={{ margin: 0 }}>Provide your authentic constraints. We engineer a plan tailored to your actual life.</p>
+                <p style={{ margin: 0 }}>Provide your authentic constraints. Our AI synthesizes your timetable immediately in front of you.</p>
               </div>
 
               <form onSubmit={submitGoal}>
@@ -547,7 +735,7 @@ export default function HomePage() {
                   className="btn btn-primary"
                   style={{ width: "100%", fontSize: "1.05rem" }}
                 >
-                  {busy ? "Submitting to Research Queue…" : "Submit Goal for Research &amp; 30-Day Plan &rarr;"}
+                  Synthesize My 30-Day Timetable with AI &rarr;
                 </button>
               </form>
             </div>
@@ -559,7 +747,7 @@ export default function HomePage() {
       <section id="lookup" style={{ borderTop: "1px solid var(--border-color)", paddingTop: "50px" }}>
         <div className="container-narrow text-center" style={{ textAlign: "center" }}>
           <h2>Check Existing Goal Request</h2>
-          <p>Already submitted a goal? Enter your Request Code (e.g. AM-A1B2C3D4E5F60718) or Request ID to check status.</p>
+          <p>Already submitted a goal? Enter your Access Code (e.g. AM-A1B2C3D4E5F60718) or Request ID to open your dashboard.</p>
 
           <div style={{ display: "flex", gap: "10px", maxWidth: "480px", margin: "20px auto 0" }}>
             <input
@@ -574,7 +762,7 @@ export default function HomePage() {
               className={`btn btn-secondary ${!lookupCode ? "disabled" : ""}`}
               style={{ whiteSpace: "nowrap" }}
             >
-              Track Status
+              Open Goal
             </Link>
           </div>
         </div>

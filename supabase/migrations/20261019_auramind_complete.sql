@@ -52,7 +52,10 @@ begin
   end if;
 end $$;
 
-create or replace view goal_requests as select * from requests;
+-- Safely handle backward-compatibility alias for goal_requests (drop table or view if pre-existing)
+drop view if exists goal_requests cascade;
+drop table if exists goal_requests cascade;
+create view goal_requests as select * from requests;
 
 create table if not exists checkins (
   id uuid primary key default gen_random_uuid(),
@@ -79,7 +82,11 @@ exception when others then null;
 end $$;
 
 create index if not exists idx_checkins_req_day on checkins(request_id, day);
-create or replace view auramind_run_logs as select * from checkins;
+
+-- Safely handle backward-compatibility alias for auramind_run_logs (drop table or view if pre-existing)
+drop view if exists auramind_run_logs cascade;
+drop table if exists auramind_run_logs cascade;
+create view auramind_run_logs as select * from checkins;
 
 create table if not exists auramind_focus_sessions (
   id uuid primary key default gen_random_uuid(),
