@@ -37,9 +37,18 @@ export const guard = (f: (r: Request) => Promise<Response>) => async (r: Request
       );
     }
 
+    if (m.includes("42P01") || m.includes("PGRST205") || m.includes("table missing") || m.includes("does not exist")) {
+      return J(
+        {
+          error: "Database tables are not set up yet in Supabase! Please run the schema SQL in your Supabase SQL Editor.",
+        },
+        503
+      );
+    }
+
     return J(
       {
-        error: m.length < 150 ? m : "An error occurred while processing your request. Please try again in a moment.",
+        error: m,
       },
       500
     );

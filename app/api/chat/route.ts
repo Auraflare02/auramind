@@ -1,7 +1,7 @@
 import { db, ok, maybeOk } from "@/lib/db";
 import { J, guard, isUuid } from "@/lib/http";
 import { ChatInput, Ctx } from "@/lib/schemas";
-import { chatWithAuraMind } from "@/lib/gemini";
+import { chatWithAuraMind, generateSmartChatFallback } from "@/lib/gemini";
 import { ChatMessageRecord } from "@/lib/types";
 
 export const POST = guard(async (req) => {
@@ -72,7 +72,11 @@ export const POST = guard(async (req) => {
     });
   } catch (err) {
     console.error("[chat] AI generation error:", err);
-    reply = "I experienced a temporary connection hiccup with Gemini. Your goal context is safe. Please ask again in a moment.";
+    reply = generateSmartChatFallback(ctx, message, {
+      currentDay,
+      todayTasks: todayBlocks,
+      recentCheckins,
+    });
   }
 
   // 5. Persist messages in auramind_messages

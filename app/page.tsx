@@ -24,7 +24,15 @@ export default function HomePage() {
   const [constraints, setConstraints] = useState("");
   const [timezone, setTimezone] = useState("UTC");
 
-  // Lookup state
+  // Multi-step onboarding state (Steps 1 to 5)
+  const [formStep, setFormStep] = useState(1);
+
+  // Interactive Product Preview Tab State
+  const [previewTab, setPreviewTab] = useState<"timetable" | "timer" | "checkin" | "ai">("timetable");
+  const [previewTimerSec, setPreviewTimerSec] = useState(25 * 60);
+  const [previewTimerActive, setPreviewTimerActive] = useState(false);
+
+  // Request lookup state
   const [lookupCode, setLookupCode] = useState("");
 
   // Submission state & AI Synthesis state
@@ -38,6 +46,7 @@ export default function HomePage() {
     researchData?: any;
   } | null>(null);
   const [isStartingDirectly, setIsStartingDirectly] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
 
   // Auto-detect timezone
   useEffect(() => {
@@ -48,6 +57,17 @@ export default function HomePage() {
       // Default to UTC
     }
   }, []);
+
+  // Mini timer runner for interactive hero preview
+  useEffect(() => {
+    let interval: any;
+    if (previewTimerActive) {
+      interval = setInterval(() => {
+        setPreviewTimerSec((prev) => (prev > 0 ? prev - 1 : 25 * 60));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [previewTimerActive]);
 
   // Animate generation steps while busy
   useEffect(() => {
@@ -74,8 +94,8 @@ export default function HomePage() {
     setHours(newConfig.defaultFocusHours);
   };
 
-  async function submitGoal(e: React.FormEvent) {
-    e.preventDefault();
+  async function submitGoal(e?: React.FormEvent) {
+    if (e) e.preventDefault();
     if (busy) return;
     setBusy(true);
     setErr("");
@@ -145,203 +165,456 @@ export default function HomePage() {
     }
   }
 
+  const copyCodeToClipboard = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2500);
+  };
+
   const GEN_STEPS = [
-    { title: "Analyzing Baseline & Cognitive Window", desc: `Calibrating daily ${hours}h budget during your ${focus} energy window...` },
-    { title: "Conducting Pedagogical Research", desc: "Modeling skill acquisition dynamics and common behavioral failure modes..." },
-    { title: "Synthesizing 30-Day Phased Architecture", desc: "Constructing daily deliberate practice drills and active recall blocks..." },
-    { title: "Finalizing Timetable & Check-In Loops", desc: "Structuring 7-day recovery buffers and diagnostic milestones..." },
+    { title: "Analyzing Cognitive Baseline", desc: `Calibrating ${hours}h daily budget inside your peak ${focus} window.` },
+    { title: "Mapping Learning Dynamics", desc: "Isolating prerequisite sub-skills and common behavioral friction points." },
+    { title: "Synthesizing 30-Day Phased Architecture", desc: "Sequencing deliberate practice drills, active recall, and recovery buffers." },
+    { title: "Finalizing Verification Loops", desc: "Setting diagnostic milestones and adaptive feedback telemetry." },
   ];
 
+  const formatTimerDigits = (sec: number) => {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  };
+
   return (
-    <div className="container" style={{ paddingTop: "40px", paddingBottom: "80px" }}>
-      {/* HERO SECTION */}
-      <section style={{ textAlign: "center", marginBottom: "70px" }}>
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "6px 14px",
-            borderRadius: "999px",
-            backgroundColor: "var(--yellow-muted)",
-            border: "1px solid var(--yellow-border)",
-            color: "var(--yellow-primary)",
-            fontSize: "0.85rem",
-            fontWeight: 600,
-            marginBottom: "24px",
-          }}
-        >
-          <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--yellow-primary)" }} />
-          Learning Science &bull; Behavioral Accountability &bull; Instant AI Synthesis
-        </div>
+    <div>
+      {/* 1. HERO SECTION */}
+      <section style={{ paddingTop: "72px", paddingBottom: "72px" }}>
+        <div className="container">
+          <div style={{ maxWidth: "820px", marginBottom: "48px" }}>
+            <div
+              className="badge badge-yellow"
+              style={{
+                marginBottom: "20px",
+                padding: "6px 12px",
+                fontSize: "0.8rem",
+              }}
+            >
+              <span className="badge-dot" />
+              <span>Cognitive Architecture &bull; Behavioral Accountability &bull; Instant Synthesis</span>
+            </div>
 
-        <h1 style={{ fontSize: "2.8rem", maxWidth: "860px", margin: "0 auto 20px" }}>
-          Don't plan a perfect day. <br />
-          <span style={{ color: "var(--yellow-primary)" }}>Build a system that learns your real one.</span>
-        </h1>
+            <h1 className="display-title" style={{ marginBottom: "20px" }}>
+              Your goals deserve more than a to-do list.
+            </h1>
 
-        <p style={{ fontSize: "1.2rem", maxWidth: "700px", margin: "0 auto 32px", color: "var(--text-secondary)" }}>
-          AuraMind researches your goal, instantly engineers a personalized 30-day timetable in front of you, and adapts your schedule based on what actually happens in reality.
-        </p>
+            <p className="lead" style={{ maxWidth: "680px", marginBottom: "36px" }}>
+              AuraMind turns your ambitions into personalized action plans, tracks your progress, and adapts when life doesn&rsquo;t go according to plan.
+            </p>
 
-        <div style={{ display: "flex", justifyContent: "center", gap: "16px", flexWrap: "wrap" }}>
-          <a href="#create-goal" className="btn btn-primary btn-lg">
-            Create Your 30-Day Goal Now &rarr;
-          </a>
-          <a href="#how-it-works" className="btn btn-secondary btn-lg">
-            How It Works
-          </a>
+            <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", alignItems: "center" }}>
+              <a href="#create-goal" className="btn btn-primary btn-lg">
+                Start Your Goal &rarr;
+              </a>
+              <a href="#product-preview" className="btn btn-secondary btn-lg">
+                Explore AuraMind
+              </a>
+            </div>
+          </div>
+
+          {/* REAL APPLICATION DEMONSTRATION WORKSPACE */}
+          <div id="product-preview" className="surface-elevated" style={{ padding: "0", overflow: "hidden" }}>
+            {/* Top Workspace Bar */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "14px 20px",
+                borderBottom: "1px solid var(--border-default)",
+                backgroundColor: "var(--bg-secondary)",
+                flexWrap: "wrap",
+                gap: "10px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <span className="badge badge-yellow">Live Preview</span>
+                <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--text-primary)" }}>
+                  Goal: Full-Stack Cloud Architecture &amp; Python Services
+                </span>
+                <span className="text-xs text-muted" style={{ display: "inline-block" }}>
+                  Day 1 of 30 &bull; Foundation Phase
+                </span>
+              </div>
+
+              {/* Workspace Navigation Tabs */}
+              <div className="tabs-nav" style={{ margin: 0 }}>
+                <button
+                  type="button"
+                  className={`tabs-nav-btn ${previewTab === "timetable" ? "active" : ""}`}
+                  onClick={() => setPreviewTab("timetable")}
+                >
+                  Timetable
+                </button>
+                <button
+                  type="button"
+                  className={`tabs-nav-btn ${previewTab === "timer" ? "active" : ""}`}
+                  onClick={() => setPreviewTab("timer")}
+                >
+                  Focus Timer
+                </button>
+                <button
+                  type="button"
+                  className={`tabs-nav-btn ${previewTab === "checkin" ? "active" : ""}`}
+                  onClick={() => setPreviewTab("checkin")}
+                >
+                  Hourly Check-in
+                </button>
+                <button
+                  type="button"
+                  className={`tabs-nav-btn ${previewTab === "ai" ? "active" : ""}`}
+                  onClick={() => setPreviewTab("ai")}
+                >
+                  Ask AuraMind
+                </button>
+              </div>
+            </div>
+
+            {/* Preview Tab Contents */}
+            <div style={{ padding: "24px" }}>
+              {previewTab === "timetable" && (
+                <div>
+                  <div className="flex-between" style={{ marginBottom: "16px" }}>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: "1.05rem" }}>Today&rsquo;s Scheduled Blocks &bull; Day 1</h3>
+                      <p style={{ margin: "2px 0 0", fontSize: "0.825rem" }}>
+                        Hardest deliberate cognitive load scheduled inside your 07:00 &ndash; 11:00 morning focus window.
+                      </p>
+                    </div>
+                    <span className="badge badge-neutral">3 Blocks &bull; 2.5h Total</span>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <div className="task-item active-current priority-high">
+                      <div className="flex-between" style={{ marginBottom: "4px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span className="font-mono text-xs text-yellow font-bold">07:00 &ndash; 07:50</span>
+                          <span className="badge badge-yellow">Learn &bull; High Priority</span>
+                          <span className="badge badge-success" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>In Progress</span>
+                        </div>
+                        <span className="text-xs text-muted">50m duration</span>
+                      </div>
+                      <strong style={{ fontSize: "0.95rem", color: "var(--text-primary)" }}>
+                        Core Runtime Mechanics: Event Loops &amp; Memory Models
+                      </strong>
+                      <div className="text-xs text-secondary" style={{ marginTop: "4px" }}>
+                        Pedagogical goal: Construct mental models of async execution before writing complex distributed code.
+                      </div>
+                    </div>
+
+                    <div className="task-item priority-medium">
+                      <div className="flex-between" style={{ marginBottom: "4px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span className="font-mono text-xs text-secondary font-bold">08:00 &ndash; 08:50</span>
+                          <span className="badge badge-neutral">Practice &bull; Medium Priority</span>
+                        </div>
+                        <span className="text-xs text-muted">50m duration</span>
+                      </div>
+                      <strong style={{ fontSize: "0.95rem", color: "var(--text-primary)" }}>
+                        Guided Implementation Drills: Concurrency Benchmarking
+                      </strong>
+                      <div className="text-xs text-secondary" style={{ marginTop: "4px" }}>
+                        Immediate active practice to wire neural pathways through deliberate coding rather than passive reading.
+                      </div>
+                    </div>
+
+                    <div className="task-item priority-low">
+                      <div className="flex-between" style={{ marginBottom: "4px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span className="font-mono text-xs text-muted font-bold">09:00 &ndash; 09:30</span>
+                          <span className="badge badge-neutral">Review &bull; Low Priority</span>
+                        </div>
+                        <span className="text-xs text-muted">30m duration</span>
+                      </div>
+                      <strong style={{ fontSize: "0.95rem", color: "var(--text-primary)" }}>
+                        Active Retrieval &amp; Check-In Reflection
+                      </strong>
+                      <div className="text-xs text-secondary" style={{ marginTop: "4px" }}>
+                        Explain concepts without notes to verify retention and diagnose cognitive fatigue.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {previewTab === "timer" && (
+                <div style={{ textAlign: "center", padding: "16px 0" }}>
+                  <span className="badge badge-yellow" style={{ marginBottom: "12px" }}>
+                    Active Sprint: Core Runtime Mechanics
+                  </span>
+                  <div
+                    className="font-mono font-bold"
+                    style={{
+                      fontSize: "4.2rem",
+                      letterSpacing: "-0.04em",
+                      color: previewTimerActive ? "var(--accent-primary)" : "var(--text-primary)",
+                      marginBottom: "16px",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {formatTimerDigits(previewTimerSec)}
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "center", gap: "10px", marginBottom: "16px" }}>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => setPreviewTimerActive(!previewTimerActive)}
+                    >
+                      {previewTimerActive ? "Pause Sprint" : "Start Sprint"}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => {
+                        setPreviewTimerActive(false);
+                        setPreviewTimerSec(25 * 60);
+                      }}
+                    >
+                      Reset
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted" style={{ margin: 0 }}>
+                    Calm, telemetry-tracked focus sprint. Completed sessions automatically award XP and update daily metrics.
+                  </p>
+                </div>
+              )}
+
+              {previewTab === "checkin" && (
+                <div>
+                  <div className="flex-between" style={{ marginBottom: "14px" }}>
+                    <h3 style={{ margin: 0, fontSize: "1.05rem" }}>Hourly Check-in &bull; Session Verification</h3>
+                    <span className="badge badge-neutral">Signal, Not Shame</span>
+                  </div>
+                  <div className="surface" style={{ padding: "16px", backgroundColor: "var(--bg-secondary)" }}>
+                    <div className="grid-2" style={{ marginBottom: "12px" }}>
+                      <div>
+                        <div className="text-xs text-muted">Planned Task</div>
+                        <strong style={{ fontSize: "0.875rem" }}>07:00 &ndash; 07:50: Core Runtime Mechanics</strong>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted">Verified Execution</div>
+                        <span className="badge badge-success">Completed &bull; 45m Focused / 5m Friction</span>
+                      </div>
+                    </div>
+                    <div style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: "10px" }}>
+                      <div className="text-xs text-yellow" style={{ fontWeight: 600, marginBottom: "2px" }}>
+                        AuraMind Cognitive Telemetry:
+                      </div>
+                      <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                        &ldquo;High retention observed. The 5-minute break prevented fatigue accumulation before Block 2.&rdquo;
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {previewTab === "ai" && (
+                <div>
+                  <div className="flex-between" style={{ marginBottom: "12px" }}>
+                    <h3 style={{ margin: 0, fontSize: "1.05rem" }}>Ask AuraMind &bull; Live Technical Tutor</h3>
+                    <span className="badge badge-yellow">Context-Aware AI</span>
+                  </div>
+                  <div className="surface" style={{ padding: "16px", backgroundColor: "var(--bg-secondary)", marginBottom: "10px" }}>
+                    <div style={{ display: "flex", gap: "10px", marginBottom: "8px" }}>
+                      <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--accent-primary)" }}>AuraMind AI:</span>
+                      <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-primary)" }}>
+                        &ldquo;For today&rsquo;s Block 1 on Python decorators, remember the golden rule: a decorator is a function returning another callable. Avoid modifying internal function signatures unless you preserve <code>*args, **kwargs</code> with <code>@functools.wraps</code>.&rdquo;
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-xs text-muted">
+                    Connected to Google Gemini learning-science models. Integrated with your live schedule and check-in history.
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ACCOUNTABILITY LOOP VISUALIZATION */}
-      <section id="how-it-works" style={{ marginBottom: "80px" }}>
-        <div style={{ textAlign: "center", marginBottom: "36px" }}>
-          <h2>The AuraMind Closed-Loop System</h2>
-          <p>Traditional habit trackers assume perfect willpower. AuraMind adapts to behavioral signals.</p>
-        </div>
+      {/* 2. THE 7 CORE ARCHITECTURAL PILLARS (NOT REPETITIVE 3-CARDS) */}
+      <section style={{ padding: "64px 0", borderTop: "1px solid var(--border-subtle)" }}>
+        <div className="container">
+          <div style={{ maxWidth: "680px", marginBottom: "48px" }}>
+            <span className="badge badge-yellow" style={{ marginBottom: "12px" }}>Learning Science Engine</span>
+            <h2 style={{ fontSize: "1.9rem", marginBottom: "12px" }}>
+              How AuraMind builds consistent execution.
+            </h2>
+            <p className="lead">
+              Traditional goal systems collapse because they rely on unbroken willpower. AuraMind treats missed sessions as diagnostic data to recalibrate your schedule.
+            </p>
+          </div>
 
-        <div className="grid-4">
-          <div className="card card-highlight">
-            <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--yellow-primary)", marginBottom: "8px" }}>01</div>
-            <h3>Instant AI Research</h3>
-            <p className="text-sm">We analyze prerequisites, skill acquisition stages, and common failure modes for your specific starting level.</p>
-          </div>
-          <div className="card card-highlight">
-            <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--yellow-primary)", marginBottom: "8px" }}>02</div>
-            <h3>Live Timetable Synthesis</h3>
-            <p className="text-sm">Gemini generates an exact 30-day curriculum respecting your available hours, peak focus window, and existing commitments.</p>
-          </div>
-          <div className="card card-highlight">
-            <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--yellow-primary)", marginBottom: "8px" }}>03</div>
-            <h3>Hourly Check-Ins</h3>
-            <p className="text-sm">Log what actually happened. Missed tasks are treated as diagnostic signals to adjust cognitive load, not as moral failures.</p>
-          </div>
-          <div className="card card-highlight">
-            <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--yellow-primary)", marginBottom: "8px" }}>04</div>
-            <h3>Adaptive Timetable</h3>
-            <p className="text-sm">Weekly behavioral analytics identify your strongest periods and auto-restructure upcoming weeks to keep you moving forward.</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            {/* Pillar 1 & 2 Asymmetric Row */}
+            <div className="grid-2">
+              <div className="surface-interactive">
+                <div style={{ color: "var(--accent-primary)", fontSize: "0.8rem", fontWeight: 700, fontFamily: "var(--font-mono)", marginBottom: "8px" }}>
+                  01 / DIAGNOSTIC RESEARCH
+                </div>
+                <h3 style={{ marginBottom: "8px" }}>Prerequisites &amp; Failure Modes</h3>
+                <p style={{ margin: 0 }}>
+                  Before writing a schedule, AuraMind analyzes the specific progression curve from your current baseline to your target standard, mapping common drop-off points and cognitive bottlenecks.
+                </p>
+              </div>
+
+              <div className="surface-interactive">
+                <div style={{ color: "var(--accent-primary)", fontSize: "0.8rem", fontWeight: 700, fontFamily: "var(--font-mono)", marginBottom: "8px" }}>
+                  02 / 30-DAY TIMETABLE
+                </div>
+                <h3 style={{ marginBottom: "8px" }}>Deliberate Practice Architecture</h3>
+                <p style={{ margin: 0 }}>
+                  Generates an exact 30-day curriculum divided into 4 structured phases: Foundation, Deliberate Practice, Real-world Application, and Consolidation, respecting your peak focus windows.
+                </p>
+              </div>
+            </div>
+
+            {/* Pillar 3, 4, 5 Three-Column Asymmetric */}
+            <div className="grid-3">
+              <div className="surface-interactive">
+                <div style={{ color: "var(--accent-primary)", fontSize: "0.8rem", fontWeight: 700, fontFamily: "var(--font-mono)", marginBottom: "8px" }}>
+                  03 / FOCUS WORKSPACE
+                </div>
+                <h3 style={{ marginBottom: "8px" }}>Dedicated Telemetry Timer</h3>
+                <p style={{ margin: 0 }}>
+                  Distraction-free focus timer supporting 25m, 50m, 90m, and custom intervals. Tracks deep-work duration and awards XP upon completion.
+                </p>
+              </div>
+
+              <div className="surface-interactive">
+                <div style={{ color: "var(--accent-primary)", fontSize: "0.8rem", fontWeight: 700, fontFamily: "var(--font-mono)", marginBottom: "8px" }}>
+                  04 / HOURLY LOGS
+                </div>
+                <h3 style={{ marginBottom: "8px" }}>Friction Signal Capture</h3>
+                <p style={{ margin: 0 }}>
+                  Log what actually happened. If fatigue or distractions derailed a block, AuraMind records the diagnostic cause to adjust subsequent workload.
+                </p>
+              </div>
+
+              <div className="surface-interactive">
+                <div style={{ color: "var(--accent-primary)", fontSize: "0.8rem", fontWeight: 700, fontFamily: "var(--font-mono)", marginBottom: "8px" }}>
+                  05 / AI COACHING
+                </div>
+                <h3 style={{ marginBottom: "8px" }}>Gemini Context Assistant</h3>
+                <p style={{ margin: 0 }}>
+                  Ask questions anytime. Your AI assistant has full access to your timetable, notes, and check-in history to provide targeted mental models and code examples.
+                </p>
+              </div>
+            </div>
+
+            {/* Pillar 6 & 7 Bottom Split */}
+            <div className="grid-2">
+              <div className="surface-interactive">
+                <div style={{ color: "var(--accent-primary)", fontSize: "0.8rem", fontWeight: 700, fontFamily: "var(--font-mono)", marginBottom: "8px" }}>
+                  06 / ANALYTICS
+                </div>
+                <h3 style={{ marginBottom: "8px" }}>Behavioral Velocity &amp; Insights</h3>
+                <p style={{ margin: 0 }}>
+                  Real metrics calculate focus vs resistance ratios, identifying your strongest cognitive time of day and your most frequent blocker.
+                </p>
+              </div>
+
+              <div className="surface-interactive">
+                <div style={{ color: "var(--accent-primary)", fontSize: "0.8rem", fontWeight: 700, fontFamily: "var(--font-mono)", marginBottom: "8px" }}>
+                  07 / RECALIBRATION
+                </div>
+                <h3 style={{ marginBottom: "8px" }}>Adaptive 7-Day Restructuring</h3>
+                <p style={{ margin: 0 }}>
+                  On Day 7, 14, and 21, the system generates evidence-based schedule adaptations to keep you progressing when unforeseen friction arises.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* SAMPLE TIMETABLE PREVIEW */}
-      <section style={{ marginBottom: "80px" }}>
-        <div className="card" style={{ backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)" }}>
-          <div className="flex-between" style={{ marginBottom: "16px", flexWrap: "wrap" }}>
-            <div>
-              <span className="badge badge-yellow" style={{ marginBottom: "8px" }}>Curriculum Architecture</span>
-              <h3 style={{ margin: 0 }}>Sample 30-Day Phased Architecture</h3>
-            </div>
-            <span className="text-xs text-muted">Days 1&ndash;7: Foundation &bull; Days 8&ndash;15: Deliberate Practice &bull; Days 16&ndash;22: Application</span>
-          </div>
-
-          <div className="grid-3" style={{ gap: "12px" }}>
-            <div className="task-block priority-high">
-              <div className="text-xs text-muted">07:00 &ndash; 07:45 &bull; Learn (High Priority)</div>
-              <strong style={{ color: "var(--text-primary)" }}>Core Concept Intake &amp; Mental Models</strong>
-              <div className="text-xs text-secondary" style={{ marginTop: "4px" }}>Hardest cognitive intake scheduled during your peak focus window.</div>
-            </div>
-            <div className="task-block priority-medium">
-              <div className="text-xs text-muted">07:55 &ndash; 08:35 &bull; Practice</div>
-              <strong style={{ color: "var(--text-primary)" }}>Deliberate Problem Drills &amp; Edge Cases</strong>
-              <div className="text-xs text-secondary" style={{ marginTop: "4px" }}>Immediate guided exercises reinforce newly learned neural connections.</div>
-            </div>
-            <div className="task-block priority-low">
-              <div className="text-xs text-muted">08:45 &ndash; 09:05 &bull; Review</div>
-              <strong style={{ color: "var(--text-primary)" }}>Active Retrieval &amp; Check-In Reflection</strong>
-              <div className="text-xs text-secondary" style={{ marginTop: "4px" }}>Self-quiz in your own words to verify durability of concepts.</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* GOAL CREATION & LIVE SYNTHESIS */}
-      <section id="create-goal" style={{ marginBottom: "80px" }}>
+      {/* 3. MULTI-STEP GOAL ONBOARDING EXPERIENCE */}
+      <section id="create-goal" style={{ padding: "80px 0", borderTop: "1px solid var(--border-subtle)" }}>
         <div className="container-narrow">
           {/* STATE 1: INSTANT TIMETABLE READY */}
           {createdRequest ? (
-            <div className="card card-highlight" style={{ textAlign: "center", padding: "40px 24px" }}>
-              <div
-                style={{
-                  width: "56px",
-                  height: "56px",
-                  borderRadius: "50%",
-                  backgroundColor: "var(--yellow-muted)",
-                  border: "2px solid var(--yellow-primary)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "24px",
-                  color: "var(--yellow-primary)",
-                  margin: "0 auto 16px",
-                }}
-              >
-                &#10003;
+            <div className="surface-accent" style={{ padding: "36px 28px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+                <span className="badge badge-success">
+                  <span className="badge-dot" />
+                  Synthesis Complete
+                </span>
+                <span className="text-xs text-muted">Ready in memory &amp; saved to database</span>
               </div>
 
-              <span className="badge badge-yellow" style={{ marginBottom: "10px" }}>AI Synthesis Complete</span>
-              <h2 style={{ fontSize: "2rem", marginBottom: "8px" }}>Your 30-Day Timetable is Ready!</h2>
-              <p style={{ maxWidth: "560px", margin: "0 auto 20px", color: "var(--text-secondary)" }}>
-                Our AI has researched your learning path, resolved common bottlenecks, and engineered an exact day-by-day plan tailored to your available hours.
+              <h2 style={{ fontSize: "1.9rem", marginBottom: "8px" }}>Your 30-Day Timetable is Ready</h2>
+              <p style={{ marginBottom: "24px" }}>
+                AuraMind has researched your learning trajectory, resolved common bottlenecks, and structured an exact day-by-day plan calibrated to your real availability.
               </p>
 
-              {/* Unique Request Code Pill */}
+              {/* ACCESS CODE CARD */}
               <div
                 style={{
-                  backgroundColor: "var(--bg-elevated)",
-                  border: "1px solid var(--yellow-border)",
-                  borderRadius: "var(--radius-md)",
-                  padding: "12px 24px",
+                  backgroundColor: "var(--bg-secondary)",
+                  border: "1px solid var(--border-default)",
+                  borderRadius: "var(--radius-sm)",
+                  padding: "16px 20px",
                   marginBottom: "24px",
-                  display: "inline-block",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: "12px",
                 }}
               >
-                <div className="text-xs text-muted" style={{ textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>
-                  Your Unique Access Code
+                <div>
+                  <div className="text-xs text-muted" style={{ textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>
+                    Your Persistent Access Code
+                  </div>
+                  <div className="font-mono" style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--accent-primary)" }}>
+                    {createdRequest.requestCode}
+                  </div>
                 </div>
-                <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--yellow-primary)", fontFamily: "monospace" }}>
-                  {createdRequest.requestCode}
-                </div>
+
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => copyCodeToClipboard(createdRequest.requestCode)}
+                >
+                  {copiedCode ? "Copied!" : "Copy Access Code"}
+                </button>
               </div>
 
-              {/* Plan Overview Preview */}
+              {/* ROADMAP OVERVIEW */}
               {createdRequest.plan && (
-                <div
-                  style={{
-                    backgroundColor: "var(--bg-secondary)",
-                    border: "1px solid var(--border-color)",
-                    borderRadius: "8px",
-                    padding: "20px",
-                    textAlign: "left",
-                    marginBottom: "24px",
-                  }}
-                >
-                  <div style={{ color: "var(--yellow-primary)", fontWeight: 700, fontSize: "0.95rem", marginBottom: "6px" }}>
-                    Executive Curriculum Roadmap:
+                <div style={{ marginBottom: "28px" }}>
+                  <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                    Executive Curriculum Summary:
                   </div>
-                  <p style={{ fontSize: "0.9rem", color: "var(--text-primary)", marginBottom: "16px" }}>
-                    {createdRequest.plan.goal_summary}
-                  </p>
+                  <div className="surface" style={{ padding: "16px", backgroundColor: "var(--bg-secondary)", marginBottom: "16px" }}>
+                    <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--text-primary)" }}>
+                      {createdRequest.plan.goal_summary}
+                    </p>
+                  </div>
 
-                  <div style={{ color: "var(--yellow-primary)", fontWeight: 700, fontSize: "0.95rem", marginBottom: "8px" }}>
-                    4-Week Phased Milestones:
-                  </div>
-                  <div className="grid-2" style={{ gap: "8px" }}>
+                  <div className="grid-2" style={{ gap: "10px" }}>
                     {createdRequest.plan.weekly_focus?.map((wf: any) => (
                       <div
                         key={wf.week}
                         style={{
-                          backgroundColor: "var(--bg-elevated)",
-                          padding: "10px 12px",
-                          borderRadius: "6px",
-                          border: "1px solid var(--border-color)",
+                          backgroundColor: "var(--bg-secondary)",
+                          padding: "12px 14px",
+                          borderRadius: "var(--radius-sm)",
+                          border: "1px solid var(--border-subtle)",
                         }}
                       >
-                        <strong style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}>
+                        <strong style={{ fontSize: "0.85rem", color: "var(--accent-primary)" }}>
                           Week {wf.week}: {wf.title}
                         </strong>
-                        <div className="text-xs text-muted" style={{ marginTop: "2px" }}>
+                        <div className="text-xs text-secondary" style={{ marginTop: "3px" }}>
                           {wf.expected_outcome}
                         </div>
                       </div>
@@ -350,26 +623,27 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* Primary Call to Action Buttons */}
-              <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+              {/* ACTION BUTTONS */}
+              <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
                 <button
                   type="button"
                   className="btn btn-primary btn-lg"
                   disabled={isStartingDirectly}
                   onClick={() => launchDay1Now(createdRequest.id)}
-                  style={{ minWidth: "220px" }}
+                  style={{ minWidth: "200px" }}
                 >
-                  {isStartingDirectly ? "Starting Day 1…" : "Start Day 1 Now \u2192"}
+                  {isStartingDirectly ? "Opening Workspace..." : "Start Day 1 Now \u2192"}
                 </button>
                 <Link href={`/goal/${createdRequest.id}`} className="btn btn-secondary btn-lg">
-                  Review 30-Day Plan &rarr;
+                  Inspect Full Schedule
                 </Link>
                 <button
                   type="button"
-                  className="btn btn-secondary btn-lg"
+                  className="btn btn-ghost btn-lg"
                   onClick={() => {
                     setCreatedRequest(null);
                     setGoal("");
+                    setFormStep(1);
                   }}
                 >
                   Create Another Goal
@@ -377,33 +651,18 @@ export default function HomePage() {
               </div>
             </div>
           ) : busy ? (
-            /* STATE 2: LIVE AI SYNTHESIS IN PROGRESS */
-            <div className="card card-highlight" style={{ padding: "40px 24px", textAlign: "center" }}>
-              <div
-                style={{
-                  width: "56px",
-                  height: "56px",
-                  borderRadius: "50%",
-                  backgroundColor: "var(--yellow-muted)",
-                  border: "2px solid var(--yellow-primary)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "24px",
-                  color: "var(--yellow-primary)",
-                  margin: "0 auto 20px",
-                  animation: "pulse 1.5s infinite",
-                }}
-              >
-                &#9889;
-              </div>
+            /* STATE 2: SYNTHESIS IN PROGRESS */
+            <div className="surface-accent" style={{ padding: "40px 28px", textAlign: "center" }}>
+              <span className="badge badge-yellow pulse" style={{ marginBottom: "16px" }}>
+                AI Synthesis Active
+              </span>
 
               <h2 style={{ fontSize: "1.9rem", marginBottom: "8px" }}>Engineering Your 30-Day Timetable</h2>
-              <p style={{ maxWidth: "520px", margin: "0 auto 28px", color: "var(--text-secondary)" }}>
-                AuraMind AI is actively analyzing your starting baseline and architecting your daily deliberate practice curriculum.
+              <p style={{ maxWidth: "540px", margin: "0 auto 28px" }}>
+                Analyzing baseline, sequencing deliberate practice blocks, and calculating cognitive recovery windows.
               </p>
 
-              {/* Dynamic Step Progress */}
+              {/* Step Telemetry */}
               <div style={{ maxWidth: "520px", margin: "0 auto 28px", textAlign: "left" }}>
                 {GEN_STEPS.map((step, idx) => {
                   const isDone = idx < generationStep;
@@ -416,26 +675,26 @@ export default function HomePage() {
                         alignItems: "flex-start",
                         gap: "12px",
                         padding: "10px 14px",
-                        borderRadius: "8px",
+                        borderRadius: "var(--radius-sm)",
                         marginBottom: "8px",
                         backgroundColor: isCurrent ? "var(--bg-elevated)" : "transparent",
-                        border: isCurrent ? "1px solid var(--yellow-border)" : "1px solid transparent",
-                        transition: "all 0.3s ease",
+                        border: isCurrent ? "1px solid var(--accent-border)" : "1px solid transparent",
+                        transition: "all var(--transition-fast)",
                       }}
                     >
                       <div
                         style={{
-                          width: "24px",
-                          height: "24px",
+                          width: "22px",
+                          height: "22px",
                           borderRadius: "50%",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          fontSize: "0.8rem",
+                          fontSize: "0.75rem",
                           fontWeight: 700,
-                          backgroundColor: isDone ? "var(--yellow-primary)" : isCurrent ? "var(--yellow-muted)" : "var(--bg-secondary)",
-                          color: isDone ? "#0A0A0A" : isCurrent ? "var(--yellow-primary)" : "var(--text-muted)",
-                          border: isCurrent ? "1px solid var(--yellow-primary)" : "1px solid var(--border-color)",
+                          backgroundColor: isDone ? "var(--accent-primary)" : isCurrent ? "var(--accent-muted)" : "var(--bg-secondary)",
+                          color: isDone ? "#0A0A0A" : isCurrent ? "var(--accent-primary)" : "var(--text-muted)",
+                          border: isCurrent ? "1px solid var(--accent-primary)" : "1px solid var(--border-default)",
                           flexShrink: 0,
                         }}
                       >
@@ -444,8 +703,8 @@ export default function HomePage() {
                       <div>
                         <strong
                           style={{
-                            fontSize: "0.95rem",
-                            color: isCurrent ? "var(--yellow-primary)" : isDone ? "var(--text-primary)" : "var(--text-muted)",
+                            fontSize: "0.9rem",
+                            color: isCurrent ? "var(--accent-primary)" : isDone ? "var(--text-primary)" : "var(--text-muted)",
                           }}
                         >
                           {step.title}
@@ -460,309 +719,489 @@ export default function HomePage() {
               </div>
 
               <div className="text-xs text-muted">
-                Synthesizing with Gemini learning-science models... takes only a few seconds.
+                Connecting with Gemini learning-science models... takes only a few seconds.
               </div>
             </div>
           ) : (
-            /* STATE 3: GOAL CREATION FORM */
-            <div className="card card-highlight">
-              <div style={{ marginBottom: "24px", borderBottom: "1px solid var(--border-color)", paddingBottom: "16px" }}>
-                <span className="badge badge-yellow" style={{ marginBottom: "8px" }}>Instant AI Planner</span>
-                <h2 style={{ fontSize: "1.8rem", margin: "4px 0" }}>Create Your 30-Day Goal</h2>
-                <p style={{ margin: 0 }}>Provide your authentic constraints. Our AI synthesizes your timetable immediately in front of you.</p>
+            /* STATE 3: MULTI-STEP GOAL CREATION WIZARD */
+            <div className="surface" style={{ padding: "32px 28px" }}>
+              {/* Header & Step Bar */}
+              <div style={{ marginBottom: "28px" }}>
+                <div className="flex-between" style={{ marginBottom: "8px", flexWrap: "wrap" }}>
+                  <div>
+                    <span className="badge badge-yellow" style={{ marginBottom: "6px" }}>Goal Setup Wizard</span>
+                    <h2 style={{ fontSize: "1.75rem", margin: 0 }}>Plan Your 30-Day Trajectory</h2>
+                  </div>
+                  <span className="text-xs font-mono text-muted">
+                    Step {formStep} of 5
+                  </span>
+                </div>
+
+                {/* Step Progress Line */}
+                <div style={{ display: "flex", gap: "6px", marginTop: "16px" }}>
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <div
+                      key={s}
+                      onClick={() => {
+                        if (goal.trim().length > 0 || s === 1) setFormStep(s);
+                      }}
+                      style={{
+                        flex: 1,
+                        height: "4px",
+                        borderRadius: "2px",
+                        backgroundColor: s <= formStep ? "var(--accent-primary)" : "var(--border-default)",
+                        cursor: goal.trim().length > 0 ? "pointer" : "default",
+                        transition: "background-color var(--transition-fast)",
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
 
-              <form onSubmit={submitGoal}>
-                {/* 1. Goal Description */}
-                <div className="form-group">
-                  <label htmlFor="goal">
-                    Goal Title or Target Achievement <span style={{ color: "var(--yellow-primary)" }}>*</span>
-                    <span className="hint">(e.g. Master German for B2 certification, Build a production AI SaaS, Pass AWS Solutions Architect)</span>
-                  </label>
-                  <input
-                    id="goal"
-                    type="text"
-                    required
-                    placeholder="What specific skill or outcome are you targeting?"
-                    value={goal}
-                    onChange={(e) => setGoal(e.target.value)}
-                  />
-                </div>
+              <form onSubmit={(e) => e.preventDefault()}>
+                {/* STEP 1: DEFINE YOUR GOAL */}
+                {formStep === 1 && (
+                  <div>
+                    <div style={{ marginBottom: "20px" }}>
+                      <h3 style={{ fontSize: "1.1rem", marginBottom: "4px" }}>Step 1: Define Your Target Outcome</h3>
+                      <p className="text-sm">What specific competency, certificate, or project do you want to accomplish?</p>
+                    </div>
 
-                {/* 2. Goal Category */}
-                <div className="form-group">
-                  <label htmlFor="category">
-                    Goal Category <span style={{ color: "var(--yellow-primary)" }}>*</span>
-                    <span className="hint">(Configures appropriate skill benchmarks)</span>
-                  </label>
-                  <select
-                    id="category"
-                    value={category}
-                    onChange={(e) => handleCategoryChange(e.target.value)}
-                  >
-                    {GOAL_CATEGORIES.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Conditional Language Field */}
-                {activeCategoryConfig.hasLanguageField && (
-                  <div className="form-group">
-                    <label htmlFor="language">
-                      Target Language <span style={{ color: "var(--yellow-primary)" }}>*</span>
-                    </label>
-                    <input
-                      id="language"
-                      type="text"
-                      placeholder="e.g. German, Japanese, Spanish, Mandarin"
-                      value={language}
-                      onChange={(e) => setLanguage(e.target.value)}
-                      required
-                    />
-                  </div>
-                )}
-
-                {/* 3. Current & Target Levels */}
-                <div className="grid-2">
-                  <div className="form-group">
-                    <label htmlFor="currentLevel">
-                      Current Starting Level <span style={{ color: "var(--yellow-primary)" }}>*</span>
-                    </label>
-                    <select
-                      id="currentLevel"
-                      value={currentLevel}
-                      onChange={(e) => setCurrentLevel(e.target.value)}
-                    >
-                      {activeCategoryConfig.levels.map((lvl) => (
-                        <option key={lvl.id} value={lvl.id}>
-                          {lvl.label}
-                        </option>
-                      ))}
-                    </select>
-                    {currentLevel === "custom" && (
-                      <input
-                        type="text"
-                        style={{ marginTop: "6px" }}
-                        placeholder="Specify your custom starting level"
-                        value={customCurrentLevel}
-                        onChange={(e) => setCustomCurrentLevel(e.target.value)}
-                        required
-                      />
-                    )}
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="targetLevel">
-                      Target 30-Day Milestone Level <span style={{ color: "var(--yellow-primary)" }}>*</span>
-                    </label>
-                    <select
-                      id="targetLevel"
-                      value={targetLevel}
-                      onChange={(e) => setTargetLevel(e.target.value)}
-                    >
-                      {activeCategoryConfig.levels.map((lvl) => (
-                        <option key={lvl.id} value={lvl.id}>
-                          {lvl.label}
-                        </option>
-                      ))}
-                    </select>
-                    {targetLevel === "custom" && (
-                      <input
-                        type="text"
-                        style={{ marginTop: "6px" }}
-                        placeholder="Specify your custom target milestone"
-                        value={customTargetLevel}
-                        onChange={(e) => setCustomTargetLevel(e.target.value)}
-                        required
-                      />
-                    )}
-                  </div>
-                </div>
-
-                {/* Conditional Score Fields for Education & Exams */}
-                {activeCategoryConfig.hasScoreFields && (
-                  <div className="grid-2">
                     <div className="form-group">
-                      <label htmlFor="currentScore">Current Score / Practice Percentile</label>
+                      <label className="form-label" htmlFor="goal">
+                        Goal Statement <span style={{ color: "var(--accent-primary)" }}>*</span>
+                        <span className="form-hint">(Be specific and measurable)</span>
+                      </label>
                       <input
-                        id="currentScore"
+                        id="goal"
                         type="text"
-                        placeholder="e.g. 580 / 800 or 65%"
-                        value={currentScore}
-                        onChange={(e) => setCurrentScore(e.target.value)}
+                        className="form-input"
+                        required
+                        placeholder="e.g. Master Python async services and build a production API"
+                        value={goal}
+                        onChange={(e) => setGoal(e.target.value)}
+                        autoFocus
                       />
                     </div>
+
                     <div className="form-group">
-                      <label htmlFor="targetScore">Target Score / Target Percentile</label>
+                      <label className="form-label" htmlFor="category">
+                        Domain Category <span style={{ color: "var(--accent-primary)" }}>*</span>
+                        <span className="form-hint">(Selects appropriate evaluation benchmarks)</span>
+                      </label>
+                      <select
+                        id="category"
+                        className="form-select"
+                        value={category}
+                        onChange={(e) => handleCategoryChange(e.target.value)}
+                      >
+                        {GOAL_CATEGORIES.map((cat) => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {activeCategoryConfig.hasLanguageField && (
+                      <div className="form-group">
+                        <label className="form-label" htmlFor="language">
+                          Target Language <span style={{ color: "var(--accent-primary)" }}>*</span>
+                        </label>
+                        <input
+                          id="language"
+                          type="text"
+                          className="form-input"
+                          placeholder="e.g. German, Japanese, Spanish, French"
+                          value={language}
+                          onChange={(e) => setLanguage(e.target.value)}
+                        />
+                      </div>
+                    )}
+
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="deadline">
+                        Target Completion Date <span className="form-hint">(Optional)</span>
+                      </label>
                       <input
-                        id="targetScore"
-                        type="text"
-                        placeholder="e.g. 750 / 800 or 95th percentile"
-                        value={targetScore}
-                        onChange={(e) => setTargetScore(e.target.value)}
+                        id="deadline"
+                        type="date"
+                        className="form-input"
+                        value={deadline}
+                        onChange={(e) => setDeadline(e.target.value)}
                       />
+                    </div>
+
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "24px" }}>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        disabled={!goal.trim()}
+                        onClick={() => setFormStep(2)}
+                      >
+                        Continue to Step 2 &rarr;
+                      </button>
                     </div>
                   </div>
                 )}
 
-                {/* 4. Daily Hours & Focus Window */}
-                <div className="grid-2">
-                  <div className="form-group">
-                    <label htmlFor="hours">
-                      Available Daily Hours <span style={{ color: "var(--yellow-primary)" }}>*</span>
-                    </label>
-                    <input
-                      id="hours"
-                      type="number"
-                      step="0.5"
-                      min="0.5"
-                      max="16"
-                      required
-                      value={hours}
-                      onChange={(e) => setHours(parseFloat(e.target.value) || 0.5)}
-                    />
+                {/* STEP 2: STARTING POINT & BENCHMARKS */}
+                {formStep === 2 && (
+                  <div>
+                    <div style={{ marginBottom: "20px" }}>
+                      <h3 style={{ fontSize: "1.1rem", marginBottom: "4px" }}>Step 2: Calibrate Starting Point &amp; Milestone</h3>
+                      <p className="text-sm">Accurate levels ensure the timetable is neither overwhelming nor under-stimulating.</p>
+                    </div>
+
+                    <div className="grid-2">
+                      <div className="form-group">
+                        <label className="form-label" htmlFor="currentLevel">
+                          Current Starting Level <span style={{ color: "var(--accent-primary)" }}>*</span>
+                        </label>
+                        <select
+                          id="currentLevel"
+                          className="form-select"
+                          value={currentLevel}
+                          onChange={(e) => setCurrentLevel(e.target.value)}
+                        >
+                          {activeCategoryConfig.levels.map((lvl) => (
+                            <option key={lvl.id} value={lvl.id}>
+                              {lvl.label}
+                            </option>
+                          ))}
+                        </select>
+                        {currentLevel === "custom" && (
+                          <input
+                            type="text"
+                            className="form-input"
+                            style={{ marginTop: "6px" }}
+                            placeholder="Specify current capability"
+                            value={customCurrentLevel}
+                            onChange={(e) => setCustomCurrentLevel(e.target.value)}
+                          />
+                        )}
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label" htmlFor="targetLevel">
+                          30-Day Target Milestone <span style={{ color: "var(--accent-primary)" }}>*</span>
+                        </label>
+                        <select
+                          id="targetLevel"
+                          className="form-select"
+                          value={targetLevel}
+                          onChange={(e) => setTargetLevel(e.target.value)}
+                        >
+                          {activeCategoryConfig.levels.map((lvl) => (
+                            <option key={lvl.id} value={lvl.id}>
+                              {lvl.label}
+                            </option>
+                          ))}
+                        </select>
+                        {targetLevel === "custom" && (
+                          <input
+                            type="text"
+                            className="form-input"
+                            style={{ marginTop: "6px" }}
+                            placeholder="Specify target milestone"
+                            value={customTargetLevel}
+                            onChange={(e) => setCustomTargetLevel(e.target.value)}
+                          />
+                        )}
+                      </div>
+                    </div>
+
+                    {activeCategoryConfig.hasScoreFields && (
+                      <div className="grid-2">
+                        <div className="form-group">
+                          <label className="form-label" htmlFor="currentScore">Current Score / Practice Percentile</label>
+                          <input
+                            id="currentScore"
+                            type="text"
+                            className="form-input"
+                            placeholder="e.g. 580 / 800 or 65%"
+                            value={currentScore}
+                            onChange={(e) => setCurrentScore(e.target.value)}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label" htmlFor="targetScore">Target Score / Milestone</label>
+                          <input
+                            id="targetScore"
+                            type="text"
+                            className="form-input"
+                            placeholder="e.g. 750 / 800 or 95th percentile"
+                            value={targetScore}
+                            onChange={(e) => setTargetScore(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: "24px" }}>
+                      <button type="button" className="btn btn-secondary" onClick={() => setFormStep(1)}>
+                        &larr; Back
+                      </button>
+                      <button type="button" className="btn btn-primary" onClick={() => setFormStep(3)}>
+                        Continue to Step 3 &rarr;
+                      </button>
+                    </div>
                   </div>
+                )}
 
-                  <div className="form-group">
-                    <label htmlFor="focus">
-                      Peak Cognitive Focus Window <span style={{ color: "var(--yellow-primary)" }}>*</span>
-                    </label>
-                    <select
-                      id="focus"
-                      value={focus}
-                      onChange={(e) => setFocus(e.target.value as any)}
-                    >
-                      <option value="morning">Morning (06:00 &ndash; 11:00)</option>
-                      <option value="afternoon">Afternoon (12:00 &ndash; 17:00)</option>
-                      <option value="evening">Evening (17:00 &ndash; 21:00)</option>
-                      <option value="night">Night (21:00 &ndash; 01:00)</option>
-                    </select>
+                {/* STEP 3: AVAILABILITY & FOCUS WINDOW */}
+                {formStep === 3 && (
+                  <div>
+                    <div style={{ marginBottom: "20px" }}>
+                      <h3 style={{ fontSize: "1.1rem", marginBottom: "4px" }}>Step 3: Define Real Time Availability</h3>
+                      <p className="text-sm">Hardest cognitive work will be placed strictly inside your designated energy window.</p>
+                    </div>
+
+                    <div className="grid-2">
+                      <div className="form-group">
+                        <label className="form-label" htmlFor="hours">
+                          Available Daily Hours <span style={{ color: "var(--accent-primary)" }}>*</span>
+                        </label>
+                        <input
+                          id="hours"
+                          type="number"
+                          step="0.5"
+                          min="0.5"
+                          max="16"
+                          className="form-input"
+                          value={hours}
+                          onChange={(e) => setHours(parseFloat(e.target.value) || 0.5)}
+                        />
+                        <div style={{ display: "flex", gap: "6px", marginTop: "8px" }}>
+                          {[1.5, 2.0, 2.5, 3.5, 4.0].map((h) => (
+                            <button
+                              key={h}
+                              type="button"
+                              className={`btn btn-sm ${hours === h ? "btn-primary" : "btn-secondary"}`}
+                              style={{ padding: "4px 8px", fontSize: "0.75rem" }}
+                              onClick={() => setHours(h)}
+                            >
+                              {h}h
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label" htmlFor="focus">
+                          Peak Cognitive Energy Window <span style={{ color: "var(--accent-primary)" }}>*</span>
+                        </label>
+                        <select
+                          id="focus"
+                          className="form-select"
+                          value={focus}
+                          onChange={(e) => setFocus(e.target.value as any)}
+                        >
+                          <option value="morning">Morning (06:00 &ndash; 11:00)</option>
+                          <option value="afternoon">Afternoon (12:00 &ndash; 17:00)</option>
+                          <option value="evening">Evening (17:00 &ndash; 21:00)</option>
+                          <option value="night">Night (21:00 &ndash; 01:00)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="timezone">
+                        Your Timezone <span className="form-hint">(Detected automatically)</span>
+                      </label>
+                      <input
+                        id="timezone"
+                        type="text"
+                        className="form-input font-mono"
+                        value={timezone}
+                        onChange={(e) => setTimezone(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: "24px" }}>
+                      <button type="button" className="btn btn-secondary" onClick={() => setFormStep(2)}>
+                        &larr; Back
+                      </button>
+                      <button type="button" className="btn btn-primary" onClick={() => setFormStep(4)}>
+                        Continue to Step 4 &rarr;
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {/* 5. Deadline & Timezone */}
-                <div className="grid-2">
-                  <div className="form-group">
-                    <label htmlFor="deadline">Target Deadline (Optional)</label>
-                    <input
-                      id="deadline"
-                      type="date"
-                      value={deadline}
-                      onChange={(e) => setDeadline(e.target.value)}
-                    />
+                {/* STEP 4: IDENTIFY CHALLENGES & FRICTION */}
+                {formStep === 4 && (
+                  <div>
+                    <div style={{ marginBottom: "20px" }}>
+                      <h3 style={{ fontSize: "1.1rem", marginBottom: "4px" }}>Step 4: Real-World Friction &amp; Constraints</h3>
+                      <p className="text-sm">Knowing your authentic bottlenecks lets our AI engineer preventative recovery buffers.</p>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="fixed">
+                        Fixed Commitments
+                        <span className="form-hint">(Work hours, commuting, class schedules)</span>
+                      </label>
+                      <textarea
+                        id="fixed"
+                        className="form-textarea"
+                        rows={2}
+                        placeholder="e.g. Work 9am-5pm Mon-Fri, family dinner 7pm."
+                        value={fixed}
+                        onChange={(e) => setFixed(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="distractions">
+                        Known Triggers &amp; Distractions
+                        <span className="form-hint">(What usually derails your concentration?)</span>
+                      </label>
+                      <textarea
+                        id="distractions"
+                        className="form-textarea"
+                        rows={2}
+                        placeholder="e.g. Phone notifications, late-afternoon brain fog, opening social media when stuck."
+                        value={distractions}
+                        onChange={(e) => setDistractions(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="previous">
+                        Previous Attempts &amp; Where They Stalled
+                        <span className="form-hint">(What did you try before?)</span>
+                      </label>
+                      <textarea
+                        id="previous"
+                        className="form-textarea"
+                        rows={2}
+                        placeholder="e.g. Tried reading a textbook for 2 hours daily, burned out after Day 5."
+                        value={previous}
+                        onChange={(e) => setPrevious(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="constraints">
+                        Additional Notes or Equipment Constraints
+                      </label>
+                      <textarea
+                        id="constraints"
+                        className="form-textarea"
+                        rows={2}
+                        placeholder="e.g. Prefer hands-on coding exercises over video lectures."
+                        value={constraints}
+                        onChange={(e) => setConstraints(e.target.value)}
+                      />
+                    </div>
+
+                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: "24px" }}>
+                      <button type="button" className="btn btn-secondary" onClick={() => setFormStep(3)}>
+                        &larr; Back
+                      </button>
+                      <button type="button" className="btn btn-primary" onClick={() => setFormStep(5)}>
+                        Review &amp; Synthesize &rarr;
+                      </button>
+                    </div>
                   </div>
+                )}
 
-                  <div className="form-group">
-                    <label htmlFor="timezone">Your Timezone</label>
-                    <input
-                      id="timezone"
-                      type="text"
-                      value={timezone}
-                      onChange={(e) => setTimezone(e.target.value)}
-                      required
-                    />
+                {/* STEP 5: REVIEW & SYNTHESIZE */}
+                {formStep === 5 && (
+                  <div>
+                    <div style={{ marginBottom: "20px" }}>
+                      <h3 style={{ fontSize: "1.1rem", marginBottom: "4px" }}>Step 5: Review &amp; Execute AI Synthesis</h3>
+                      <p className="text-sm">Verify your input parameters before generating your customized 30-day schedule.</p>
+                    </div>
+
+                    {/* Parameter Summary Box */}
+                    <div className="surface" style={{ padding: "18px", backgroundColor: "var(--bg-secondary)", marginBottom: "20px" }}>
+                      <div className="flex-between" style={{ marginBottom: "12px" }}>
+                        <span className="text-xs text-muted" style={{ textTransform: "uppercase", letterSpacing: "0.06em" }}>Configuration Summary</span>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => setFormStep(1)} style={{ padding: "2px 6px", fontSize: "0.75rem" }}>
+                          Edit Settings
+                        </button>
+                      </div>
+
+                      <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "0.875rem" }}>
+                        <div>
+                          <span className="text-muted">Target Goal: </span>
+                          <strong style={{ color: "var(--text-primary)" }}>{goal}</strong>
+                        </div>
+                        <div className="grid-2">
+                          <div>
+                            <span className="text-muted">Category: </span>
+                            <span style={{ color: "var(--text-primary)" }}>{activeCategoryConfig.name}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted">Progression: </span>
+                            <span style={{ color: "var(--accent-primary)", fontWeight: 600 }}>
+                              {currentLevel} &rarr; {targetLevel}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="grid-2">
+                          <div>
+                            <span className="text-muted">Daily Time Budget: </span>
+                            <span style={{ color: "var(--text-primary)" }}>{hours} hours / day</span>
+                          </div>
+                          <div>
+                            <span className="text-muted">Cognitive Window: </span>
+                            <span style={{ color: "var(--text-primary)", textTransform: "capitalize" }}>{focus}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {err && <div className="alert alert-error">{err}</div>}
+
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", marginTop: "24px" }}>
+                      <button type="button" className="btn btn-secondary" onClick={() => setFormStep(4)}>
+                        &larr; Back
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-lg"
+                        disabled={busy}
+                        onClick={() => submitGoal()}
+                        style={{ flex: 1, maxWidth: "340px" }}
+                      >
+                        Synthesize My 30-Day Timetable &rarr;
+                      </button>
+                    </div>
                   </div>
-                </div>
-
-                {/* 6. Fixed Commitments */}
-                <div className="form-group">
-                  <label htmlFor="fixed">
-                    Fixed Commitments
-                    <span className="hint">(Work hours, school, family obligations, commuting)</span>
-                  </label>
-                  <textarea
-                    id="fixed"
-                    rows={2}
-                    placeholder="e.g. Work 9am-5pm Mon-Fri, gym on Tue/Thu evenings."
-                    value={fixed}
-                    onChange={(e) => setFixed(e.target.value)}
-                  />
-                </div>
-
-                {/* 7. Known Distractions */}
-                <div className="form-group">
-                  <label htmlFor="distractions">
-                    Known Distractions &amp; Triggers
-                    <span className="hint">(What usually derails your study flow?)</span>
-                  </label>
-                  <textarea
-                    id="distractions"
-                    rows={2}
-                    placeholder="e.g. Phone notifications, YouTube rabbit holes, fatigue after 4pm."
-                    value={distractions}
-                    onChange={(e) => setDistractions(e.target.value)}
-                  />
-                </div>
-
-                {/* 8. Previous Attempts */}
-                <div className="form-group">
-                  <label htmlFor="previous">
-                    Previous Attempts &amp; Pain Points
-                    <span className="hint">(What did you try before and why did it stall?)</span>
-                  </label>
-                  <textarea
-                    id="previous"
-                    rows={2}
-                    placeholder="e.g. Tried learning 2 months ago but got overwhelmed by grammar rules and stopped."
-                    value={previous}
-                    onChange={(e) => setPrevious(e.target.value)}
-                  />
-                </div>
-
-                {/* 9. Additional Constraints */}
-                <div className="form-group">
-                  <label htmlFor="constraints">
-                    Additional Notes or Constraints
-                    <span className="hint">(Special equipment, materials, physical constraints)</span>
-                  </label>
-                  <textarea
-                    id="constraints"
-                    rows={2}
-                    placeholder="e.g. Only have a laptop; prefer visual diagrams and coding exercises over passive reading."
-                    value={constraints}
-                    onChange={(e) => setConstraints(e.target.value)}
-                  />
-                </div>
-
-                {err && <div className="alert alert-error">{err}</div>}
-
-                <button
-                  type="submit"
-                  disabled={busy}
-                  className="btn btn-primary"
-                  style={{ width: "100%", fontSize: "1.05rem" }}
-                >
-                  Synthesize My 30-Day Timetable with AI &rarr;
-                </button>
+                )}
               </form>
             </div>
           )}
         </div>
       </section>
 
-      {/* REQUEST LOOKUP SECTION */}
-      <section id="lookup" style={{ borderTop: "1px solid var(--border-color)", paddingTop: "50px" }}>
+      {/* 4. LOOKUP EXISTING REQUEST SECTION */}
+      <section id="lookup" style={{ padding: "64px 0", borderTop: "1px solid var(--border-subtle)", backgroundColor: "var(--bg-secondary)" }}>
         <div className="container-narrow text-center" style={{ textAlign: "center" }}>
-          <h2>Check Existing Goal Request</h2>
-          <p>Already submitted a goal? Enter your Access Code (e.g. AM-A1B2C3D4E5F60718) or Request ID to open your dashboard.</p>
+          <h2 style={{ fontSize: "1.6rem", marginBottom: "8px" }}>Resume an Existing Goal</h2>
+          <p style={{ maxWidth: "520px", margin: "0 auto 20px" }}>
+            Enter your persistent Access Code (e.g. AM-A1B2C3D4E5F60718) or Request UUID to reopen your dashboard.
+          </p>
 
-          <div style={{ display: "flex", gap: "10px", maxWidth: "480px", margin: "20px auto 0" }}>
+          <div style={{ display: "flex", gap: "8px", maxWidth: "440px", margin: "0 auto" }}>
             <input
               type="text"
+              className="form-input font-mono"
               placeholder="e.g. AM-A1B2C3D4E5F60718"
               value={lookupCode}
               onChange={(e) => setLookupCode(e.target.value)}
-              style={{ fontFamily: "monospace", textTransform: "uppercase" }}
+              style={{ textTransform: "uppercase" }}
             />
             <Link
               href={lookupCode ? `/goal/${lookupCode.trim()}` : "#"}
-              className={`btn btn-secondary ${!lookupCode ? "disabled" : ""}`}
+              className={`btn btn-primary ${!lookupCode ? "disabled" : ""}`}
               style={{ whiteSpace: "nowrap" }}
             >
-              Open Goal
+              Open Workspace
             </Link>
           </div>
         </div>

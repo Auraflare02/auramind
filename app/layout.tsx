@@ -15,14 +15,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="theme-color" content="#0A0A0A" />
       </head>
       <body>
+        {/* TOP WORKSPACE NAVIGATION */}
         <header
           style={{
-            borderBottom: "1px solid var(--border-color)",
-            backgroundColor: "rgba(10, 10, 10, 0.9)",
-            backdropFilter: "blur(12px)",
+            borderBottom: "1px solid var(--border-subtle)",
+            backgroundColor: "rgba(10, 10, 10, 0.92)",
+            backdropFilter: "blur(14px)",
+            WebkitBackdropFilter: "blur(14px)",
             position: "sticky",
             top: 0,
-            zIndex: 50,
+            zIndex: 100,
           }}
         >
           <div
@@ -34,6 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               height: "64px",
             }}
           >
+            {/* BRAND */}
             <Link
               href="/"
               style={{
@@ -48,100 +51,198 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   width: "28px",
                   height: "28px",
                   borderRadius: "6px",
-                  backgroundColor: "var(--yellow-primary)",
+                  backgroundColor: "var(--accent-primary)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   fontWeight: 900,
-                  fontSize: "16px",
+                  fontSize: "15px",
                   color: "#0A0A0A",
+                  boxShadow: "0 0 10px rgba(255, 214, 0, 0.25)",
                 }}
               >
                 A
               </div>
               <span
                 style={{
-                  fontSize: "1.25rem",
+                  fontSize: "1.15rem",
                   fontWeight: 800,
                   letterSpacing: "-0.03em",
                   color: "var(--text-primary)",
                 }}
               >
-                Aura<span style={{ color: "var(--yellow-primary)" }}>Mind</span>
+                Aura<span style={{ color: "var(--accent-primary)" }}>Mind</span>
               </span>
             </Link>
 
-            <nav style={{ display: "flex", alignItems: "center", gap: "18px" }}>
+            {/* NAV LINKS */}
+            <nav style={{ display: "flex", alignItems: "center", gap: "16px" }}>
               <Link
                 href="/#create-goal"
                 style={{
                   color: "var(--text-secondary)",
                   textDecoration: "none",
-                  fontSize: "0.9rem",
+                  fontSize: "0.875rem",
                   fontWeight: 500,
-                  transition: "color 0.15s ease",
+                  transition: "color var(--transition-fast)",
                 }}
               >
-                New Goal
+                Start Goal
               </Link>
               <Link
                 href="/#lookup"
                 style={{
                   color: "var(--text-secondary)",
                   textDecoration: "none",
-                  fontSize: "0.9rem",
+                  fontSize: "0.875rem",
                   fontWeight: 500,
-                  transition: "color 0.15s ease",
+                  transition: "color var(--transition-fast)",
                 }}
               >
-                Check Request
+                Access Request
               </Link>
               <Link
                 href="/admin"
                 style={{
                   color: "var(--text-secondary)",
                   textDecoration: "none",
-                  fontSize: "0.85rem",
+                  fontSize: "0.825rem",
                   fontWeight: 600,
                   padding: "6px 12px",
-                  borderRadius: "6px",
-                  backgroundColor: "var(--bg-card)",
-                  border: "1px solid var(--border-color)",
+                  borderRadius: "var(--radius-sm)",
+                  backgroundColor: "var(--bg-surface)",
+                  border: "1px solid var(--border-subtle)",
+                  transition: "all var(--transition-fast)",
                 }}
               >
                 Admin
               </Link>
+
+              {/* Status Indicator */}
+              <div
+                className="badge badge-neutral"
+                style={{
+                  padding: "4px 8px",
+                  fontSize: "0.72rem",
+                  fontWeight: 600,
+                  display: "none",
+                }}
+              >
+                <span className="badge-dot" style={{ backgroundColor: "var(--success)" }} />
+                <span>Engine Active</span>
+              </div>
             </nav>
           </div>
         </header>
 
-        <main style={{ minHeight: "calc(100vh - 140px)" }}>{children}</main>
+        {/* MAIN VIEWPORT */}
+        <main style={{ flex: 1 }}>{children}</main>
 
+        {/* WORKSPACE FOOTER */}
         <footer
           style={{
-            borderTop: "1px solid var(--border-color)",
-            padding: "32px 0",
+            borderTop: "1px solid var(--border-subtle)",
+            padding: "48px 0 36px",
             backgroundColor: "var(--bg-secondary)",
-            marginTop: "60px",
+            marginTop: "auto",
           }}
         >
-          <div
-            className="container"
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              textAlign: "center",
-            }}
-          >
-            <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--text-muted)" }}>
-              AuraMind &copy; {new Date().getFullYear()} &mdash; "Don't plan a perfect day. Build a system that learns your real one."
-            </p>
-            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-muted)" }}>
-              Powered by Google Gemini &amp; Learning Science. Black &amp; Yellow Edition.
-            </p>
+          <div className="container">
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                gap: "24px",
+                marginBottom: "32px",
+              }}
+            >
+              <div style={{ maxWidth: "420px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                  <div
+                    style={{
+                      width: "20px",
+                      height: "20px",
+                      borderRadius: "4px",
+                      backgroundColor: "var(--accent-primary)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: 900,
+                      fontSize: "11px",
+                      color: "#0A0A0A",
+                    }}
+                  >
+                    A
+                  </div>
+                  <strong style={{ fontSize: "1rem", color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
+                    AuraMind Platform
+                  </strong>
+                </div>
+                <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", margin: 0 }}>
+                  A cognitive architecture platform that transforms ambitions into personalized 30-day deliberate practice schedules, tracks real-time focus metrics, and adapts to reality.
+                </p>
+              </div>
+
+              <div style={{ display: "flex", gap: "32px", flexWrap: "wrap" }}>
+                <div>
+                  <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-primary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "10px" }}>
+                    Workspace
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <Link href="/#create-goal" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
+                      New 30-Day Goal
+                    </Link>
+                    <Link href="/#lookup" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
+                      Open Existing Request
+                    </Link>
+                    <Link href="/admin" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
+                      Research Console
+                    </Link>
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-primary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "10px" }}>
+                    Integrations
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <span style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>
+                      Google Gemini AI Models
+                    </span>
+                    <span style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>
+                      Supabase PostgreSQL
+                    </span>
+                    <span style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>
+                      Cognitive Science Framework
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                borderTop: "1px solid var(--border-subtle)",
+                paddingTop: "24px",
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "12px",
+                fontSize: "0.8rem",
+                color: "var(--text-muted)",
+              }}
+            >
+              <div>
+                &copy; {new Date().getFullYear()} AuraMind. Core Principle: <em>&ldquo;Don&rsquo;t plan a perfect day. Build a system that learns your real one.&rdquo;</em>
+              </div>
+              <div style={{ display: "flex", gap: "16px" }}>
+                <a href="#how-it-works" style={{ color: "var(--text-muted)", textDecoration: "none" }}>Methodology</a>
+                <a href="#create-goal" style={{ color: "var(--text-muted)", textDecoration: "none" }}>Start Free</a>
+              </div>
+            </div>
           </div>
         </footer>
       </body>

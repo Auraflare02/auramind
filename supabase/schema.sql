@@ -1,11 +1,22 @@
 -- ============================================================
--- AuraMind Production Schema (Fixed for existing tables)
+-- AuraMind Complete Clean Schema
 -- ============================================================
+
+-- 1. Safely remove any half-created or broken legacy tables/views
+drop table if exists requests cascade;
+drop table if exists checkins cascade;
+drop table if exists auramind_focus_sessions cascade;
+drop table if exists auramind_goal_runs cascade;
+drop table if exists auramind_messages cascade;
+drop table if exists auramind_run_reports cascade;
+drop table if exists auramind_knowledge cascade;
+drop view if exists goal_requests cascade;
+drop view if exists auramind_run_logs cascade;
 
 create extension if not exists "pgcrypto";
 
--- 1. Main Goal Requests Table
-create table if not exists requests (
+-- 2. Create All 7 Core Tables
+create table requests (
   id uuid primary key default gen_random_uuid(),
   request_code text unique,
   status text not null default 'pending',
@@ -25,50 +36,11 @@ create table if not exists requests (
   updated_at timestamptz not null default now()
 );
 
--- Add missing columns if table already existed from older schema
-do $$
-begin
-  if not exists (select 1 from information_schema.columns where table_name='requests' and column_name='request_code') then
-    alter table requests add column request_code text unique;
-  end if;
-  if not exists (select 1 from information_schema.columns where table_name='requests' and column_name='category') then
-    alter table requests add column category text not null default 'other';
-  end if;
-  if not exists (select 1 from information_schema.columns where table_name='requests' and column_name='current_level') then
-    alter table requests add column current_level text not null default 'Beginner';
-  end if;
-  if not exists (select 1 from information_schema.columns where table_name='requests' and column_name='target_level') then
-    alter table requests add column target_level text not null default 'Advanced';
-  end if;
-  if not exists (select 1 from information_schema.columns where table_name='requests' and column_name='timezone') then
-    alter table requests add column timezone text not null default 'UTC';
-  end if;
-  if not exists (select 1 from information_schema.columns where table_name='requests' and column_name='research_data') then
-    alter table requests add column research_data jsonb;
-  end if;
-  if not exists (select 1 from information_schema.columns where table_name='requests' and column_name='plan_source') then
-    alter table requests add column plan_source text default 'ai';
-  end if;
-  if not exists (select 1 from information_schema.columns where table_name='requests' and column_name='ready_at') then
-    alter table requests add column ready_at timestamptz;
-  end if;
-  if not exists (select 1 from information_schema.columns where table_name='requests' and column_name='started_at') then
-    alter table requests add column started_at timestamptz;
-  end if;
-  if not exists (select 1 from information_schema.columns where table_name='requests' and column_name='session_token') then
-    alter table requests add column session_token text;
-  end if;
-  if not exists (select 1 from information_schema.columns where table_name='requests' and column_name='updated_at') then
-    alter table requests add column updated_at timestamptz not null default now();
-  end if;
-end $$;
+create index idx_requests_status on requests(status);
+create index idx_requests_code on requests(request_code);
+create index idx_requests_created_at on requests(created_at desc);
 
-create index if not exists idx_requests_status on requests(status);
-create index if not exists idx_requests_code on requests(request_code);
-create index if not exists idx_requests_created_at on requests(created_at desc);
-
--- 2. Hourly Check-ins Table
-create table if not exists checkins (
+create table checkins (
   id uuid primary key default gen_random_uuid(),
   request_id uuid not null references requests(id) on delete cascade,
   day int not null,
@@ -84,11 +56,10 @@ create table if not exists checkins (
   created_at timestamptz not null default now()
 );
 
-create index if not exists idx_checkins_req_day on checkins(request_id, day);
-create index if not exists idx_checkins_created on checkins(created_at desc);
+create index idx_checkins_req_day on checkins(request_id, day);
+create index idx_checkins_created on checkins(created_at desc);
 
--- 3. Focus Sessions Table
-create table if not exists auramind_focus_sessions (
+create table auramind_focus_sessions (
   id uuid primary key default gen_random_uuid(),
   request_id uuid not null references requests(id) on delete cascade,
   task_activity text not null,
@@ -101,11 +72,10 @@ create table if not exists auramind_focus_sessions (
   created_at timestamptz not null default now()
 );
 
-create index if not exists idx_focus_sessions_req on auramind_focus_sessions(request_id);
-create index if not exists idx_focus_sessions_started on auramind_focus_sessions(started_at desc);
+create index idx_focus_sessions_req on auramind_focus_sessions(request_id);
+create index idx_focus_sessions_started on auramind_focus_sessions(started_at desc);
 
--- 4. Persistent Goal Runs
-create table if not exists auramind_goal_runs (
+create table auramind_goal_runs (
   id uuid primary key default gen_random_uuid(),
   request_id uuid not null unique references requests(id) on delete cascade,
   session_token text not null unique,
@@ -119,10 +89,9 @@ create table if not exists auramind_goal_runs (
   updated_at timestamptz not null default now()
 );
 
-create index if not exists idx_goal_runs_token on auramind_goal_runs(session_token);
+create index idx_goal_runs_token on auramind_goal_runs(session_token);
 
--- 5. AI Chat Messages
-create table if not exists auramind_messages (
+create table auramind_messages (
   id uuid primary key default gen_random_uuid(),
   request_id uuid not null references requests(id) on delete cascade,
   role text not null,
@@ -130,10 +99,9 @@ create table if not exists auramind_messages (
   created_at timestamptz not null default now()
 );
 
-create index if not exists idx_messages_req on auramind_messages(request_id, created_at asc);
+create index idx_messages_req on auramind_messages(request_id, created_at asc);
 
--- 6. Reports Table
-create table if not exists auramind_run_reports (
+create table auramind_run_reports (
   id uuid primary key default gen_random_uuid(),
   request_id uuid not null references requests(id) on delete cascade,
   report_type text not null,
@@ -143,10 +111,9 @@ create table if not exists auramind_run_reports (
   created_at timestamptz not null default now()
 );
 
-create index if not exists idx_reports_req on auramind_run_reports(request_id, report_type, day);
+create index idx_reports_req on auramind_run_reports(request_id, report_type, day);
 
--- 7. Knowledge Base Table
-create table if not exists auramind_knowledge (
+create table auramind_knowledge (
   id uuid primary key default gen_random_uuid(),
   query text not null,
   goal_category text,
@@ -156,12 +123,9 @@ create table if not exists auramind_knowledge (
   created_at timestamptz not null default now()
 );
 
-create index if not exists idx_knowledge_cat on auramind_knowledge(goal_category);
+create index idx_knowledge_cat on auramind_knowledge(goal_category);
 
--- ============================================================
--- Permissions and RLS
--- ============================================================
-
+-- 3. Grants and Row-Level Security
 grant usage on schema public to anon, authenticated, service_role;
 grant all on all tables in schema public to service_role;
 grant all on all sequences in schema public to service_role;
@@ -175,23 +139,10 @@ alter table auramind_messages enable row level security;
 alter table auramind_run_reports enable row level security;
 alter table auramind_knowledge enable row level security;
 
-drop policy if exists "service_role_requests" on requests;
 create policy "service_role_requests" on requests for all to service_role using (true) with check (true);
-
-drop policy if exists "service_role_checkins" on checkins;
 create policy "service_role_checkins" on checkins for all to service_role using (true) with check (true);
-
-drop policy if exists "service_role_focus" on auramind_focus_sessions;
 create policy "service_role_focus" on auramind_focus_sessions for all to service_role using (true) with check (true);
-
-drop policy if exists "service_role_runs" on auramind_goal_runs;
 create policy "service_role_runs" on auramind_goal_runs for all to service_role using (true) with check (true);
-
-drop policy if exists "service_role_messages" on auramind_messages;
 create policy "service_role_messages" on auramind_messages for all to service_role using (true) with check (true);
-
-drop policy if exists "service_role_reports" on auramind_run_reports;
 create policy "service_role_reports" on auramind_run_reports for all to service_role using (true) with check (true);
-
-drop policy if exists "service_role_knowledge" on auramind_knowledge;
 create policy "service_role_knowledge" on auramind_knowledge for all to service_role using (true) with check (true);

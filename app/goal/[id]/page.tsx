@@ -44,12 +44,16 @@ export default function GoalHub() {
   const [isLoading, setIsLoading] = useState(true);
   const [isStarting, setIsStarting] = useState(false);
   const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
 
-  // Active Tab
-  const [activeTab, setActiveTab] = useState<"plan" | "timer" | "checkin" | "chat" | "reports" | "adaptive" | "xp">("plan");
+  // Active Navigation Tab
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "timetable" | "timer" | "checkin" | "reports" | "chat" | "adaptive" | "my_goal"
+  >("overview");
 
   // Selected Day (defaults to calculated current day)
   const [selectedDay, setSelectedDay] = useState(1);
+  const [taskCategoryFilter, setTaskCategoryFilter] = useState("all");
 
   // Focus Timer State
   const [timerDurationMin, setTimerDurationMin] = useState(25);
@@ -61,7 +65,6 @@ export default function GoalHub() {
   const [completedSessionsCount, setCompletedSessionsCount] = useState(0);
   const [timerAlert, setTimerAlert] = useState("");
   const [fullscreenFocus, setFullscreenFocus] = useState(false);
-  const [taskCategoryFilter, setTaskCategoryFilter] = useState("all");
   const timerExpectedEndRef = useRef<number | null>(null);
 
   // Check-in State
@@ -84,6 +87,7 @@ export default function GoalHub() {
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [isSendingChat, setIsSendingChat] = useState(false);
+  const chatBottomRef = useRef<HTMLDivElement>(null);
 
   // Adaptive Schedule State
   const [isAdapting, setIsAdapting] = useState(false);
@@ -98,6 +102,7 @@ export default function GoalHub() {
     try {
       const res = await fetch(`/api/requests?id=${encodeURIComponent(idOrCode)}`);
       const data = await res.json();
+
       if (!res.ok) throw new Error(data.error || "Goal not found.");
 
       setGoalData(data);
@@ -149,7 +154,7 @@ export default function GoalHub() {
     loadGoal();
   }, [loadGoal]);
 
-  // Auto-poll if goal is not yet ready
+  // Auto-poll if goal is synthesizing
   useEffect(() => {
     if (goalData && goalData.status !== "ready" && goalData.status !== "archived") {
       const interval = setInterval(loadGoal, 12000);
@@ -163,6 +168,13 @@ export default function GoalHub() {
       loadChat();
     }
   }, [goalData?.started_at, loadCheckins, loadChat]);
+
+  // Scroll chat to bottom when new messages arrive
+  useEffect(() => {
+    if (activeTab === "chat") {
+      chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [chatMessages, activeTab]);
 
   // Load / Restore Timer State from LocalStorage
   useEffect(() => {
@@ -218,7 +230,7 @@ export default function GoalHub() {
     );
   };
 
-  // Timer Tick Mechanism (Accurate against sleep & inactive tabs)
+  // Timer Tick Mechanism (Accurate against background tabs)
   useEffect(() => {
     if (timerStatus !== "running") return;
 
@@ -255,13 +267,14 @@ export default function GoalHub() {
 
   const resetTimer = () => {
     timerExpectedEndRef.current = null;
-    const defaultSec = timerDurationMin * 60;
-    setTimerRemainingSec(defaultSec);
+    const totalSec = timerDurationMin * 60;
+    setTimerRemainingSec(totalSec);
     setTimerStatus("idle");
     setTimerAlert("");
-    persistTimerState("idle", defaultSec, null);
+    persistTimerState("idle", totalSec, null);
   };
 
+  // Keyboard Shortcuts for Timer
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
@@ -315,35 +328,8 @@ export default function GoalHub() {
       osc.start();
       osc.stop(ctx.currentTime + 0.6);
     } catch {
-      // Audio autoplay restrictions
+      // Audio autoplay policy
     }
-  };
-
-  const exportTimetableMarkdown = (goal: string, plan: any) => {
-    if (!plan?.days) return;
-    let md = `# AuraMind 30-Day Plan: ${goal}\n\n`;
-    md += `## Goal Summary\n${plan.goal_summary}\n\n`;
-    md += `## Definition of Success\n${plan.definition_of_success}\n\n`;
-    md += `## 4-Week Milestones\n`;
-    plan.weekly_focus?.forEach((w: any) => {
-      md += `- **Week ${w.week}: ${w.title}**: ${w.focus} (Expected: ${w.expected_outcome})\n`;
-    });
-    md += `\n---\n\n## 30-Day Schedule\n\n`;
-    plan.days.forEach((d: any) => {
-      md += `### ${d.day_label || `Day ${d.day}`} (${d.calendar_date}) — ${d.phase}\n`;
-      d.blocks.forEach((b: any) => {
-        md += `- **${b.start} - ${b.end}** [${b.category.toUpperCase()}] (${b.priority} priority): ${b.activity}\n  *Reason: ${b.reason}*\n`;
-      });
-      md += `\n`;
-    });
-
-    const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `AuraMind-Plan-${goal.slice(0, 20).replace(/[^a-zA-Z0-9]/g, "-")}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
   };
 
   const handleTimerComplete = async () => {
@@ -355,11 +341,10 @@ export default function GoalHub() {
       const newCount = completedSessionsCount + 1;
       setCompletedSessionsCount(newCount);
 
-      // Offer long break suggestion after 4 sessions
       if (newCount % 4 === 0) {
-        setTimerAlert("Outstanding effort! You completed 4 focus sessions. We recommend a 15-minute restorative break.");
+        setTimerAlert("Outstanding focus! You finished 4 sessions. Take a 15-minute restorative break.");
       } else {
-        setTimerAlert("Focus session complete! Great work. Take a 5-minute breather or start your next block.");
+        setTimerAlert("Focus session complete. Log your check-in or take a 5-minute breather.");
       }
 
       // Persist to Server via /api/timer
@@ -382,11 +367,10 @@ export default function GoalHub() {
           setUserXp((prev) => prev + (data.xp_awarded || 35));
         }
       } catch {
-        // Fallback local award
         setUserXp((prev) => prev + timerDurationMin + 15);
       }
     } else {
-      setTimerAlert("Break time finished! Ready to resume your deep focus block?");
+      setTimerAlert("Break period finished. Ready for your next deep focus block?");
     }
 
     persistTimerState("completed", 0, null);
@@ -553,82 +537,95 @@ export default function GoalHub() {
     }
   };
 
-  // Format Timer mm:ss
-  const formatTimer = (totalSeconds: number) => {
-    const mins = Math.floor(totalSeconds / 60);
-    const secs = totalSeconds % 60;
-    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  const copyAccessCode = () => {
+    if (!goalData?.request_code) return;
+    navigator.clipboard.writeText(goalData.request_code);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2000);
   };
 
-  // LOADING STATE
+  const exportTimetableMarkdown = (goal: string, plan: any) => {
+    if (!plan?.days) return;
+    let md = `# AuraMind 30-Day Plan: ${goal}\n\n`;
+    md += `## Goal Summary\n${plan.goal_summary}\n\n`;
+    md += `## Definition of Success\n${plan.definition_of_success}\n\n`;
+    md += `## 4-Week Milestones\n`;
+    plan.weekly_focus?.forEach((w: any) => {
+      md += `- **Week ${w.week}: ${w.title}**: ${w.focus} (Expected: ${w.expected_outcome})\n`;
+    });
+    md += `\n---\n\n## 30-Day Schedule\n\n`;
+    plan.days.forEach((d: any) => {
+      md += `### ${d.day_label || `Day ${d.day}`} (${d.calendar_date}) \u2014 ${d.phase}\n`;
+      d.blocks.forEach((b: any) => {
+        md += `- **${b.start} - ${b.end}** [${b.category.toUpperCase()}] (${b.priority} priority): ${b.activity}\n  *Reason: ${b.reason}*\n`;
+      });
+      md += `\n`;
+    });
+
+    const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `AuraMind-Plan-${goal.slice(0, 20).replace(/[^a-zA-Z0-9]/g, "-")}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const formatTimer = (sec: number) => {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  };
+
+  // 1. LOADING SKELETON
   if (isLoading) {
     return (
-      <div className="container-narrow" style={{ paddingTop: "80px", textAlign: "center" }}>
-        <div style={{ color: "var(--yellow-primary)", fontSize: "1.2rem", fontWeight: 700 }}>
-          Loading your AuraMind goal...
+      <div className="container" style={{ paddingTop: "32px", paddingBottom: "80px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+          <div className="skeleton" style={{ width: "220px", height: "32px" }} />
+          <div className="skeleton" style={{ width: "120px", height: "32px" }} />
+        </div>
+        <div className="workspace-layout">
+          <div className="workspace-sidebar" style={{ gap: "10px" }}>
+            <div className="skeleton" style={{ height: "40px" }} />
+            <div className="skeleton" style={{ height: "40px" }} />
+            <div className="skeleton" style={{ height: "40px" }} />
+            <div className="skeleton" style={{ height: "40px" }} />
+            <div className="skeleton" style={{ height: "40px" }} />
+          </div>
+          <div>
+            <div className="card" style={{ marginBottom: "20px" }}>
+              <div className="skeleton" style={{ width: "40%", height: "28px", marginBottom: "12px" }} />
+              <div className="skeleton" style={{ width: "80%", height: "18px", marginBottom: "8px" }} />
+              <div className="skeleton" style={{ width: "60%", height: "18px" }} />
+            </div>
+            <div className="card">
+              <div className="skeleton" style={{ height: "180px" }} />
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
-  // ERROR OR NOT FOUND
-  if (!goalData) {
+  // 2. ERROR STATE
+  if (errorMsg && !goalData) {
     return (
-      <div className="container-narrow" style={{ paddingTop: "80px", textAlign: "center" }}>
-        <div className="card card-highlight">
-          <h2>Goal Request Not Found</h2>
-          <p className="text-secondary">{errorMsg || "We could not find a goal corresponding to this ID or Request Code."}</p>
-          <Link href="/" className="btn btn-primary">
-            &larr; Return to Home
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  // 1. STATUS IS NOT READY (PENDING / RESEARCHING / REVIEW)
-  if (goalData.status !== "ready") {
-    const isArchived = goalData.status === "archived";
-
-    return (
-      <div className="container-narrow" style={{ paddingTop: "60px", paddingBottom: "80px" }}>
-        <div className="card card-highlight" style={{ textAlign: "center", padding: "40px 24px" }}>
-          <div className="flex-center" style={{ gap: "8px", marginBottom: "16px" }}>
-            <span className="badge badge-yellow">
-              {isArchived ? "Archived" : "Action Required"}
-            </span>
-            <span className="font-mono text-xs text-yellow">{goalData.request_code}</span>
+      <div className="container-narrow" style={{ paddingTop: "80px", paddingBottom: "80px" }}>
+        <div className="card card-highlight" style={{ textAlign: "center", padding: "48px 24px" }}>
+          <div style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: "var(--error-bg)", border: "1px solid var(--error-border)", color: "var(--error-text)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", fontSize: "1.2rem", fontWeight: 700 }}>
+            !
           </div>
-
-          <h1 style={{ fontSize: "2rem", marginBottom: "10px" }}>{goalData.goal}</h1>
-
-          <div style={{ maxWidth: "540px", margin: "0 auto 30px" }}>
-            {isArchived ? (
-              <p>This goal request has been archived.</p>
-            ) : (
-              <div>
-                <p style={{ color: "var(--text-secondary)", marginBottom: "24px" }}>
-                  Your goal is registered. Click below to immediately synthesize your full 30-day curriculum with AI.
-                </p>
-
-                {errorMsg && <div className="alert alert-error" style={{ marginBottom: "16px" }}>{errorMsg}</div>}
-
-                <button
-                  type="button"
-                  className="btn btn-primary btn-lg"
-                  disabled={isGeneratingPlan}
-                  onClick={handleGeneratePlanNow}
-                  style={{ width: "100%", maxWidth: "380px", margin: "0 auto 16px" }}
-                >
-                  {isGeneratingPlan ? "⚡ Synthesizing 30-Day Plan…" : "⚡ Synthesize 30-Day Plan with AI Now \u2192"}
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-            <Link href="/" className="btn btn-secondary btn-sm">
-              &larr; Back to Home
+          <h2 style={{ fontSize: "1.5rem", marginBottom: "8px" }}>Goal Not Accessible</h2>
+          <p className="text-secondary text-sm" style={{ maxWidth: "460px", margin: "0 auto 24px" }}>
+            {errorMsg}
+          </p>
+          <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
+            <button type="button" onClick={loadGoal} className="btn btn-secondary">
+              Try Again
+            </button>
+            <Link href="/" className="btn btn-primary">
+              Return Home
             </Link>
           </div>
         </div>
@@ -636,56 +633,158 @@ export default function GoalHub() {
     );
   }
 
-  // 2. STATUS IS READY, BUT USER HAS NOT CLICKED "START 30-DAY GOAL"
+  // 3. PENDING SYNTHESIS / NOT READY STATE
+  if (goalData.status !== "ready") {
+    const isArchived = goalData.status === "archived";
+
+    return (
+      <div className="container-narrow" style={{ paddingTop: "60px", paddingBottom: "80px" }}>
+        <div className="card card-highlight" style={{ padding: "36px 28px" }}>
+          <div className="flex-between" style={{ marginBottom: "16px", flexWrap: "wrap", gap: "8px" }}>
+            <span className={`badge ${isArchived ? "badge-gray" : "badge-yellow"}`}>
+              {isArchived ? "Archived" : "Action Required"}
+            </span>
+            <button
+              type="button"
+              onClick={copyAccessCode}
+              className="text-xs font-mono"
+              style={{
+                background: "var(--bg-elevated)",
+                border: "1px solid var(--border-color)",
+                padding: "3px 10px",
+                borderRadius: "var(--radius-xs)",
+                color: "var(--accent-primary)",
+                cursor: "pointer",
+              }}
+              title="Click to copy access code"
+            >
+              {copiedCode ? "\u2713 Copied" : `Code: ${goalData.request_code}`}
+            </button>
+          </div>
+
+          <h1 style={{ fontSize: "1.85rem", marginBottom: "8px" }}>{goalData.goal}</h1>
+          <div className="text-sm text-secondary" style={{ marginBottom: "24px" }}>
+            {formatLevel(goalData.category, goalData.current_level, goalData.context?.custom_current_level)} &rarr;{" "}
+            {formatLevel(goalData.category, goalData.target_level, goalData.context?.custom_target_level)} &bull;{" "}
+            {goalData.context?.hours || 2}h daily deliberate practice
+          </div>
+
+          {isArchived ? (
+            <p className="text-muted">This goal request has been archived.</p>
+          ) : (
+            <div style={{ backgroundColor: "var(--bg-secondary)", padding: "20px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-subtle)", marginBottom: "24px" }}>
+              <div style={{ fontWeight: 600, color: "var(--accent-primary)", marginBottom: "6px" }}>
+                Ready to Synthesize 30-Day Plan
+              </div>
+              <p className="text-sm text-secondary" style={{ margin: "0 0 16px" }}>
+                AuraMind breaks your goal into a 4-week deliberate practice progression tailored to your focus window and starting level.
+              </p>
+
+              {errorMsg && <div className="alert alert-error" style={{ marginBottom: "16px" }}>{errorMsg}</div>}
+
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={isGeneratingPlan}
+                onClick={handleGeneratePlanNow}
+                style={{ width: "100%", justifyContent: "center" }}
+              >
+                {isGeneratingPlan ? "Synthesizing 30-Day Curriculum..." : "Synthesize 30-Day Plan with AI Now \u2192"}
+              </button>
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+            <Link href="/" className="btn btn-secondary btn-sm">
+              &larr; Back to Dashboard
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 4. READY BUT UNSTARTED STATE
   if (!goalData.started_at) {
     const plan = goalData.plan;
 
     return (
       <div className="container-narrow" style={{ paddingTop: "50px", paddingBottom: "80px" }}>
-        <div className="card card-highlight">
-          <div className="flex-between" style={{ marginBottom: "16px", flexWrap: "wrap" }}>
-            <span className="badge badge-success">&#10003; 30-Day Timetable Ready</span>
-            <span className="text-xs font-mono text-muted">{goalData.request_code}</span>
+        <div className="card card-highlight" style={{ padding: "36px 30px" }}>
+          <div className="flex-between" style={{ marginBottom: "16px", flexWrap: "wrap", gap: "8px" }}>
+            <span className="badge badge-success">&#10003; 30-Day Timetable Synthesized</span>
+            <button
+              type="button"
+              onClick={copyAccessCode}
+              className="text-xs font-mono"
+              style={{
+                background: "var(--bg-elevated)",
+                border: "1px solid var(--border-color)",
+                padding: "3px 10px",
+                borderRadius: "var(--radius-xs)",
+                color: "var(--accent-primary)",
+                cursor: "pointer",
+              }}
+            >
+              {copiedCode ? "\u2713 Copied" : `Access Code: ${goalData.request_code}`}
+            </button>
           </div>
 
-          <h1 style={{ fontSize: "2.2rem", marginBottom: "8px" }}>{goalData.goal}</h1>
-          <div className="text-sm text-secondary" style={{ marginBottom: "20px" }}>
+          <h1 style={{ fontSize: "2rem", marginBottom: "8px" }}>{goalData.goal}</h1>
+          <div className="text-sm text-secondary" style={{ marginBottom: "24px" }}>
             {formatLevel(goalData.category, goalData.current_level, goalData.context?.custom_current_level)} &rarr;{" "}
             {formatLevel(goalData.category, goalData.target_level, goalData.context?.custom_target_level)} &bull;{" "}
-            {goalData.context?.hours}h / day in your {goalData.context?.focus} focus window
+            {goalData.context?.hours || 2}h/day in your {goalData.context?.focus || "morning"} focus window
           </div>
 
           {plan && (
-            <div style={{ backgroundColor: "var(--bg-secondary)", padding: "18px", borderRadius: "8px", marginBottom: "24px" }}>
-              <div style={{ fontWeight: 700, color: "var(--yellow-primary)", marginBottom: "4px" }}>Curriculum Roadmap:</div>
-              <p style={{ fontSize: "0.95rem", marginBottom: "16px" }}>{plan.goal_summary}</p>
+            <div style={{ backgroundColor: "var(--bg-secondary)", padding: "20px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-subtle)", marginBottom: "28px" }}>
+              <div style={{ fontWeight: 600, color: "var(--accent-primary)", marginBottom: "4px" }}>
+                Curriculum Trajectory
+              </div>
+              <p className="text-sm text-secondary" style={{ marginBottom: "16px", lineHeight: 1.6 }}>
+                {plan.goal_summary}
+              </p>
 
-              <div style={{ fontWeight: 700, color: "var(--yellow-primary)", marginBottom: "6px" }}>4-Week Phased Milestones:</div>
+              <div style={{ fontWeight: 600, color: "var(--text-primary)", marginBottom: "8px", fontSize: "0.85rem" }}>
+                Phased 4-Week Milestones:
+              </div>
               <div className="grid-2" style={{ gap: "10px" }}>
                 {plan.weekly_focus?.map((wf: any) => (
-                  <div key={wf.week} style={{ backgroundColor: "var(--bg-elevated)", padding: "10px 14px", borderRadius: "6px", fontSize: "0.85rem" }}>
-                    <strong style={{ color: "var(--text-primary)" }}>Week {wf.week}: {wf.title}</strong>
-                    <div className="text-muted" style={{ marginTop: "2px" }}>{wf.expected_outcome}</div>
+                  <div
+                    key={wf.week}
+                    style={{
+                      backgroundColor: "var(--bg-surface)",
+                      padding: "12px 14px",
+                      borderRadius: "var(--radius-xs)",
+                      border: "1px solid var(--border-subtle)",
+                      fontSize: "0.85rem",
+                    }}
+                  >
+                    <strong style={{ color: "var(--accent-primary)" }}>Week {wf.week}: {wf.title}</strong>
+                    <div className="text-muted" style={{ marginTop: "4px", fontSize: "0.8rem", lineHeight: 1.4 }}>
+                      {wf.expected_outcome}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {errorMsg && <div className="alert alert-error">{errorMsg}</div>}
+          {errorMsg && <div className="alert alert-error" style={{ marginBottom: "16px" }}>{errorMsg}</div>}
 
           <div style={{ textAlign: "center" }}>
-            <p className="text-sm text-muted" style={{ marginBottom: "16px" }}>
-              Day 1 commences the moment you start. All timers, hourly check-ins, and AI accountability features will activate.
+            <p className="text-xs text-muted" style={{ marginBottom: "16px" }}>
+              Day 1 commences the moment you activate. All timer logging, daily check-ins, and adaptive analytics will unlock.
             </p>
             <button
               type="button"
               className="btn btn-primary btn-lg"
               disabled={isStarting}
               onClick={handleStartGoal}
-              style={{ width: "100%", maxWidth: "420px" }}
+              style={{ width: "100%", maxWidth: "380px" }}
             >
-              {isStarting ? "Initializing Persistent Session…" : "Start 30-Day Goal \u2192"}
+              {isStarting ? "Activating Session..." : "Start 30-Day Goal \u2192"}
             </button>
           </div>
         </div>
@@ -693,883 +792,1247 @@ export default function GoalHub() {
     );
   }
 
-  // 3. FULL PRODUCTION DASHBOARD (PLAN IS STARTED)
+  // 5. ACTIVE DASHBOARD (GOAL STARTED)
   const plan = goalData.plan;
   const currentDay = Math.min(30, Math.max(1, Math.floor((Date.now() - Date.parse(goalData.started_at)) / 864e5) + 1));
   const activeDayPlan = plan?.days?.find((d: any) => d.day === selectedDay) || plan?.days?.[0];
 
+  const currentLevelNumber = Math.max(1, Math.floor(Math.sqrt(userXp / 50)) + 1);
+
+  // Filter tasks for timetable view
+  const filteredBlocks = activeDayPlan?.blocks?.filter((b: any) => {
+    if (taskCategoryFilter === "all") return true;
+    return b.category?.toLowerCase() === taskCategoryFilter.toLowerCase();
+  }) || [];
+
   return (
-    <div className="container" style={{ paddingTop: "24px", paddingBottom: "80px" }}>
-      {/* DASHBOARD HERO HEADER */}
-      <div className="card card-highlight" style={{ padding: "20px 24px", marginBottom: "20px" }}>
-        <div className="flex-between" style={{ flexWrap: "wrap", gap: "12px" }}>
+    <div className="container-wide" style={{ paddingTop: "20px", paddingBottom: "80px" }}>
+      {/* TOP WORKSPACE BAR */}
+      <div
+        className="card"
+        style={{
+          padding: "16px 20px",
+          marginBottom: "20px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "12px",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+          <div
+            style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "var(--radius-xs)",
+              backgroundColor: "var(--accent-primary)",
+              color: "#0A0A0A",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: 800,
+              fontSize: "1.1rem",
+            }}
+          >
+            A
+          </div>
           <div>
-            <div className="flex-between" style={{ justifyContent: "flex-start", gap: "8px", marginBottom: "6px" }}>
-              <span className="badge badge-yellow">Day {currentDay} of 30</span>
-              <span className="badge badge-gray">{activeDayPlan?.phase}</span>
-              <span className="font-mono text-xs text-muted">{goalData.request_code}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <h1 style={{ fontSize: "1.25rem", margin: 0, fontWeight: 700 }}>{goalData.goal}</h1>
+              <span className="badge badge-yellow" style={{ fontSize: "0.7rem", padding: "1px 6px" }}>
+                Day {currentDay} of 30
+              </span>
             </div>
-            <h1 style={{ fontSize: "1.9rem", margin: "4px 0" }}>{goalData.goal}</h1>
-            <div className="text-xs text-secondary">
-              Progression: {formatLevel(goalData.category, goalData.current_level, goalData.context?.custom_current_level)} &rarr; {formatLevel(goalData.category, goalData.target_level, goalData.context?.custom_target_level)} &bull; Available: {goalData.context?.hours}h / day
+            <div className="text-xs text-muted" style={{ marginTop: "2px" }}>
+              {formatLevel(goalData.category, goalData.current_level, goalData.context?.custom_current_level)} &bull; {goalData.context?.hours || 2}h/day &bull; Phase: {activeDayPlan?.phase || "Foundation"}
             </div>
           </div>
+        </div>
 
-          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-            <div style={{ textAlign: "right" }}>
-              <div className="text-xs text-muted" style={{ textTransform: "uppercase", letterSpacing: "0.04em" }}>Level {Math.max(1, Math.floor(Math.sqrt(userXp / 50)) + 1)}</div>
-              <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--yellow-primary)" }}>{userXp} XP</div>
-            </div>
-            <div
-              style={{
-                width: "44px",
-                height: "44px",
-                borderRadius: "50%",
-                backgroundColor: "var(--yellow-muted)",
-                border: "2px solid var(--yellow-primary)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: 900,
-                color: "var(--yellow-primary)",
-              }}
-            >
-              &#9733;
-            </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <button
+            type="button"
+            onClick={copyAccessCode}
+            className="text-xs font-mono"
+            style={{
+              background: "var(--bg-elevated)",
+              border: "1px solid var(--border-subtle)",
+              padding: "5px 10px",
+              borderRadius: "var(--radius-xs)",
+              color: "var(--text-secondary)",
+              cursor: "pointer",
+            }}
+            title="Click to copy code"
+          >
+            {copiedCode ? "\u2713 Copied" : `Code: ${goalData.request_code}`}
+          </button>
+
+          <div
+            style={{
+              padding: "4px 10px",
+              borderRadius: "var(--radius-xs)",
+              backgroundColor: "var(--bg-elevated)",
+              border: "1px solid var(--accent-border)",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            <span style={{ color: "var(--accent-primary)", fontWeight: 700, fontSize: "0.85rem" }}>
+              Lv {currentLevelNumber}
+            </span>
+            <span className="text-xs text-muted">&bull;</span>
+            <span className="text-xs font-mono" style={{ color: "var(--text-primary)", fontWeight: 600 }}>
+              {userXp} XP
+            </span>
           </div>
         </div>
       </div>
 
-      {/* DASHBOARD TABS NAVIGATION */}
-      <div className="tabs-container">
-        <button
-          type="button"
-          className={`tab-btn ${activeTab === "plan" ? "active" : ""}`}
-          onClick={() => setActiveTab("plan")}
-        >
-          Curriculum &amp; Day {selectedDay}
-        </button>
-        <button
-          type="button"
-          className={`tab-btn ${activeTab === "timer" ? "active" : ""}`}
-          onClick={() => setActiveTab("timer")}
-        >
-          Focus Timer
-        </button>
-        <button
-          type="button"
-          className={`tab-btn ${activeTab === "checkin" ? "active" : ""}`}
-          onClick={() => setActiveTab("checkin")}
-        >
-          Hourly Check-In
-        </button>
-        <button
-          type="button"
-          className={`tab-btn ${activeTab === "chat" ? "active" : ""}`}
-          onClick={() => setActiveTab("chat")}
-        >
-          Ask AuraMind (AI)
-        </button>
-        <button
-          type="button"
-          className={`tab-btn ${activeTab === "reports" ? "active" : ""}`}
-          onClick={() => setActiveTab("reports")}
-        >
-          Reports &amp; Metrics
-        </button>
-        <button
-          type="button"
-          className={`tab-btn ${activeTab === "adaptive" ? "active" : ""}`}
-          onClick={() => setActiveTab("adaptive")}
-        >
-          Adaptive Schedule
-        </button>
-      </div>
-
-      {/* TAB 1: CURRICULUM & TODAY'S PLAN */}
-      {activeTab === "plan" && (
-        <div>
-          {/* DAY PICKER */}
-          <div className="card" style={{ padding: "16px", marginBottom: "20px" }}>
-            <div className="flex-between" style={{ marginBottom: "10px" }}>
-              <span className="text-xs text-muted" style={{ textTransform: "uppercase", fontWeight: 700 }}>
-                Select Day to Inspect (30 Days Total)
-              </span>
-              <span className="text-xs text-yellow" style={{ fontWeight: 600 }}>
-                Currently on Day {currentDay}
-              </span>
-            </div>
-
-            <div style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "4px" }}>
-              {plan?.days?.map((d: any) => {
-                const isSelected = d.day === selectedDay;
-                const isToday = d.day === currentDay;
-                return (
-                  <button
-                    key={d.day}
-                    type="button"
-                    onClick={() => setSelectedDay(d.day)}
-                    style={{
-                      minWidth: "44px",
-                      height: "44px",
-                      borderRadius: "6px",
-                      backgroundColor: isSelected ? "var(--yellow-primary)" : isToday ? "var(--bg-elevated)" : "var(--bg-secondary)",
-                      color: isSelected ? "#0A0A0A" : isToday ? "var(--yellow-primary)" : "var(--text-secondary)",
-                      border: isSelected ? "1px solid var(--yellow-primary)" : isToday ? "1px solid var(--yellow-border)" : "1px solid var(--border-color)",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                      fontSize: "0.85rem",
-                    }}
-                  >
-                    {d.day}
-                  </button>
-                );
-              })}
-            </div>
+      {/* WORKSPACE LAYOUT: SIDEBAR + MAIN STAGE */}
+      <div className="workspace-layout">
+        {/* SIDEBAR NAVIGATION */}
+        <aside className="workspace-sidebar">
+          <div style={{ padding: "4px 8px 12px", borderBottom: "1px solid var(--border-subtle)", marginBottom: "6px" }}>
+            <span className="text-xs text-muted" style={{ textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 700 }}>
+              Goal Workspace
+            </span>
           </div>
 
-          {/* ACTIVE DAY TASKS */}
-          <div className="card">
-            <div className="flex-between" style={{ marginBottom: "16px", flexWrap: "wrap" }}>
-              <div>
-                <span className="badge badge-yellow" style={{ marginBottom: "6px" }}>{activeDayPlan?.phase}</span>
-                <h2 style={{ fontSize: "1.6rem", margin: "2px 0" }}>
-                  {activeDayPlan?.day_label || `Day ${selectedDay}`} &mdash; {activeDayPlan?.calendar_date}
-                </h2>
-              </div>
+          <button
+            type="button"
+            className={`workspace-nav-item ${activeTab === "overview" ? "active" : ""}`}
+            onClick={() => setActiveTab("overview")}
+          >
+            <span>
+              <span className="workspace-nav-item-icon">&#9638;</span>
+              Overview
+            </span>
+            <span className="workspace-nav-item-badge">Day {currentDay}</span>
+          </button>
 
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  onClick={() => exportTimetableMarkdown(goalData.goal, plan)}
-                >
-                  &#x2913; Export Plan (.md)
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-outline-yellow btn-sm"
-                  onClick={() => {
-                    if (activeDayPlan?.blocks?.[0]) {
-                      setTimerTask(activeDayPlan.blocks[0].activity);
-                      setActiveTab("timer");
-                    }
-                  }}
-                >
-                  Start Priority in Focus Timer &rarr;
-                </button>
-              </div>
+          <button
+            type="button"
+            className={`workspace-nav-item ${activeTab === "timetable" ? "active" : ""}`}
+            onClick={() => setActiveTab("timetable")}
+          >
+            <span>
+              <span className="workspace-nav-item-icon">&#9776;</span>
+              30-Day Timetable
+            </span>
+            <span className="workspace-nav-item-badge">Day {selectedDay}</span>
+          </button>
+
+          <button
+            type="button"
+            className={`workspace-nav-item ${activeTab === "timer" ? "active" : ""}`}
+            onClick={() => setActiveTab("timer")}
+          >
+            <span>
+              <span className="workspace-nav-item-icon">&#9201;</span>
+              Focus Timer
+            </span>
+            {timerStatus === "running" && (
+              <span className="badge badge-yellow pulse" style={{ fontSize: "0.65rem", padding: "1px 5px" }}>
+                Active
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            className={`workspace-nav-item ${activeTab === "checkin" ? "active" : ""}`}
+            onClick={() => setActiveTab("checkin")}
+          >
+            <span>
+              <span className="workspace-nav-item-icon">&#10003;</span>
+              Hourly Check-In
+            </span>
+            {checkins.length > 0 && (
+              <span className="workspace-nav-item-badge">{checkins.length} logged</span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            className={`workspace-nav-item ${activeTab === "reports" ? "active" : ""}`}
+            onClick={() => setActiveTab("reports")}
+          >
+            <span>
+              <span className="workspace-nav-item-icon">&#9684;</span>
+              Reports &amp; Analytics
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className={`workspace-nav-item ${activeTab === "chat" ? "active" : ""}`}
+            onClick={() => setActiveTab("chat")}
+          >
+            <span>
+              <span className="workspace-nav-item-icon">&#9670;</span>
+              Ask AuraMind
+            </span>
+            <span className="workspace-nav-item-badge">AI</span>
+          </button>
+
+          <button
+            type="button"
+            className={`workspace-nav-item ${activeTab === "adaptive" ? "active" : ""}`}
+            onClick={() => setActiveTab("adaptive")}
+          >
+            <span>
+              <span className="workspace-nav-item-icon">&#9881;</span>
+              Adaptive Timetable
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className={`workspace-nav-item ${activeTab === "my_goal" ? "active" : ""}`}
+            onClick={() => setActiveTab("my_goal")}
+          >
+            <span>
+              <span className="workspace-nav-item-icon">&#9671;</span>
+              Goal Scope &amp; Details
+            </span>
+          </button>
+
+          {/* SIDEBAR FOOTER CARD */}
+          <div
+            style={{
+              marginTop: "auto",
+              paddingTop: "16px",
+              borderTop: "1px solid var(--border-subtle)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span className="text-xs text-muted">Daily Target</span>
+              <span className="text-xs font-mono text-yellow">{goalData.context?.hours || 2} Hours</span>
             </div>
-
-            {/* CATEGORY FILTER */}
-            <div style={{ display: "flex", gap: "6px", marginBottom: "16px", flexWrap: "wrap" }}>
-              {["all", "learn", "practice", "review", "repair", "checkpoint"].map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  className={`badge ${taskCategoryFilter === cat ? "badge-yellow" : "badge-gray"}`}
-                  style={{
-                    cursor: "pointer",
-                    border: taskCategoryFilter === cat ? "1px solid var(--yellow-primary)" : "1px solid var(--border-color)",
-                    backgroundColor: taskCategoryFilter === cat ? "var(--yellow-muted)" : "var(--bg-secondary)",
-                    color: taskCategoryFilter === cat ? "var(--yellow-primary)" : "var(--text-secondary)",
-                  }}
-                  onClick={() => setTaskCategoryFilter(cat)}
-                >
-                  {cat.toUpperCase()}
-                </button>
-              ))}
+            <div style={{ width: "100%", height: "4px", backgroundColor: "var(--bg-elevated)", borderRadius: "2px", overflow: "hidden" }}>
+              <div
+                style={{
+                  width: `${Math.min(100, Math.round((completedSessionsCount * 25) / ((goalData.context?.hours || 2) * 60) * 100))}%`,
+                  height: "100%",
+                  backgroundColor: "var(--accent-primary)",
+                  borderRadius: "2px",
+                }}
+              />
             </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", color: "var(--text-muted)" }}>
+              <span>Focus sessions: {completedSessionsCount}</span>
+              <span>Day {currentDay}/30</span>
+            </div>
+          </div>
+        </aside>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {activeDayPlan?.blocks
-                ?.filter((b: any) => (taskCategoryFilter === "all" ? true : b.category === taskCategoryFilter))
-                ?.map((block: any, idx: number) => (
-                <div
-                  key={idx}
-                  className={`task-block ${
-                    block.priority === "high" ? "priority-high" : block.priority === "medium" ? "priority-medium" : "priority-low"
-                  }`}
-                >
-                  <div className="flex-between" style={{ marginBottom: "6px" }}>
-                    <div>
-                      <span className="task-time">{block.start} &ndash; {block.end}</span>
-                      <strong style={{ fontSize: "1.05rem", color: "var(--text-primary)" }}>{block.activity}</strong>
-                    </div>
-                    <span className="badge badge-gray" style={{ fontSize: "0.7rem" }}>
-                      {block.category} &bull; {block.priority}
-                    </span>
+        {/* MAIN STAGE */}
+        <main>
+          {/* TAB 1: OVERVIEW */}
+          {activeTab === "overview" && (
+            <div>
+              {/* TOP METRICS GRID */}
+              <div className="grid-4" style={{ gap: "12px", marginBottom: "20px" }}>
+                <div className="card" style={{ padding: "16px" }}>
+                  <div className="text-xs text-muted" style={{ textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                    Current Trajectory
                   </div>
-                  <p className="text-xs text-secondary" style={{ margin: 0 }}>
-                    {block.reason}
-                  </p>
+                  <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--accent-primary)", margin: "4px 0 2px" }}>
+                    Day {currentDay}
+                  </div>
+                  <div className="text-xs text-secondary">
+                    Phase: {activeDayPlan?.phase || "Foundation"}
+                  </div>
+                </div>
 
-                  <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+                <div className="card" style={{ padding: "16px" }}>
+                  <div className="text-xs text-muted" style={{ textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                    Focus Completed
+                  </div>
+                  <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--text-primary)", margin: "4px 0 2px" }}>
+                    {completedSessionsCount * 25}m
+                  </div>
+                  <div className="text-xs text-secondary">
+                    {completedSessionsCount} deep sessions today
+                  </div>
+                </div>
+
+                <div className="card" style={{ padding: "16px" }}>
+                  <div className="text-xs text-muted" style={{ textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                    Check-Ins Recorded
+                  </div>
+                  <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--accent-primary)", margin: "4px 0 2px" }}>
+                    {checkins.length}
+                  </div>
+                  <div className="text-xs text-secondary">
+                    {dailyReport?.consistency_score ? `${dailyReport.consistency_score}% Adherence` : "Awaiting diagnostics"}
+                  </div>
+                </div>
+
+                <div className="card" style={{ padding: "16px" }}>
+                  <div className="text-xs text-muted" style={{ textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                    Mastery XP
+                  </div>
+                  <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--accent-primary)", margin: "4px 0 2px" }}>
+                    {userXp}
+                  </div>
+                  <div className="text-xs text-secondary">
+                    Level {currentLevelNumber} Apprentice
+                  </div>
+                </div>
+              </div>
+
+              {/* NEXT SCHEDULED ACTION CARD */}
+              <div className="card card-highlight" style={{ padding: "24px", marginBottom: "20px" }}>
+                <div className="flex-between" style={{ marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
+                  <span className="badge badge-yellow">Day {currentDay} Scheduled Focus</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedDay(currentDay);
+                      setActiveTab("timetable");
+                    }}
+                    className="text-xs font-mono text-muted"
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "var(--accent-primary)" }}
+                  >
+                    View All {activeDayPlan?.blocks?.length || 0} Blocks &rarr;
+                  </button>
+                </div>
+
+                {activeDayPlan?.blocks?.[0] ? (
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                      <span className="badge badge-gray font-mono">{activeDayPlan.blocks[0].start} &ndash; {activeDayPlan.blocks[0].end}</span>
+                      <span className="badge badge-yellow">{activeDayPlan.blocks[0].category}</span>
+                      <span className="badge badge-gray">{activeDayPlan.blocks[0].priority} priority</span>
+                    </div>
+
+                    <h2 style={{ fontSize: "1.4rem", margin: "4px 0 8px" }}>
+                      {activeDayPlan.blocks[0].activity}
+                    </h2>
+
+                    <p className="text-sm text-secondary" style={{ marginBottom: "18px", lineHeight: 1.5 }}>
+                      <strong style={{ color: "var(--accent-primary)" }}>Pedagogical Reason:</strong> {activeDayPlan.blocks[0].reason}
+                    </p>
+
+                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={() => {
+                          setTimerTask(activeDayPlan.blocks[0].activity);
+                          setActiveTab("timer");
+                        }}
+                      >
+                        &#9654; Start in Focus Timer
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => {
+                          setCheckinPlanned(`${activeDayPlan.blocks[0].start} ${activeDayPlan.blocks[0].activity}`);
+                          setActiveTab("checkin");
+                        }}
+                      >
+                        &#10003; Log Check-In
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-muted text-sm">No scheduled task blocks found for today.</p>
+                )}
+              </div>
+
+              {/* TWO COLUMN BRIEFING & QUICK ACTIONS */}
+              <div className="grid-2" style={{ gap: "20px" }}>
+                <div className="card" style={{ padding: "20px" }}>
+                  <div style={{ fontWeight: 600, color: "var(--accent-primary)", marginBottom: "8px", fontSize: "0.95rem" }}>
+                    AI Coach Diagnostic
+                  </div>
+                  <p className="text-sm text-secondary" style={{ margin: "0 0 16px", lineHeight: 1.6 }}>
+                    {coachingFeedback
+                      ? coachingFeedback
+                      : "You are in the foundational phase of your 30-day curriculum. Prioritize high-focus deliberate practice over passive consumption. If friction occurs, log an hourly check-in so your schedule can adapt."}
+                  </p>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => setActiveTab("chat")}
+                  >
+                    Consult AI Tutor &rarr;
+                  </button>
+                </div>
+
+                <div className="card" style={{ padding: "20px" }}>
+                  <div style={{ fontWeight: 600, color: "var(--text-primary)", marginBottom: "8px", fontSize: "0.95rem" }}>
+                    Active 4-Week Milestone
+                  </div>
+                  <div className="text-xs font-mono text-yellow" style={{ marginBottom: "4px" }}>
+                    WEEK {Math.ceil(currentDay / 7)}
+                  </div>
+                  <div style={{ fontWeight: 600, fontSize: "1rem", marginBottom: "6px" }}>
+                    {plan?.weekly_focus?.[Math.ceil(currentDay / 7) - 1]?.title || "Foundational Competencies"}
+                  </div>
+                  <p className="text-xs text-muted" style={{ margin: "0 0 16px", lineHeight: 1.5 }}>
+                    {plan?.weekly_focus?.[Math.ceil(currentDay / 7) - 1]?.expected_outcome || "Build automaticity with core mechanics."}
+                  </p>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => setActiveTab("my_goal")}
+                  >
+                    View Full Roadmap &rarr;
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: 30-DAY TIMETABLE */}
+          {activeTab === "timetable" && (
+            <div>
+              {/* DAY SELECTOR CAROUSEL / STRIP */}
+              <div className="card" style={{ padding: "16px", marginBottom: "20px" }}>
+                <div className="flex-between" style={{ marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
+                  <span className="text-xs text-muted" style={{ textTransform: "uppercase", fontWeight: 700 }}>
+                    Select Day (1&ndash;30)
+                  </span>
+                  <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                    <span className="text-xs text-yellow" style={{ fontWeight: 600 }}>
+                      Current: Day {currentDay}
+                    </span>
                     <button
                       type="button"
                       className="btn btn-secondary btn-sm"
-                      style={{ fontSize: "0.75rem", padding: "4px 10px", minHeight: "28px" }}
-                      onClick={() => {
-                        setTimerTask(block.activity);
-                        setActiveTab("timer");
-                      }}
+                      style={{ fontSize: "0.75rem", padding: "4px 8px" }}
+                      onClick={() => exportTimetableMarkdown(goalData.goal, plan)}
                     >
-                      &#9654; Open in Timer
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-secondary btn-sm"
-                      style={{ fontSize: "0.75rem", padding: "4px 10px", minHeight: "28px" }}
-                      onClick={() => {
-                        setCheckinPlanned(`${block.start} ${block.activity}`);
-                        setActiveTab("checkin");
-                      }}
-                    >
-                      &#10003; Log Check-In
+                      Export .md
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* ROADMAP PHASES & MILESTONES PREVIEW */}
-          <details className="card" style={{ marginTop: "20px" }}>
-            <summary style={{ cursor: "pointer", fontWeight: 700, fontSize: "1.05rem" }}>
-              Explore Full 30-Day Weekly Architecture &amp; Milestones
-            </summary>
-            <div style={{ marginTop: "16px" }}>
-              <div className="grid-2" style={{ gap: "12px", marginBottom: "16px" }}>
-                {plan?.weekly_focus?.map((wf: any) => (
-                  <div key={wf.week} style={{ backgroundColor: "var(--bg-secondary)", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)" }}>
-                    <div style={{ color: "var(--yellow-primary)", fontWeight: 700, fontSize: "0.9rem" }}>Week {wf.week}: {wf.title}</div>
-                    <div className="text-xs text-secondary" style={{ margin: "4px 0" }}>{wf.focus}</div>
-                    <div className="text-xs text-muted"><strong>Target Outcome:</strong> {wf.expected_outcome}</div>
-                  </div>
-                ))}
+                {/* HORIZONTAL DAY PICKER */}
+                <div style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "6px" }}>
+                  {plan?.days?.map((d: any) => {
+                    const isSelected = d.day === selectedDay;
+                    const isToday = d.day === currentDay;
+                    return (
+                      <button
+                        key={d.day}
+                        type="button"
+                        onClick={() => setSelectedDay(d.day)}
+                        style={{
+                          minWidth: "42px",
+                          height: "42px",
+                          borderRadius: "var(--radius-xs)",
+                          backgroundColor: isSelected
+                            ? "var(--accent-primary)"
+                            : isToday
+                            ? "var(--bg-elevated)"
+                            : "var(--bg-secondary)",
+                          color: isSelected ? "#0A0A0A" : isToday ? "var(--accent-primary)" : "var(--text-secondary)",
+                          border: isToday
+                            ? "1px solid var(--accent-primary)"
+                            : "1px solid var(--border-subtle)",
+                          fontWeight: isSelected || isToday ? 700 : 500,
+                          fontSize: "0.85rem",
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          cursor: "pointer",
+                          transition: "all var(--transition-fast)",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <span style={{ fontSize: "0.65rem", opacity: 0.8 }}>D</span>
+                        <span>{d.day}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
-              <div style={{ backgroundColor: "var(--bg-secondary)", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)" }}>
-                <div style={{ fontWeight: 700, color: "var(--yellow-primary)", marginBottom: "8px" }}>Milestone Checkpoints:</div>
-                {plan?.milestones?.map((m: any, idx: number) => (
-                  <div key={idx} className="text-xs text-secondary" style={{ padding: "4px 0" }}>
-                    &bull; <strong>Day {m.day}:</strong> {m.milestone}
+              {/* SELECTED DAY HEADER & CATEGORY FILTER */}
+              <div className="card card-highlight" style={{ padding: "20px", marginBottom: "16px" }}>
+                <div className="flex-between" style={{ flexWrap: "wrap", gap: "10px", marginBottom: "12px" }}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span className="badge badge-yellow">Day {selectedDay}</span>
+                      <span className="badge badge-gray">{activeDayPlan?.phase}</span>
+                      {selectedDay === currentDay && <span className="badge badge-success">Today</span>}
+                    </div>
+                    <h2 style={{ fontSize: "1.4rem", margin: "6px 0 2px" }}>
+                      {activeDayPlan?.day_label || `Day ${selectedDay}`} &bull; {activeDayPlan?.calendar_date || `Day ${selectedDay}`}
+                    </h2>
                   </div>
-                ))}
+
+                  {/* CATEGORY FILTER CHIPS */}
+                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                    {["all", "deliberate_practice", "retrieval", "theory", "review"].map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setTaskCategoryFilter(cat)}
+                        className={`badge ${taskCategoryFilter === cat ? "badge-yellow" : "badge-gray"}`}
+                        style={{ cursor: "pointer", textTransform: "capitalize" }}
+                      >
+                        {cat.replace("_", " ")}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* SCHEDULED TASK BLOCKS LIST */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {filteredBlocks.length === 0 ? (
+                    <p className="text-muted text-sm" style={{ padding: "16px 0", textAlign: "center" }}>
+                      No tasks matching this filter.
+                    </p>
+                  ) : (
+                    filteredBlocks.map((block: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className="task-block"
+                        style={{
+                          backgroundColor: "var(--bg-secondary)",
+                          padding: "16px",
+                          borderRadius: "var(--radius-xs)",
+                          border: "1px solid var(--border-subtle)",
+                        }}
+                      >
+                        <div className="flex-between" style={{ marginBottom: "6px", flexWrap: "wrap", gap: "6px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span className="font-mono text-xs text-yellow" style={{ fontWeight: 700 }}>
+                              {block.start} &ndash; {block.end}
+                            </span>
+                            <span className="badge badge-gray text-xs">{block.category}</span>
+                            <span className="text-xs text-muted">&bull; {block.priority} priority</span>
+                          </div>
+                        </div>
+
+                        <div style={{ fontWeight: 600, fontSize: "1.05rem", color: "var(--text-primary)", marginBottom: "6px" }}>
+                          {block.activity}
+                        </div>
+
+                        <div className="text-xs text-secondary" style={{ marginBottom: "12px", lineHeight: 1.5 }}>
+                          <strong style={{ color: "var(--accent-primary)" }}>Why this task now:</strong> {block.reason}
+                        </div>
+
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-sm"
+                            style={{ fontSize: "0.75rem", padding: "4px 10px" }}
+                            onClick={() => {
+                              setTimerTask(block.activity);
+                              setActiveTab("timer");
+                            }}
+                          >
+                            &#9654; Open in Timer
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-sm"
+                            style={{ fontSize: "0.75rem", padding: "4px 10px" }}
+                            onClick={() => {
+                              setCheckinPlanned(`${block.start} ${block.activity}`);
+                              setActiveTab("checkin");
+                            }}
+                          >
+                            &#10003; Log Check-In
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
-          </details>
-        </div>
-      )}
+          )}
 
-      {/* TAB 2: INTERACTIVE FOCUS TIMER */}
-      {activeTab === "timer" && (
-        <div className="container-narrow">
-          <div className="card card-highlight" style={{ textAlign: "center", padding: "36px 20px" }}>
-            <div className="flex-between" style={{ justifyContent: "center", gap: "8px", marginBottom: "16px", flexWrap: "wrap" }}>
-              <span className={`badge ${timerMode === "focus" ? "badge-yellow" : "badge-gray"}`}>
-                {timerMode === "focus" ? "Deep Focus Session" : "Restorative Break"}
-              </span>
-              <span className="badge badge-gray">{completedSessionsCount} Completed Today</span>
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                style={{ fontSize: "0.75rem", padding: "4px 10px", minHeight: "28px" }}
-                onClick={() => setFullscreenFocus(true)}
-              >
-                &#x26F6; Focus Mode [F]
-              </button>
-            </div>
+          {/* TAB 3: FOCUS TIMER */}
+          {activeTab === "timer" && (
+            <div className="container-narrow" style={{ margin: "0 auto" }}>
+              <div className="card card-highlight" style={{ textAlign: "center", padding: "36px 20px" }}>
+                <div className="flex-between" style={{ justifyContent: "center", gap: "8px", marginBottom: "16px", flexWrap: "wrap" }}>
+                  <span className={`badge ${timerMode === "focus" ? "badge-yellow" : "badge-gray"}`}>
+                    {timerMode === "focus" ? "Deep Focus Session" : "Restorative Break"}
+                  </span>
+                  <span className="badge badge-gray">{completedSessionsCount} Completed Today</span>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    style={{ fontSize: "0.75rem", padding: "4px 10px" }}
+                    onClick={() => setFullscreenFocus(true)}
+                  >
+                    Focus Mode [F]
+                  </button>
+                </div>
 
-            {/* TASK ATTACHMENT */}
-            <div style={{ maxWidth: "480px", margin: "0 auto 24px" }}>
-              <label htmlFor="timerTask" className="text-xs text-muted" style={{ marginBottom: "4px" }}>
-                Active Task Block
-              </label>
-              <input
-                id="timerTask"
-                type="text"
-                placeholder="What task are you working on right now?"
-                value={timerTask}
-                onChange={(e) => setTimerTask(e.target.value)}
-                style={{ textAlign: "center", fontWeight: 600 }}
-              />
-            </div>
+                {/* TASK ATTACHMENT */}
+                <div style={{ maxWidth: "480px", margin: "0 auto 24px" }}>
+                  <label htmlFor="timerTask" className="text-xs text-muted" style={{ marginBottom: "6px", display: "block" }}>
+                    Active Task Block
+                  </label>
+                  <input
+                    id="timerTask"
+                    type="text"
+                    placeholder="What task are you working on right now?"
+                    value={timerTask}
+                    onChange={(e) => setTimerTask(e.target.value)}
+                    style={{ textAlign: "center", fontWeight: 600 }}
+                  />
+                </div>
 
-            {/* LARGE DIGITAL TIMER DISPLAY */}
-            <div
-              style={{
-                fontSize: "5.5rem",
-                fontWeight: 900,
-                fontFamily: "ui-monospace, monospace",
-                letterSpacing: "-0.04em",
-                color: timerStatus === "running" ? "var(--yellow-primary)" : "var(--text-primary)",
-                lineHeight: 1,
-                margin: "10px 0 24px",
-                textShadow: timerStatus === "running" ? "0 0 24px rgba(255, 214, 0, 0.25)" : "none",
-                transition: "color 0.2s ease",
-              }}
-            >
-              {formatTimer(timerRemainingSec)}
-            </div>
-
-            {/* CONTROLS */}
-            <div style={{ display: "flex", gap: "12px", justifyContent: "center", marginBottom: "16px" }}>
-              {timerStatus !== "running" ? (
-                <button
-                  type="button"
-                  className="btn btn-primary btn-lg"
-                  onClick={startTimer}
-                  style={{ minWidth: "160px" }}
-                >
-                  {timerStatus === "paused" ? "Resume" : "Start Focus"}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-lg"
-                  onClick={pauseTimer}
-                  style={{ minWidth: "160px" }}
-                >
-                  Pause
-                </button>
-              )}
-
-              <button type="button" className="btn btn-secondary btn-lg" onClick={resetTimer}>
-                Reset
-              </button>
-            </div>
-
-            <div className="text-xs text-muted" style={{ marginBottom: "24px" }}>
-              Shortcuts: <kbd style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--bg-elevated)", border: "1px solid var(--border-color)" }}>Space</kbd> Start/Pause &bull; <kbd style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--bg-elevated)", border: "1px solid var(--border-color)" }}>R</kbd> Reset &bull; <kbd style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--bg-elevated)", border: "1px solid var(--border-color)" }}>F</kbd> Focus Mode
-            </div>
-
-            {fullscreenFocus && (
-              <div
-                style={{
-                  position: "fixed",
-                  top: 0,
-                  left: 0,
-                  width: "100vw",
-                  height: "100vh",
-                  backgroundColor: "#0A0A0A",
-                  zIndex: 9999,
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: "24px",
-                }}
-              >
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  style={{ position: "absolute", top: "24px", right: "24px" }}
-                  onClick={() => setFullscreenFocus(false)}
-                >
-                  &times; Exit Focus Mode [Esc]
-                </button>
-
-                <span className="badge badge-yellow" style={{ marginBottom: "12px" }}>
-                  {timerMode === "focus" ? "Deep Work Session" : "Break"}
-                </span>
-
-                <h2 style={{ fontSize: "1.8rem", color: "var(--text-primary)", maxWidth: "600px", textAlign: "center", marginBottom: "20px" }}>
-                  {timerTask || "Deliberate Practice"}
-                </h2>
-
+                {/* LARGE DIGITAL TIMER DISPLAY */}
                 <div
                   style={{
-                    fontSize: "8rem",
+                    fontSize: "5.5rem",
                     fontWeight: 900,
                     fontFamily: "ui-monospace, monospace",
                     letterSpacing: "-0.04em",
-                    color: timerStatus === "running" ? "var(--yellow-primary)" : "var(--text-primary)",
+                    color: timerStatus === "running" ? "var(--accent-primary)" : "var(--text-primary)",
                     lineHeight: 1,
-                    marginBottom: "36px",
-                    textShadow: timerStatus === "running" ? "0 0 40px rgba(255, 214, 0, 0.3)" : "none",
+                    margin: "10px 0 24px",
+                    textShadow: timerStatus === "running" ? "0 0 24px rgba(255, 214, 0, 0.25)" : "none",
+                    transition: "color var(--transition-fast)",
                   }}
                 >
                   {formatTimer(timerRemainingSec)}
                 </div>
 
-                <div style={{ display: "flex", gap: "16px" }}>
+                {/* CONTROLS */}
+                <div style={{ display: "flex", gap: "12px", justifyContent: "center", marginBottom: "16px" }}>
                   {timerStatus !== "running" ? (
-                    <button type="button" className="btn btn-primary btn-lg" onClick={startTimer} style={{ minWidth: "180px" }}>
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-lg"
+                      onClick={startTimer}
+                      style={{ minWidth: "160px" }}
+                    >
                       {timerStatus === "paused" ? "Resume" : "Start Focus"}
                     </button>
                   ) : (
-                    <button type="button" className="btn btn-secondary btn-lg" onClick={pauseTimer} style={{ minWidth: "180px" }}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-lg"
+                      onClick={pauseTimer}
+                      style={{ minWidth: "160px" }}
+                    >
                       Pause
                     </button>
                   )}
+
                   <button type="button" className="btn btn-secondary btn-lg" onClick={resetTimer}>
                     Reset
                   </button>
                 </div>
-              </div>
-            )}
 
-            {timerAlert && (
-              <div className="alert alert-info" style={{ maxWidth: "480px", margin: "0 auto 24px", textAlign: "left" }}>
-                {timerAlert}
-              </div>
-            )}
-
-            {/* PRESET SELECTORS */}
-            <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "20px" }}>
-              <div className="text-xs text-muted" style={{ marginBottom: "10px", fontWeight: 700, textTransform: "uppercase" }}>
-                Focus Presets
-              </div>
-              <div style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap", marginBottom: "16px" }}>
-                {TIMER_PRESETS.map((p) => (
-                  <button
-                    key={p.minutes}
-                    type="button"
-                    className={`btn btn-sm ${timerDurationMin === p.minutes && timerMode === "focus" ? "btn-primary" : "btn-secondary"}`}
-                    onClick={() => selectTimerPreset(p.minutes, "focus")}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="text-xs text-muted" style={{ marginBottom: "10px", fontWeight: 700, textTransform: "uppercase" }}>
-                Break Presets
-              </div>
-              <div style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap" }}>
-                {BREAK_PRESETS.map((p) => (
-                  <button
-                    key={p.minutes}
-                    type="button"
-                    className={`btn btn-sm ${timerDurationMin === p.minutes && timerMode === "break" ? "btn-outline-yellow" : "btn-secondary"}`}
-                    onClick={() => selectTimerPreset(p.minutes, "break")}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 3: HOURLY ACCOUNTABILITY CHECK-IN */}
-      {activeTab === "checkin" && (
-        <div className="container-narrow">
-          <div className="card card-highlight">
-            <div style={{ marginBottom: "20px" }}>
-              <span className="badge badge-yellow" style={{ marginBottom: "6px" }}>Real-World Execution Signal</span>
-              <h2 style={{ fontSize: "1.6rem", margin: "4px 0" }}>Hourly Accountability Check-In</h2>
-              <p className="text-sm text-secondary" style={{ margin: 0 }}>
-                Record what happened during this block. Missed tasks are diagnostic signals used to improve your timetable, never moral failures.
-              </p>
-            </div>
-
-            <form onSubmit={submitCheckin}>
-              {/* Planned Task */}
-              <div className="form-group">
-                <label>Planned Task from Schedule</label>
-                <select
-                  value={checkinPlanned}
-                  onChange={(e) => setCheckinPlanned(e.target.value)}
-                  required
-                >
-                  <option value="">-- Choose scheduled task block --</option>
-                  {activeDayPlan?.blocks?.map((b: any, idx: number) => (
-                    <option key={idx} value={`${b.start} ${b.activity}`}>
-                      {b.start} &ndash; {b.end}: {b.activity}
-                    </option>
-                  ))}
-                  <option value="Self-Directed Task">Self-Directed Study Task</option>
-                </select>
-              </div>
-
-              {/* What actually happened */}
-              <div className="form-group">
-                <label>What You Actually Did</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Read chapter 2, completed 4 grammar exercises, or skipped due to meeting"
-                  value={checkinActual}
-                  onChange={(e) => setCheckinActual(e.target.value)}
-                />
-              </div>
-
-              <div className="grid-2">
-                <div className="form-group">
-                  <label>Outcome Status</label>
-                  <select
-                    value={checkinStatus}
-                    onChange={(e) => setCheckinStatus(e.target.value as any)}
-                  >
-                    <option value="done">Completed as Planned</option>
-                    <option value="partial">Partially Completed</option>
-                    <option value="missed">Missed Session</option>
-                    <option value="different">Worked on a Different Task</option>
-                  </select>
+                <div className="text-xs text-muted" style={{ marginBottom: "24px" }}>
+                  Shortcuts: <kbd style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--bg-elevated)", border: "1px solid var(--border-color)" }}>Space</kbd> Start/Pause &bull; <kbd style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--bg-elevated)", border: "1px solid var(--border-color)" }}>R</kbd> Reset &bull; <kbd style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--bg-elevated)", border: "1px solid var(--border-color)" }}>F</kbd> Focus Mode
                 </div>
 
-                <div className="form-group">
-                  <label>Time of Day Window</label>
-                  <select
-                    value={checkinPeriod}
-                    onChange={(e) => setCheckinPeriod(e.target.value as any)}
-                  >
-                    <option value="morning">Morning</option>
-                    <option value="afternoon">Afternoon</option>
-                    <option value="evening">Evening</option>
-                    <option value="night">Night</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid-2">
-                <div className="form-group">
-                  <label>Focused Minutes</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="300"
-                    value={checkinFocusedMin}
-                    onChange={(e) => setCheckinFocusedMin(parseInt(e.target.value) || 0)}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Distracted Minutes</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="300"
-                    value={checkinDistractionMin}
-                    onChange={(e) => setCheckinDistractionMin(parseInt(e.target.value) || 0)}
-                  />
-                </div>
-              </div>
-
-              <div className="grid-2">
-                <div className="form-group">
-                  <label>Distraction Category (If Any)</label>
-                  <select
-                    value={checkinDistractionType}
-                    onChange={(e) => setCheckinDistractionType(e.target.value)}
-                  >
-                    <option value="">None / Focused</option>
-                    {REASONS.map((r) => (
-                      <option key={r} value={r}>
-                        {REASON_LABELS[r] || r}
-                      </option>
+                {/* PRESETS */}
+                <div style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: "20px" }}>
+                  <div className="text-xs text-muted" style={{ marginBottom: "8px", fontWeight: 600 }}>
+                    Focus Presets
+                  </div>
+                  <div style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap", marginBottom: "16px" }}>
+                    {TIMER_PRESETS.map((p) => (
+                      <button
+                        key={p.minutes}
+                        type="button"
+                        className={`btn btn-sm ${timerDurationMin === p.minutes && timerMode === "focus" ? "btn-primary" : "btn-secondary"}`}
+                        onClick={() => selectTimerPreset(p.minutes, "focus")}
+                      >
+                        {p.label}
+                      </button>
                     ))}
-                  </select>
-                </div>
+                  </div>
 
-                <div className="form-group">
-                  <label>Main Bottleneck Reason (If Incomplete)</label>
-                  <select
-                    value={checkinReason}
-                    onChange={(e) => setCheckinReason(e.target.value)}
-                  >
-                    <option value="">None / Success</option>
-                    {REASONS.map((r) => (
-                      <option key={r} value={r}>
-                        {REASON_LABELS[r] || r}
-                      </option>
+                  <div className="text-xs text-muted" style={{ marginBottom: "8px", fontWeight: 600 }}>
+                    Break Presets
+                  </div>
+                  <div style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap" }}>
+                    {BREAK_PRESETS.map((b) => (
+                      <button
+                        key={b.minutes}
+                        type="button"
+                        className={`btn btn-sm ${timerDurationMin === b.minutes && timerMode === "break" ? "btn-primary" : "btn-secondary"}`}
+                        onClick={() => selectTimerPreset(b.minutes, "break")}
+                      >
+                        {b.label}
+                      </button>
                     ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label>Reflection Notes</label>
-                <textarea
-                  rows={2}
-                  placeholder="What specifically felt easy or difficult? Any friction points?"
-                  value={checkinNotes}
-                  onChange={(e) => setCheckinNotes(e.target.value)}
-                />
-              </div>
-
-              {errorMsg && <div className="alert alert-error">{errorMsg}</div>}
-
-              <button
-                type="submit"
-                disabled={isSubmittingCheckin}
-                className="btn btn-primary"
-                style={{ width: "100%" }}
-              >
-                {isSubmittingCheckin ? "Analyzing Signal…" : "Save Check-In & Get AI Feedback \u2192"}
-              </button>
-            </form>
-
-            {coachingFeedback && (
-              <div
-                style={{
-                  marginTop: "20px",
-                  padding: "16px",
-                  borderRadius: "8px",
-                  backgroundColor: "var(--bg-elevated)",
-                  border: "1px solid var(--yellow-border)",
-                }}
-              >
-                <div style={{ fontWeight: 700, color: "var(--yellow-primary)", marginBottom: "4px" }}>
-                  AuraMind Diagnostic Feedback:
-                </div>
-                <div style={{ fontSize: "0.95rem", color: "var(--text-primary)" }}>
-                  {coachingFeedback}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* TAB 4: ASK AURAMIND AI CHAT */}
-      {activeTab === "chat" && (
-        <div className="container-narrow">
-          <div className="card" style={{ display: "flex", flexDirection: "column", height: "620px", padding: "16px" }}>
-            <div className="flex-between" style={{ borderBottom: "1px solid var(--border-color)", paddingBottom: "12px", marginBottom: "12px" }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: "1.1rem" }}>Ask AuraMind &mdash; AI Accountability Coach</h3>
-                <div className="text-xs text-muted">Full context active: your 30-day plan, check-in history, and focus metrics</div>
-              </div>
-              <span className="badge badge-yellow">Gemini AI</span>
-            </div>
-
-            {/* MESSAGES LIST */}
-            <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px", paddingRight: "6px" }}>
-              {chatMessages.length === 0 ? (
-                <div style={{ margin: "auto", textAlign: "center", maxWidth: "400px" }}>
-                  <p className="text-secondary text-sm">
-                    Ask anything about your timetable, concepts, or missed tasks.
-                  </p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                    <button
-                      type="button"
-                      className="btn btn-secondary btn-sm"
-                      onClick={() => setChatInput("What should I focus on today to make the biggest impact?")}
-                    >
-                      "What should I focus on today?"
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-secondary btn-sm"
-                      onClick={() => setChatInput("I fell behind yesterday. How should I adjust without getting overwhelmed?")}
-                    >
-                      "I fell behind yesterday. How should I adjust?"
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-secondary btn-sm"
-                      onClick={() => setChatInput("Explain how to break down today's hardest task into smaller steps.")}
-                    >
-                      "Break down today's hardest task."
-                    </button>
                   </div>
                 </div>
-              ) : (
-                chatMessages.map((msg, i) => {
-                  const isUser = msg.role === "user";
-                  return (
-                    <div
-                      key={i}
-                      style={{
-                        alignSelf: isUser ? "flex-end" : "flex-start",
-                        maxWidth: "85%",
-                        padding: "12px 16px",
-                        borderRadius: "12px",
-                        backgroundColor: isUser ? "var(--yellow-primary)" : "var(--bg-elevated)",
-                        color: isUser ? "#0A0A0A" : "var(--text-primary)",
-                        border: isUser ? "none" : "1px solid var(--border-color)",
-                        fontSize: "0.95rem",
-                        lineHeight: 1.5,
-                        whiteSpace: "pre-wrap",
-                      }}
-                    >
-                      {msg.content}
-                    </div>
-                  );
-                })
-              )}
-              {isSendingChat && (
+
+                {timerAlert && (
+                  <div className="alert alert-info" style={{ marginTop: "20px" }}>
+                    {timerAlert}
+                  </div>
+                )}
+              </div>
+
+              {/* FULLSCREEN FOCUS OVERLAY */}
+              {fullscreenFocus && (
                 <div
                   style={{
-                    alignSelf: "flex-start",
-                    padding: "10px 14px",
-                    borderRadius: "12px",
-                    backgroundColor: "var(--bg-elevated)",
-                    color: "var(--yellow-primary)",
-                    fontSize: "0.85rem",
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    width: "100vw",
+                    height: "100vh",
+                    backgroundColor: "#0A0A0A",
+                    zIndex: 9999,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "24px",
                   }}
                 >
-                  AuraMind is thinking…
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    style={{ position: "absolute", top: "24px", right: "24px" }}
+                    onClick={() => setFullscreenFocus(false)}
+                  >
+                    &times; Exit Focus Mode [Esc]
+                  </button>
+
+                  <span className="badge badge-yellow" style={{ marginBottom: "12px" }}>
+                    {timerMode === "focus" ? "Deep Work Session" : "Restorative Break"}
+                  </span>
+
+                  <h2 style={{ fontSize: "1.8rem", color: "var(--text-primary)", maxWidth: "600px", textAlign: "center", marginBottom: "20px" }}>
+                    {timerTask || "Deliberate Practice"}
+                  </h2>
+
+                  <div
+                    style={{
+                      fontSize: "8rem",
+                      fontWeight: 900,
+                      fontFamily: "ui-monospace, monospace",
+                      letterSpacing: "-0.04em",
+                      color: timerStatus === "running" ? "var(--accent-primary)" : "var(--text-primary)",
+                      lineHeight: 1,
+                      marginBottom: "36px",
+                      textShadow: timerStatus === "running" ? "0 0 40px rgba(255, 214, 0, 0.3)" : "none",
+                    }}
+                  >
+                    {formatTimer(timerRemainingSec)}
+                  </div>
+
+                  <div style={{ display: "flex", gap: "16px" }}>
+                    {timerStatus !== "running" ? (
+                      <button type="button" className="btn btn-primary btn-lg" onClick={startTimer} style={{ minWidth: "180px" }}>
+                        {timerStatus === "paused" ? "Resume" : "Start Focus"}
+                      </button>
+                    ) : (
+                      <button type="button" className="btn btn-secondary btn-lg" onClick={pauseTimer} style={{ minWidth: "180px" }}>
+                        Pause
+                      </button>
+                    )}
+                    <button type="button" className="btn btn-secondary btn-lg" onClick={resetTimer}>
+                      Reset
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
+          )}
 
-            {/* MESSAGE COMPOSER */}
-            <form onSubmit={sendChatMessage} style={{ marginTop: "12px", display: "flex", gap: "8px" }}>
-              <input
-                type="text"
-                placeholder="Ask AuraMind anything about your schedule, concept, or strategy..."
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    sendChatMessage();
-                  }
-                }}
-              />
-              <button
-                type="submit"
-                disabled={isSendingChat || !chatInput.trim()}
-                className="btn btn-primary"
-                style={{ whiteSpace: "nowrap" }}
-              >
-                Send
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 5: REPORTS & METRICS */}
-      {activeTab === "reports" && (
-        <div>
-          <div className="grid-2">
-            {/* DAILY REPORT */}
-            <div className="card card-highlight">
-              <span className="badge badge-yellow" style={{ marginBottom: "8px" }}>Day {selectedDay} Analysis</span>
-              <h3>Daily Execution Metrics</h3>
-
-              {dailyReport?.enough ? (
-                <div style={{ marginTop: "14px" }}>
-                  <div className="grid-2" style={{ gap: "10px", marginBottom: "16px" }}>
-                    <div style={{ backgroundColor: "var(--bg-secondary)", padding: "12px", borderRadius: "6px" }}>
-                      <div className="text-xs text-muted">Completion Rate</div>
-                      <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--yellow-primary)" }}>
-                        {dailyReport.completion_pct}%
-                      </div>
-                    </div>
-                    <div style={{ backgroundColor: "var(--bg-secondary)", padding: "12px", borderRadius: "6px" }}>
-                      <div className="text-xs text-muted">Measured Focus</div>
-                      <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-primary)" }}>
-                        {dailyReport.focused_min} min
-                      </div>
-                    </div>
+          {/* TAB 4: HOURLY CHECK-IN */}
+          {activeTab === "checkin" && (
+            <div className="container-narrow" style={{ margin: "0 auto" }}>
+              <div className="card card-highlight">
+                <div className="flex-between" style={{ marginBottom: "16px" }}>
+                  <div>
+                    <span className="badge badge-yellow" style={{ marginBottom: "6px" }}>Diagnostic Check-In</span>
+                    <h2 style={{ fontSize: "1.5rem", margin: "4px 0" }}>Log Session &amp; Friction</h2>
                   </div>
-
-                  <div className="text-sm" style={{ marginBottom: "8px" }}>
-                    <strong>Strongest Period:</strong> {dailyReport.strongest_period} &bull; <strong>Weakest:</strong> {dailyReport.weakest_period}
-                  </div>
-                  <div className="text-sm" style={{ marginBottom: "16px" }}>
-                    <strong>Primary Blocker:</strong> {REASON_LABELS[dailyReport.primary_blocker] || dailyReport.primary_blocker}
-                  </div>
-
-                  <div style={{ backgroundColor: "var(--bg-secondary)", padding: "12px", borderRadius: "6px" }}>
-                    <div style={{ fontWeight: 700, color: "var(--yellow-primary)", marginBottom: "4px" }}>Tomorrow's Pacing:</div>
-                    <div className="text-xs text-secondary">{dailyReport.tomorrow_recommendation}</div>
-                  </div>
+                  <span className="text-xs font-mono text-muted">Day {selectedDay}</span>
                 </div>
-              ) : (
-                <p className="text-sm text-muted" style={{ padding: "20px 0" }}>
-                  Not enough check-ins logged for Day {selectedDay} yet. Complete your first block to generate daily analytics.
-                </p>
-              )}
-            </div>
 
-            {/* WEEKLY REPORT */}
-            <div className="card">
-              <span className="badge badge-gray" style={{ marginBottom: "8px" }}>7-Day Consistency</span>
-              <h3>Weekly Behavioral Patterns</h3>
-
-              {weeklyReport?.enough ? (
-                <div style={{ marginTop: "14px" }}>
-                  <div className="grid-2" style={{ gap: "10px", marginBottom: "16px" }}>
-                    <div style={{ backgroundColor: "var(--bg-secondary)", padding: "12px", borderRadius: "6px" }}>
-                      <div className="text-xs text-muted">Weekly Consistency</div>
-                      <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--yellow-primary)" }}>
-                        {weeklyReport.weekly_consistency_pct}%
-                      </div>
-                    </div>
-                    <div style={{ backgroundColor: "var(--bg-secondary)", padding: "12px", borderRadius: "6px" }}>
-                      <div className="text-xs text-muted">Total Deep Work</div>
-                      <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-primary)" }}>
-                        {weeklyReport.total_focused_hours} hrs
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="text-sm" style={{ marginBottom: "8px" }}>
-                    <strong>Peak Window:</strong> {weeklyReport.strongest_period} &bull; <strong>Lowest Energy:</strong> {weeklyReport.weakest_period}
-                  </div>
-                  <div className="text-sm" style={{ marginBottom: "16px" }}>
-                    <strong>Repeated Distraction:</strong> {REASON_LABELS[weeklyReport.repeated_distraction] || weeklyReport.repeated_distraction}
-                  </div>
-
-                  <div style={{ backgroundColor: "var(--bg-secondary)", padding: "12px", borderRadius: "6px" }}>
-                    <div style={{ fontWeight: 700, color: "var(--yellow-primary)", marginBottom: "4px" }}>Learning Science Recommendations:</div>
-                    <ul style={{ paddingLeft: "18px", margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-                      {weeklyReport.recommendations?.map((r: string, idx: number) => (
-                        <li key={idx}>{r}</li>
+                <form onSubmit={submitCheckin}>
+                  <div className="form-group">
+                    <label>Planned Task</label>
+                    <select
+                      value={checkinPlanned}
+                      onChange={(e) => setCheckinPlanned(e.target.value)}
+                    >
+                      <option value="">-- Choose scheduled task or enter below --</option>
+                      {activeDayPlan?.blocks?.map((b: any, idx: number) => (
+                        <option key={idx} value={`${b.start} ${b.activity}`}>
+                          {b.start} &ndash; {b.end}: {b.activity}
+                        </option>
                       ))}
-                    </ul>
+                      <option value="Self-Directed Task">Self-Directed Study Task</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>What You Actually Did</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Read chapter 2, completed 4 exercises, or skipped due to meeting"
+                      value={checkinActual}
+                      onChange={(e) => setCheckinActual(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="grid-2">
+                    <div className="form-group">
+                      <label>Outcome Status</label>
+                      <select
+                        value={checkinStatus}
+                        onChange={(e) => setCheckinStatus(e.target.value as any)}
+                      >
+                        <option value="done">Completed as Planned</option>
+                        <option value="partial">Partially Completed</option>
+                        <option value="missed">Missed Session</option>
+                        <option value="different">Worked on a Different Task</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Time of Day Window</label>
+                      <select
+                        value={checkinPeriod}
+                        onChange={(e) => setCheckinPeriod(e.target.value as any)}
+                      >
+                        <option value="morning">Morning</option>
+                        <option value="afternoon">Afternoon</option>
+                        <option value="evening">Evening</option>
+                        <option value="night">Night</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid-2">
+                    <div className="form-group">
+                      <label>Focused Minutes</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="300"
+                        value={checkinFocusedMin}
+                        onChange={(e) => setCheckinFocusedMin(parseInt(e.target.value) || 0)}
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>Distracted Minutes</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="300"
+                        value={checkinDistractionMin}
+                        onChange={(e) => setCheckinDistractionMin(parseInt(e.target.value) || 0)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid-2">
+                    <div className="form-group">
+                      <label>Distraction Reason (If Any)</label>
+                      <select
+                        value={checkinDistractionType}
+                        onChange={(e) => setCheckinDistractionType(e.target.value)}
+                      >
+                        <option value="">None / Focused</option>
+                        {REASONS.map((r) => (
+                          <option key={r} value={r}>
+                            {REASON_LABELS[r] || r}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Primary Bottleneck (If Incomplete)</label>
+                      <select
+                        value={checkinReason}
+                        onChange={(e) => setCheckinReason(e.target.value)}
+                      >
+                        <option value="">None / Success</option>
+                        {REASONS.map((r) => (
+                          <option key={r} value={r}>
+                            {REASON_LABELS[r] || r}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Reflection Notes</label>
+                    <textarea
+                      rows={2}
+                      placeholder="What felt easy or difficult? Any specific cognitive blockers?"
+                      value={checkinNotes}
+                      onChange={(e) => setCheckinNotes(e.target.value)}
+                    />
+                  </div>
+
+                  {errorMsg && <div className="alert alert-error" style={{ marginBottom: "16px" }}>{errorMsg}</div>}
+
+                  <button
+                    type="submit"
+                    disabled={isSubmittingCheckin}
+                    className="btn btn-primary"
+                    style={{ width: "100%", justifyContent: "center" }}
+                  >
+                    {isSubmittingCheckin ? "Analyzing Signals..." : "Save Check-In & Get AI Feedback \u2192"}
+                  </button>
+                </form>
+
+                {coachingFeedback && (
+                  <div
+                    style={{
+                      marginTop: "20px",
+                      padding: "16px",
+                      borderRadius: "var(--radius-xs)",
+                      backgroundColor: "var(--bg-secondary)",
+                      border: "1px solid var(--accent-border)",
+                    }}
+                  >
+                    <div style={{ fontWeight: 600, color: "var(--accent-primary)", marginBottom: "4px" }}>
+                      AuraMind Diagnostic Feedback:
+                    </div>
+                    <div style={{ fontSize: "0.95rem", color: "var(--text-primary)", lineHeight: 1.5 }}>
+                      {coachingFeedback}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: REPORTS & METRICS */}
+          {activeTab === "reports" && (
+            <div>
+              <div className="grid-2" style={{ gap: "20px" }}>
+                {/* DAILY METRICS */}
+                <div className="card">
+                  <span className="badge badge-yellow" style={{ marginBottom: "6px" }}>Day {selectedDay} Diagnostics</span>
+                  <h3 style={{ fontSize: "1.3rem", margin: "4px 0 16px" }}>Daily Adherence</h3>
+
+                  {dailyReport ? (
+                    <div>
+                      <div className="grid-2" style={{ gap: "10px", marginBottom: "16px" }}>
+                        <div style={{ backgroundColor: "var(--bg-secondary)", padding: "12px", borderRadius: "var(--radius-xs)" }}>
+                          <div className="text-xs text-muted">Focused Time</div>
+                          <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--accent-primary)" }}>
+                            {dailyReport.focused_hours} hrs
+                          </div>
+                        </div>
+                        <div style={{ backgroundColor: "var(--bg-secondary)", padding: "12px", borderRadius: "var(--radius-xs)" }}>
+                          <div className="text-xs text-muted">Adherence Score</div>
+                          <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-primary)" }}>
+                            {dailyReport.consistency_score}%
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-sm" style={{ marginBottom: "8px" }}>
+                        <strong>Planned vs Actual:</strong> {dailyReport.tasks_planned} planned &bull; {dailyReport.tasks_completed} fully completed
+                      </div>
+                      <div className="text-sm text-secondary">
+                        <strong>Distraction Cost:</strong> {dailyReport.distraction_minutes} minutes logged
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted" style={{ padding: "20px 0" }}>
+                      No check-ins logged yet for Day {selectedDay}. Complete a focus session and log a check-in to see metrics.
+                    </p>
+                  )}
+                </div>
+
+                {/* 7-DAY CONSISTENCY */}
+                <div className="card">
+                  <span className="badge badge-yellow" style={{ marginBottom: "6px" }}>7-Day Consistency</span>
+                  <h3 style={{ fontSize: "1.3rem", margin: "4px 0 16px" }}>Behavioral Patterns</h3>
+
+                  {weeklyReport?.enough ? (
+                    <div>
+                      <div className="grid-2" style={{ gap: "10px", marginBottom: "16px" }}>
+                        <div style={{ backgroundColor: "var(--bg-secondary)", padding: "12px", borderRadius: "var(--radius-xs)" }}>
+                          <div className="text-xs text-muted">Weekly Consistency</div>
+                          <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--accent-primary)" }}>
+                            {weeklyReport.weekly_consistency_pct}%
+                          </div>
+                        </div>
+                        <div style={{ backgroundColor: "var(--bg-secondary)", padding: "12px", borderRadius: "var(--radius-xs)" }}>
+                          <div className="text-xs text-muted">Total Deep Work</div>
+                          <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-primary)" }}>
+                            {weeklyReport.total_focused_hours} hrs
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-sm" style={{ marginBottom: "8px" }}>
+                        <strong>Peak Window:</strong> {weeklyReport.strongest_period} &bull; <strong>Lowest Energy:</strong> {weeklyReport.weakest_period}
+                      </div>
+
+                      <div style={{ backgroundColor: "var(--bg-secondary)", padding: "12px", borderRadius: "var(--radius-xs)", marginTop: "12px" }}>
+                        <div style={{ fontWeight: 600, color: "var(--accent-primary)", marginBottom: "4px" }}>Learning Science Suggestions:</div>
+                        <ul style={{ paddingLeft: "18px", margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                          {weeklyReport.recommendations?.map((r: string, idx: number) => (
+                            <li key={idx} style={{ marginBottom: "4px" }}>{r}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted" style={{ padding: "20px 0" }}>
+                      {weeklyReport?.message || "Log at least 4 check-ins across the week to confirm recurring behavioral patterns."}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 6: ASK AURAMIND AI CHAT */}
+          {activeTab === "chat" && (
+            <div className="container-narrow" style={{ margin: "0 auto" }}>
+              <div className="card" style={{ display: "flex", flexDirection: "column", height: "620px", padding: "16px" }}>
+                <div className="flex-between" style={{ borderBottom: "1px solid var(--border-subtle)", paddingBottom: "12px", marginBottom: "12px" }}>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: "1.1rem" }}>Ask AuraMind &mdash; AI Accountability Coach</h3>
+                    <div className="text-xs text-muted">Context active: your 30-day curriculum, check-in history, and focus metrics</div>
+                  </div>
+                  <span className="badge badge-yellow">Gemini AI</span>
+                </div>
+
+                {/* MESSAGES LIST */}
+                <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px", paddingRight: "6px" }}>
+                  {chatMessages.length === 0 ? (
+                    <div style={{ margin: "auto", textAlign: "center", maxWidth: "420px" }}>
+                      <p className="text-secondary text-sm" style={{ marginBottom: "16px" }}>
+                        Ask questions about your timetable, concepts, or recovery strategies if you fell behind.
+                      </p>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-sm"
+                          style={{ textAlign: "left", justifyContent: "flex-start" }}
+                          onClick={() => setChatInput("What should I focus on today to make the biggest impact?")}
+                        >
+                          "What should I focus on today to make the biggest impact?"
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-sm"
+                          style={{ textAlign: "left", justifyContent: "flex-start" }}
+                          onClick={() => setChatInput("I fell behind yesterday. How should I adjust without getting overwhelmed?")}
+                        >
+                          "I fell behind yesterday. How should I adjust?"
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-sm"
+                          style={{ textAlign: "left", justifyContent: "flex-start" }}
+                          onClick={() => setChatInput("Explain how to break down today's hardest task into smaller steps.")}
+                        >
+                          "Break down today's hardest task into smaller steps."
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    chatMessages.map((msg, i) => {
+                      const isUser = msg.role === "user";
+                      return (
+                        <div
+                          key={i}
+                          style={{
+                            alignSelf: isUser ? "flex-end" : "flex-start",
+                            maxWidth: "85%",
+                            padding: "12px 16px",
+                            borderRadius: "var(--radius-sm)",
+                            backgroundColor: isUser ? "var(--accent-primary)" : "var(--bg-elevated)",
+                            color: isUser ? "#0A0A0A" : "var(--text-primary)",
+                            border: isUser ? "none" : "1px solid var(--border-subtle)",
+                            fontSize: "0.925rem",
+                            lineHeight: 1.5,
+                            whiteSpace: "pre-wrap",
+                          }}
+                        >
+                          {msg.content}
+                        </div>
+                      );
+                    })
+                  )}
+                  {isSendingChat && (
+                    <div
+                      style={{
+                        alignSelf: "flex-start",
+                        padding: "10px 14px",
+                        borderRadius: "var(--radius-sm)",
+                        backgroundColor: "var(--bg-elevated)",
+                        color: "var(--accent-primary)",
+                        fontSize: "0.85rem",
+                      }}
+                    >
+                      AuraMind is thinking...
+                    </div>
+                  )}
+                  <div ref={chatBottomRef} />
+                </div>
+
+                {/* CHAT INPUT FORM */}
+                <form
+                  onSubmit={sendChatMessage}
+                  style={{ display: "flex", gap: "8px", marginTop: "12px", borderTop: "1px solid var(--border-subtle)", paddingTop: "12px" }}
+                >
+                  <input
+                    type="text"
+                    placeholder="Ask about your timetable or concepts..."
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    disabled={isSendingChat}
+                    style={{ flex: 1 }}
+                  />
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={isSendingChat || !chatInput.trim()}
+                  >
+                    Send
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 7: ADAPTIVE SCHEDULE */}
+          {activeTab === "adaptive" && (
+            <div className="container-narrow" style={{ margin: "0 auto" }}>
+              <div className="card card-highlight">
+                <span className="badge badge-yellow" style={{ marginBottom: "6px" }}>Evidence-Based Rebuild</span>
+                <h2 style={{ fontSize: "1.5rem", margin: "4px 0 8px" }}>Adaptive Timetable Tuning</h2>
+                <p className="text-sm text-secondary" style={{ marginBottom: "20px", lineHeight: 1.6 }}>
+                  AuraMind replaces rigid calendars with cognitive adaptation. If check-ins indicate persistent bottlenecks, rebuild upcoming days based on recorded reality.
+                </p>
+
+                {adaptiveProposal ? (
+                  <div>
+                    <div style={{ backgroundColor: "var(--bg-secondary)", padding: "16px", borderRadius: "var(--radius-xs)", marginBottom: "16px" }}>
+                      <div style={{ fontWeight: 600, color: "var(--accent-primary)", marginBottom: "4px" }}>Adaptation Rationale:</div>
+                      <p className="text-sm" style={{ marginBottom: "12px" }}>{adaptiveProposal.rationale}</p>
+
+                      <div style={{ fontWeight: 600, color: "var(--accent-primary)", marginBottom: "6px" }}>Key Adjustments Made:</div>
+                      <ul style={{ paddingLeft: "18px", margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                        {adaptiveProposal.key_adjustments?.map((adj: string, idx: number) => (
+                          <li key={idx} style={{ marginBottom: "4px" }}>{adj}</li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="alert alert-success">
+                      &#10003; Adapted 7-day schedule has been synchronized with your active timetable.
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: "center", padding: "16px 0" }}>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      disabled={isAdapting}
+                      onClick={handleAdaptSchedule}
+                    >
+                      {isAdapting ? "Synthesizing Evidence-Based Schedule..." : "Rebuild Upcoming 7 Days with Gemini \u2192"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 8: GOAL SCOPE & DETAILS */}
+          {activeTab === "my_goal" && (
+            <div>
+              <div className="card card-highlight" style={{ marginBottom: "20px" }}>
+                <span className="badge badge-yellow" style={{ marginBottom: "8px" }}>Scope Specification</span>
+                <h2 style={{ fontSize: "1.6rem", margin: "4px 0 8px" }}>{goalData.goal}</h2>
+                <div className="text-xs font-mono text-muted" style={{ marginBottom: "20px" }}>
+                  Request ID: {goalData.id} &bull; Access Code: {goalData.request_code}
+                </div>
+
+                <div className="grid-2" style={{ gap: "16px", marginBottom: "20px" }}>
+                  <div style={{ backgroundColor: "var(--bg-secondary)", padding: "14px", borderRadius: "var(--radius-xs)" }}>
+                    <div className="text-xs text-muted">Category &amp; Domain</div>
+                    <div style={{ fontWeight: 600, marginTop: "2px" }}>{goalData.category}</div>
+                  </div>
+                  <div style={{ backgroundColor: "var(--bg-secondary)", padding: "14px", borderRadius: "var(--radius-xs)" }}>
+                    <div className="text-xs text-muted">Daily Time Commitment</div>
+                    <div style={{ fontWeight: 600, marginTop: "2px" }}>{goalData.context?.hours || 2} Hours / Day ({goalData.context?.focus || "morning"})</div>
+                  </div>
+                  <div style={{ backgroundColor: "var(--bg-secondary)", padding: "14px", borderRadius: "var(--radius-xs)" }}>
+                    <div className="text-xs text-muted">Starting Competency</div>
+                    <div style={{ fontWeight: 600, marginTop: "2px" }}>
+                      {formatLevel(goalData.category, goalData.current_level, goalData.context?.custom_current_level)}
+                    </div>
+                  </div>
+                  <div style={{ backgroundColor: "var(--bg-secondary)", padding: "14px", borderRadius: "var(--radius-xs)" }}>
+                    <div className="text-xs text-muted">Target Competency</div>
+                    <div style={{ fontWeight: 600, marginTop: "2px" }}>
+                      {formatLevel(goalData.category, goalData.target_level, goalData.context?.custom_target_level)}
+                    </div>
                   </div>
                 </div>
-              ) : (
-                <p className="text-sm text-muted" style={{ padding: "20px 0" }}>
-                  {weeklyReport?.message || "Need at least 4 logged check-ins across the week to confirm recurring behavioral patterns."}
-                </p>
-              )}
+
+                {plan && (
+                  <div>
+                    <div style={{ fontWeight: 600, color: "var(--accent-primary)", marginBottom: "4px" }}>
+                      Definition of Success
+                    </div>
+                    <p className="text-sm text-secondary" style={{ marginBottom: "16px", lineHeight: 1.6 }}>
+                      {plan.definition_of_success}
+                    </p>
+
+                    <div style={{ fontWeight: 600, color: "var(--accent-primary)", marginBottom: "8px" }}>
+                      4-Week Milestone Roadmap
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      {plan.weekly_focus?.map((wf: any) => (
+                        <div
+                          key={wf.week}
+                          style={{
+                            backgroundColor: "var(--bg-secondary)",
+                            padding: "12px 16px",
+                            borderRadius: "var(--radius-xs)",
+                            border: "1px solid var(--border-subtle)",
+                          }}
+                        >
+                          <div style={{ color: "var(--accent-primary)", fontWeight: 600, fontSize: "0.9rem" }}>
+                            Week {wf.week}: {wf.title}
+                          </div>
+                          <div className="text-xs text-secondary" style={{ margin: "2px 0 4px" }}>
+                            {wf.focus}
+                          </div>
+                          <div className="text-xs text-muted">
+                            Target outcome: {wf.expected_outcome}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 6: ADAPTIVE SCHEDULE */}
-      {activeTab === "adaptive" && (
-        <div className="container-narrow">
-          <div className="card card-highlight">
-            <span className="badge badge-yellow" style={{ marginBottom: "6px" }}>Evidence-Based Rebuild</span>
-            <h2 style={{ fontSize: "1.6rem", margin: "4px 0" }}>Adaptive Upcoming 7-Day Timetable</h2>
-            <p className="text-sm text-secondary">
-              AuraMind doesn't believe in forcing rigid schedules when reality intervenes. Rebuild your upcoming 7 days based on actual recorded check-in friction.
-            </p>
-
-            {adaptiveProposal ? (
-              <div style={{ marginTop: "20px" }}>
-                <div style={{ backgroundColor: "var(--bg-secondary)", padding: "16px", borderRadius: "8px", marginBottom: "16px" }}>
-                  <div style={{ fontWeight: 700, color: "var(--yellow-primary)", marginBottom: "4px" }}>Adaptation Rationale:</div>
-                  <p className="text-sm" style={{ marginBottom: "12px" }}>{adaptiveProposal.rationale}</p>
-
-                  <div style={{ fontWeight: 700, color: "var(--yellow-primary)", marginBottom: "6px" }}>Key Adjustments Made:</div>
-                  <ul style={{ paddingLeft: "18px", margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-                    {adaptiveProposal.key_adjustments?.map((adj: string, idx: number) => (
-                      <li key={idx}>{adj}</li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="alert alert-success">
-                  &#10003; Adapted 7-day schedule has been applied to your active timetable!
-                </div>
-              </div>
-            ) : (
-              <div style={{ marginTop: "20px", textAlign: "center" }}>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  disabled={isAdapting}
-                  onClick={handleAdaptSchedule}
-                >
-                  {isAdapting ? "Synthesizing Evidence-Based Schedule…" : "Rebuild Upcoming 7 Days with Gemini \u2192"}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+          )}
+        </main>
+      </div>
     </div>
   );
 }
