@@ -58,32 +58,32 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   fontWeight: 900,
                   fontSize: "15px",
                   color: "#0A0A0A",
-                  boxShadow: "0 0 10px rgba(255, 214, 0, 0.25)",
+                  boxShadow: "0 0 12px rgba(255, 214, 0, 0.25)",
                 }}
               >
                 A
               </div>
               <span
                 style={{
-                  fontSize: "1.15rem",
+                  fontSize: "1.2rem",
                   fontWeight: 800,
                   letterSpacing: "-0.03em",
                   color: "var(--text-primary)",
                 }}
               >
-                Aura<span style={{ color: "var(--accent-primary)" }}>Mind</span>
+                AuraMind
               </span>
             </Link>
 
             {/* NAV LINKS */}
-            <nav style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <nav style={{ display: "flex", alignItems: "center", gap: "20px" }}>
               <Link
                 href="/chat"
                 style={{
                   color: "var(--accent-primary)",
                   textDecoration: "none",
                   fontSize: "0.875rem",
-                  fontWeight: 600,
+                  fontWeight: 700,
                   transition: "color var(--transition-fast)",
                 }}
               >
@@ -92,7 +92,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link
                 href="/#create-goal"
                 style={{
-                  color: "var(--text-secondary)",
+                  color: "var(--text-primary)",
                   textDecoration: "none",
                   fontSize: "0.875rem",
                   fontWeight: 500,
@@ -104,7 +104,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link
                 href="/#lookup"
                 style={{
-                  color: "var(--text-secondary)",
+                  color: "var(--text-primary)",
                   textDecoration: "none",
                   fontSize: "0.875rem",
                   fontWeight: 500,
@@ -116,14 +116,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link
                 href="/admin"
                 style={{
-                  color: "var(--text-secondary)",
+                  color: "#F5F5F5",
                   textDecoration: "none",
                   fontSize: "0.825rem",
                   fontWeight: 600,
-                  padding: "6px 12px",
-                  borderRadius: "var(--radius-sm)",
-                  backgroundColor: "var(--bg-surface)",
-                  border: "1px solid var(--border-subtle)",
+                  padding: "6px 18px",
+                  borderRadius: "9999px",
+                  backgroundColor: "#171717",
+                  border: "1px solid #303030",
                   transition: "all var(--transition-fast)",
                 }}
               >

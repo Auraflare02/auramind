@@ -187,8 +187,9 @@ export default function HomePage() {
   return (
     <div>
       {/* 1. HERO SECTION */}
-      <section style={{ paddingTop: "72px", paddingBottom: "72px" }}>
-        <div className="container">
+      <section className="futuristic-rings-container" style={{ paddingTop: "80px", paddingBottom: "72px" }}>
+        <div className="futuristic-rings" style={{ top: "25%", left: "75%", opacity: 0.6 }} aria-hidden="true" />
+        <div className="container" style={{ position: "relative", zIndex: 1 }}>
           <div style={{ maxWidth: "820px", marginBottom: "48px" }}>
             <div
               className="badge badge-yellow"
@@ -440,94 +441,227 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 2. THE 7 CORE ARCHITECTURAL PILLARS (NOT REPETITIVE 3-CARDS) */}
-      <section style={{ padding: "64px 0", borderTop: "1px solid var(--border-subtle)" }}>
-        <div className="container">
-          <div style={{ maxWidth: "680px", marginBottom: "48px" }}>
-            <span className="badge badge-yellow" style={{ marginBottom: "12px" }}>Learning Science Engine</span>
-            <h2 style={{ fontSize: "1.9rem", marginBottom: "12px" }}>
-              How AuraMind builds consistent execution.
+      {/* 2. THE 7 CORE ARCHITECTURAL PILLARS - BENTO 2-3-2 ARCHITECTURE */}
+      <section className="futuristic-rings-container" style={{ padding: "96px 0", borderTop: "1px solid var(--border-default)" }}>
+        <div className="futuristic-rings" aria-hidden="true" />
+        <div className="container" style={{ position: "relative", zIndex: 1 }}>
+          <div style={{ maxWidth: "780px", marginBottom: "56px" }}>
+            <div className="badge badge-yellow" style={{ marginBottom: "16px", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              <span className="badge-dot" />
+              <span>System Architecture</span>
+            </div>
+            <h2 style={{ fontSize: "2.5rem", fontWeight: 800, letterSpacing: "-0.03em", marginBottom: "16px", color: "var(--text-primary)" }}>
+              Engineered for Sustained Progress
             </h2>
-            <p className="lead">
+            <p className="lead" style={{ fontSize: "1.05rem", color: "var(--text-secondary)", lineHeight: 1.6, maxWidth: "700px" }}>
               Traditional goal systems collapse because they rely on unbroken willpower. AuraMind treats missed sessions as diagnostic data to recalibrate your schedule.
             </p>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-            {/* Pillar 1 & 2 Asymmetric Row */}
-            <div className="grid-2">
-              <div className="surface-interactive">
-                <div style={{ color: "var(--accent-primary)", fontSize: "0.8rem", fontWeight: 700, fontFamily: "var(--font-mono)", marginBottom: "8px" }}>
-                  01 / DIAGNOSTIC RESEARCH
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            {/* Bento Row 1: 2 Columns */}
+            <div className="bento-row-2" style={{ margin: 0 }}>
+              <div className="bento-card">
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+                    <span className="bento-card-tag" style={{ margin: 0 }}>01 / DIAGNOSTIC RESEARCH</span>
+                    <div className="dot-matrix" aria-hidden="true">
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", marginBottom: "14px" }}>
+                    <div className="bento-card-icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        <line x1="11" y1="8" x2="11" y2="14" />
+                        <line x1="8" y1="11" x2="14" y2="11" />
+                      </svg>
+                    </div>
+                    <h3 className="bento-card-title" style={{ margin: "4px 0 0" }}>Prerequisites &amp; Failure Modes</h3>
+                  </div>
                 </div>
-                <h3 style={{ marginBottom: "8px" }}>Prerequisites &amp; Failure Modes</h3>
-                <p style={{ margin: 0 }}>
+                <p className="bento-card-desc" style={{ margin: 0 }}>
                   Before writing a schedule, AuraMind analyzes the specific progression curve from your current baseline to your target standard, mapping common drop-off points and cognitive bottlenecks.
                 </p>
               </div>
 
-              <div className="surface-interactive">
-                <div style={{ color: "var(--accent-primary)", fontSize: "0.8rem", fontWeight: 700, fontFamily: "var(--font-mono)", marginBottom: "8px" }}>
-                  02 / 30-DAY TIMETABLE
+              <div className="bento-card">
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+                    <span className="bento-card-tag" style={{ margin: 0 }}>02 / 30-DAY TIMETABLE</span>
+                    <div className="dot-matrix" aria-hidden="true">
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", marginBottom: "14px" }}>
+                    <div className="bento-card-icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                        <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" />
+                      </svg>
+                    </div>
+                    <h3 className="bento-card-title" style={{ margin: "4px 0 0" }}>Deliberate Practice Architecture</h3>
+                  </div>
                 </div>
-                <h3 style={{ marginBottom: "8px" }}>Deliberate Practice Architecture</h3>
-                <p style={{ margin: 0 }}>
+                <p className="bento-card-desc" style={{ margin: 0 }}>
                   Generates an exact 30-day curriculum divided into 4 structured phases: Foundation, Deliberate Practice, Real-world Application, and Consolidation, respecting your peak focus windows.
                 </p>
               </div>
             </div>
 
-            {/* Pillar 3, 4, 5 Three-Column Asymmetric */}
-            <div className="grid-3">
-              <div className="surface-interactive">
-                <div style={{ color: "var(--accent-primary)", fontSize: "0.8rem", fontWeight: 700, fontFamily: "var(--font-mono)", marginBottom: "8px" }}>
-                  03 / FOCUS WORKSPACE
+            {/* Bento Row 2: 3 Columns */}
+            <div className="bento-row-3" style={{ margin: 0 }}>
+              <div className="bento-card">
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+                    <span className="bento-card-tag" style={{ margin: 0 }}>03 / FOCUS WORKSPACE</span>
+                    <div className="dot-matrix" aria-hidden="true">
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", marginBottom: "14px" }}>
+                    <div className="bento-card-icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="13" r="8" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="13" x2="15" y2="15" />
+                        <path d="M12 2v3M9 2h6" />
+                      </svg>
+                    </div>
+                    <h3 className="bento-card-title" style={{ margin: "4px 0 0" }}>Dedicated Telemetry Timer</h3>
+                  </div>
                 </div>
-                <h3 style={{ marginBottom: "8px" }}>Dedicated Telemetry Timer</h3>
-                <p style={{ margin: 0 }}>
+                <p className="bento-card-desc" style={{ margin: 0 }}>
                   Distraction-free focus timer supporting 25m, 50m, 90m, and custom intervals. Tracks deep-work duration and awards XP upon completion.
                 </p>
               </div>
 
-              <div className="surface-interactive">
-                <div style={{ color: "var(--accent-primary)", fontSize: "0.8rem", fontWeight: 700, fontFamily: "var(--font-mono)", marginBottom: "8px" }}>
-                  04 / HOURLY LOGS
+              <div className="bento-card">
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+                    <span className="bento-card-tag" style={{ margin: 0 }}>04 / HOURLY LOGS</span>
+                    <div className="dot-matrix" aria-hidden="true">
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", marginBottom: "14px" }}>
+                    <div className="bento-card-icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                        <path d="M9 14l2 2 4-4" />
+                      </svg>
+                    </div>
+                    <h3 className="bento-card-title" style={{ margin: "4px 0 0" }}>Friction Signal Capture</h3>
+                  </div>
                 </div>
-                <h3 style={{ marginBottom: "8px" }}>Friction Signal Capture</h3>
-                <p style={{ margin: 0 }}>
+                <p className="bento-card-desc" style={{ margin: 0 }}>
                   Log what actually happened. If fatigue or distractions derailed a block, AuraMind records the diagnostic cause to adjust subsequent workload.
                 </p>
               </div>
 
-              <div className="surface-interactive">
-                <div style={{ color: "var(--accent-primary)", fontSize: "0.8rem", fontWeight: 700, fontFamily: "var(--font-mono)", marginBottom: "8px" }}>
-                  05 / AI COACHING
+              <div className="bento-card">
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+                    <span className="bento-card-tag" style={{ margin: 0 }}>05 / AI COACHING</span>
+                    <div className="dot-matrix" aria-hidden="true">
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", marginBottom: "14px" }}>
+                    <div className="bento-card-icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 2a4 4 0 0 1 4 4c0 1.25-.57 2.37-1.47 3.1A7.002 7.002 0 0 1 19 16v1a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-1a7.002 7.002 0 0 1 4.47-6.9A4.002 4.002 0 0 1 8 6a4 4 0 0 1 4-4z" />
+                        <path d="M9 12h6M12 9v6" />
+                      </svg>
+                    </div>
+                    <h3 className="bento-card-title" style={{ margin: "4px 0 0" }}>Gemini Context Assistant</h3>
+                  </div>
                 </div>
-                <h3 style={{ marginBottom: "8px" }}>Gemini Context Assistant</h3>
-                <p style={{ margin: 0 }}>
+                <p className="bento-card-desc" style={{ margin: 0 }}>
                   Ask questions anytime. Your AI assistant has full access to your timetable, notes, and check-in history to provide targeted mental models and code examples.
                 </p>
               </div>
             </div>
 
-            {/* Pillar 6 & 7 Bottom Split */}
-            <div className="grid-2">
-              <div className="surface-interactive">
-                <div style={{ color: "var(--accent-primary)", fontSize: "0.8rem", fontWeight: 700, fontFamily: "var(--font-mono)", marginBottom: "8px" }}>
-                  06 / ANALYTICS
+            {/* Bento Row 3: 2 Columns */}
+            <div className="bento-row-2" style={{ margin: 0 }}>
+              <div className="bento-card">
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+                    <span className="bento-card-tag" style={{ margin: 0 }}>06 / ANALYTICS</span>
+                    <div className="dot-matrix" aria-hidden="true">
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", marginBottom: "14px" }}>
+                    <div className="bento-card-icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="18" y1="20" x2="18" y2="10" />
+                        <line x1="12" y1="20" x2="12" y2="4" />
+                        <line x1="6" y1="20" x2="6" y2="14" />
+                        <path d="M4 20h16" />
+                      </svg>
+                    </div>
+                    <h3 className="bento-card-title" style={{ margin: "4px 0 0" }}>Behavioral Velocity &amp; Insights</h3>
+                  </div>
                 </div>
-                <h3 style={{ marginBottom: "8px" }}>Behavioral Velocity &amp; Insights</h3>
-                <p style={{ margin: 0 }}>
+                <p className="bento-card-desc" style={{ margin: 0 }}>
                   Real metrics calculate focus vs resistance ratios, identifying your strongest cognitive time of day and your most frequent blocker.
                 </p>
               </div>
 
-              <div className="surface-interactive">
-                <div style={{ color: "var(--accent-primary)", fontSize: "0.8rem", fontWeight: 700, fontFamily: "var(--font-mono)", marginBottom: "8px" }}>
-                  07 / RECALIBRATION
+              <div className="bento-card">
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+                    <span className="bento-card-tag" style={{ margin: 0 }}>07 / RECALIBRATION</span>
+                    <div className="dot-matrix" aria-hidden="true">
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                      <span className="dot-matrix-dot" />
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", marginBottom: "14px" }}>
+                    <div className="bento-card-icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21.5 2v6h-6M2.5 22v-6h6" />
+                        <path d="M22 11.5A10 10 0 0 0 3.2 7.2L2.5 8M2 12.5a10 10 0 0 0 18.8 4.3l.7.7" />
+                      </svg>
+                    </div>
+                    <h3 className="bento-card-title" style={{ margin: "4px 0 0" }}>Adaptive 7-Day Restructuring</h3>
+                  </div>
                 </div>
-                <h3 style={{ marginBottom: "8px" }}>Adaptive 7-Day Restructuring</h3>
-                <p style={{ margin: 0 }}>
+                <p className="bento-card-desc" style={{ margin: 0 }}>
                   On Day 7, 14, and 21, the system generates evidence-based schedule adaptations to keep you progressing when unforeseen friction arises.
                 </p>
               </div>

@@ -1402,21 +1402,49 @@ export default function GoalHub() {
                   />
                 </div>
 
-                {/* LARGE DIGITAL TIMER DISPLAY */}
-                <div
-                  style={{
-                    fontSize: "5.5rem",
-                    fontWeight: 900,
-                    fontFamily: "ui-monospace, monospace",
-                    letterSpacing: "-0.04em",
-                    color: timerStatus === "running" ? "var(--accent-primary)" : "var(--text-primary)",
-                    lineHeight: 1,
-                    margin: "10px 0 24px",
-                    textShadow: timerStatus === "running" ? "0 0 24px rgba(255, 214, 0, 0.25)" : "none",
-                    transition: "color var(--transition-fast)",
-                  }}
-                >
-                  {formatTimer(timerRemainingSec)}
+                {/* CIRCULAR DIGITAL TIMER DISPLAY */}
+                <div style={{ position: "relative", width: "290px", height: "290px", margin: "16px auto 24px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="290" height="290" style={{ transform: "rotate(-90deg)", position: "absolute", top: 0, left: 0 }}>
+                    <circle
+                      cx="145"
+                      cy="145"
+                      r="130"
+                      stroke="#202020"
+                      strokeWidth="6"
+                      fill="transparent"
+                    />
+                    <circle
+                      cx="145"
+                      cy="145"
+                      r="130"
+                      stroke="var(--accent-primary)"
+                      strokeWidth="6"
+                      fill="transparent"
+                      strokeDasharray={2 * Math.PI * 130}
+                      strokeDashoffset={2 * Math.PI * 130 * (1 - Math.max(0, Math.min(1, ((timerDurationMin * 60) - timerRemainingSec) / Math.max(1, timerDurationMin * 60))))}
+                      strokeLinecap="round"
+                      style={{ transition: "stroke-dashoffset 0.4s ease" }}
+                    />
+                  </svg>
+                  <div style={{ position: "relative", zIndex: 1, textAlign: "center" }}>
+                    <div
+                      style={{
+                        fontSize: "4.2rem",
+                        fontWeight: 900,
+                        fontFamily: "ui-monospace, monospace",
+                        letterSpacing: "-0.04em",
+                        color: timerStatus === "running" ? "var(--accent-primary)" : "var(--text-primary)",
+                        lineHeight: 1,
+                        textShadow: timerStatus === "running" ? "0 0 24px rgba(255, 214, 0, 0.25)" : "none",
+                        transition: "color var(--transition-fast)",
+                      }}
+                    >
+                      {formatTimer(timerRemainingSec)}
+                    </div>
+                    <div className="text-xs text-muted" style={{ marginTop: "10px", textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: "var(--font-mono)" }}>
+                      {timerStatus === "running" ? "\u25CF Active Flow" : timerStatus === "paused" ? "\u275A\u275A Paused" : "Ready"}
+                    </div>
+                  </div>
                 </div>
 
                 {/* CONTROLS */}
@@ -1527,19 +1555,47 @@ export default function GoalHub() {
                     {timerTask || "Deliberate Practice"}
                   </h2>
 
-                  <div
-                    style={{
-                      fontSize: "8rem",
-                      fontWeight: 900,
-                      fontFamily: "ui-monospace, monospace",
-                      letterSpacing: "-0.04em",
-                      color: timerStatus === "running" ? "var(--accent-primary)" : "var(--text-primary)",
-                      lineHeight: 1,
-                      marginBottom: "36px",
-                      textShadow: timerStatus === "running" ? "0 0 40px rgba(255, 214, 0, 0.3)" : "none",
-                    }}
-                  >
-                    {formatTimer(timerRemainingSec)}
+                  <div style={{ position: "relative", width: "380px", height: "380px", margin: "16px auto 36px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <svg width="380" height="380" style={{ transform: "rotate(-90deg)", position: "absolute", top: 0, left: 0 }}>
+                      <circle
+                        cx="190"
+                        cy="190"
+                        r="170"
+                        stroke="#202020"
+                        strokeWidth="8"
+                        fill="transparent"
+                      />
+                      <circle
+                        cx="190"
+                        cy="190"
+                        r="170"
+                        stroke="var(--accent-primary)"
+                        strokeWidth="8"
+                        fill="transparent"
+                        strokeDasharray={2 * Math.PI * 170}
+                        strokeDashoffset={2 * Math.PI * 170 * (1 - Math.max(0, Math.min(1, ((timerDurationMin * 60) - timerRemainingSec) / Math.max(1, timerDurationMin * 60))))}
+                        strokeLinecap="round"
+                        style={{ transition: "stroke-dashoffset 0.4s ease" }}
+                      />
+                    </svg>
+                    <div style={{ position: "relative", zIndex: 1, textAlign: "center" }}>
+                      <div
+                        style={{
+                          fontSize: "5.5rem",
+                          fontWeight: 900,
+                          fontFamily: "ui-monospace, monospace",
+                          letterSpacing: "-0.04em",
+                          color: timerStatus === "running" ? "var(--accent-primary)" : "var(--text-primary)",
+                          lineHeight: 1,
+                          textShadow: timerStatus === "running" ? "0 0 36px rgba(255, 214, 0, 0.3)" : "none",
+                        }}
+                      >
+                        {formatTimer(timerRemainingSec)}
+                      </div>
+                      <div className="text-xs text-muted" style={{ marginTop: "12px", textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: "var(--font-mono)" }}>
+                        {timerStatus === "running" ? "\u25CF Deep Flow State" : timerStatus === "paused" ? "\u275A\u275A Paused" : "Ready"}
+                      </div>
+                    </div>
                   </div>
 
                   <div style={{ display: "flex", gap: "16px" }}>
