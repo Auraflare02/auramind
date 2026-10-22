@@ -13,13 +13,14 @@ export function getCandidateModels(): string[] {
   const configured = process.env.GEMINI_MODEL?.trim();
   const validStandards = [
     "gemini-3.8-flash",
+    "gemini-3.6-flash",
     "gemini-3.1-pro-preview",
     "gemini-flash-latest",
+    "gemini-3.1-flash-lite",
     "gemini-pro-latest",
-    "gemini-2.5-flash",
   ];
 
-  if (configured) {
+  if (configured && configured !== "gemini-2.5-flash" && configured !== "gemini-1.5-flash") {
     return [configured, ...validStandards.filter((m) => m !== configured)];
   }
   return validStandards;
