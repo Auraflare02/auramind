@@ -78,6 +78,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {/* NAV LINKS */}
             <nav style={{ display: "flex", alignItems: "center", gap: "16px" }}>
               <Link
+                href="/chat"
+                style={{
+                  color: "var(--accent-primary)",
+                  textDecoration: "none",
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                  transition: "color var(--transition-fast)",
+                }}
+              >
+                AI Assistant
+              </Link>
+              <Link
                 href="/#create-goal"
                 style={{
                   color: "var(--text-secondary)",

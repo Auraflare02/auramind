@@ -480,19 +480,30 @@ export default function GoalHub() {
     setChatMessages((prev) => [...prev, optimisticMessage]);
 
     try {
+      const historyPayload = chatMessages.slice(-8).map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           request_id: goalData.id,
           message: userText,
+          history: historyPayload,
         }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "AI response failed.");
 
-      const assistantMessage = { role: "assistant", content: data.reply, created_at: new Date().toISOString() };
+      const assistantMessage = {
+        role: "assistant",
+        content: data.reply,
+        sources: data.sources,
+        created_at: new Date().toISOString(),
+      };
       setChatMessages((prev) => [...prev, assistantMessage]);
     } catch (e: any) {
       setChatMessages((prev) => [

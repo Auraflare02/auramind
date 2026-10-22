@@ -3,6 +3,7 @@ import { Ctx, Plan, Day, Block, ResearchSchema } from "./schemas";
 import { formatLevel } from "./categories";
 import { fallbackPlan, phaseOf } from "./fallback";
 import { AdaptivePlanProposal, ResearchData } from "./types";
+import { searchTavily } from "./tavily";
 
 export function isGeminiConfigured(): boolean {
   return Boolean(process.env.GEMINI_API_KEY);
@@ -376,266 +377,236 @@ Return JSON with:
   });
 }
 
-export function generateSmartChatFallback(
-  c: Ctx,
-  userMessage: string,
-  extraContext?: {
+export interface ChatAIParams {
+  userMessage: string;
+  history?: { role: "user" | "assistant" | "model" | "system"; content: string }[];
+  goalContext?: {
+    goal?: string;
+    category?: string;
+    currentLevel?: string;
+    targetLevel?: string;
+    dailyHours?: number;
+    focusWindow?: string;
     currentDay?: number;
     todayTasks?: string[];
     recentCheckins?: any[];
     focusSessionStats?: any;
-  }
-): string {
-  const raw = (userMessage || "").trim();
-  const msg = raw.toLowerCase();
-  const day = extraContext?.currentDay || 1;
-  const tasks = extraContext?.todayTasks || [];
-  const topTask = tasks[0] || "Foundational Practice Drill";
+  };
+  enableWebSearch?: boolean;
+}
 
-  // 1. Python Decorators
-  if (/(decorator|wrapper|@|functools)/i.test(msg)) {
-    return `### 🎯 Masterclass: Python Decorators Explained
+export interface ChatAIResult {
+  reply: string;
+  sources?: { title: string; url: string; content?: string }[];
+  modelUsed: string;
+}
 
-A **decorator** is simply a function that takes another function as an argument, extends or alters its behavior without modifying the original function's source code, and returns the modified function.
+const AURAMIND_AI_SYSTEM_INSTRUCTION = `You are AuraMind, a highly capable, intelligent AI learning, productivity, and problem-solving assistant.
+Your purpose is to provide accurate, useful, relevant, understandable, and personalized assistance across a wide spectrum of domains.
 
-\`\`\`python
-import functools
-import time
+Follow these 10 core rules at all times:
 
-def log_execution_time(func):
-    """Decorator that measures execution time of any function."""
-    @functools.wraps(func)  # Preserves function name & docstring
-    def wrapper(*args, **kwargs):
-        start = time.perf_counter()
-        result = func(*args, **kwargs)
-        duration = time.perf_counter() - start
-        print(f"[AuraMind Metrics] {func.__name__}() completed in {duration:.4f}s")
-        return result
-    return wrapper
+### Rule 1 — Understand the user's actual question and intent
+Identify the user's actual intent before responding:
+- Is it a factual question, scientific query, mathematical proof, calculation, programming problem, debugging request, grammar question, language translation, comparison, recommendation, or casual conversation?
+- CRITICAL RESTRICTION: Do NOT assume all questions are about productivity, motivation, or study planning.
+  * "What is photosynthesis?" -> Explain photosynthesis scientifically. Do NOT talk about study goals.
+  * "Why is my JavaScript returning undefined?" -> Analyze the code and diagnose the bug directly.
+  * "Solve 2x + 5 = 15" -> Provide step-by-step mathematical steps and the final answer (x = 5).
+  * "Explain electricity as if I'm 12 years old" -> Use intuitive analogies (like water flow in pipes).
+  * "Explain German accusative articles" -> Teach German grammar directly with clear tables and sentences.
+  * "Write a Python program to find prime numbers" -> Provide clean, functional, idiomatic Python code.
+  * "How was your day?" -> Respond warmly and naturally without pretending to be a biological person.
+  * "Which language should I learn?" -> Ask what they want to build (web, iOS, data, games) or compare top choices objectively.
+  * In Hindi ("मुझे प्रकाश संश्लेषण सरल हिंदी में समझाओ") -> Respond clearly and fluently in Hindi.
+  * If the user specifically asks about their active goal or timetable, use the provided goal context. If no goal exists, do NOT invent one.
 
-# Applying the decorator using @ syntax:
-@log_execution_time
-def process_data(n):
-    return sum(i * i for i in range(n))
+### Rule 2 — Answer directly and concisely
+Start with the direct answer or solution immediately. Never add robotic greetings, unnecessary throat-clearing, or filler phrases ("As AuraMind...", "I would be happy to help you with that..."). Match response length to the question complexity. Keep simple answers short and clean.
 
-print(process_data(100_000))
-\`\`\`
+### Rule 3 — Prioritize accuracy and truthfulness
+Do not invent facts, statistics, research papers, citations, or quotations. Distinguish established scientific facts from theories or reasonable interpretations. When verified web search results are provided in the prompt, use them and cite them with markdown links [Source](URL). Never invent citations or sources. If something is unknown or uncertain, state that honestly.
 
-#### ⚡ When to use decorators in your Python journey:
-1. **Cross-Cutting Concerns**: Logging, execution timing, input validation, or authentication.
-2. **Caching**: Python's built-in \`@functools.lru_cache\` saves expensive recalculations automatically.
-3. **Clean Architecture**: Keeps your core business logic completely separated from boilerplate utilities.
+### Rule 4 — Adapt to the user's knowledge level
+- Beginner: Use simple, plain language, define new terms, and provide relatable analogies.
+- Intermediate: Explain underlying mechanics, relationships between concepts, and practical tradeoffs.
+- Advanced: Use standard technical nomenclature, formal notation, architectural considerations, and deep reasoning.
+Never unnecessarily complicate simple questions.
 
-**Immediate Active Recall Drill**: What happens if you forget \`*args, **kwargs\` in the inner wrapper? *(Hint: It won't accept function arguments!)*`;
-  }
+### Rule 5 — Provide valuable, actionable substance
+Avoid vague platitudes ("practice every day", "stay focused"). Provide concrete examples, runnable code blocks, realistic solutions, and logical next steps.
 
-  // 2. Python Generators & Yield
-  if (/(generator|yield|iterator|next\(\))/i.test(msg)) {
-    return `### ⚡ Masterclass: Python Generators & \`yield\`
+### Rule 6 — Maintain multi-turn conversational context
+Track the conversation history. When the user asks follow-up questions ("Give me an example", "Make it simpler", "Now in TypeScript", "Why did you use that method?"), interpret their request in relation to previous messages without restarting the topic.
 
-A **generator** produces items one-by-one **on demand (lazy evaluation)** instead of storing the entire sequence in memory at once. It turns memory complexity from **O(N)** into **O(1)**!
+### Rule 7 — Ask clarifying questions only when genuinely necessary
+Ask a follow-up question when the answer genuinely depends on missing user requirements (e.g. target platform, operating system, starting baseline). Once answered, use that information. Do not turn conversations into repetitive questionnaires.
 
-\`\`\`python
-# Standard list: Allocates 10 million integers in RAM simultaneously!
-# big_list = [x for x in range(10_000_000)] # Heavy memory usage
+### Rule 8 — Personalize with authorized goal data
+When authorized goal data is present below, use it ONLY if the question is related to the user's active goal, study plan, or progress. If the question is general or unrelated, answer the general question directly.
 
-# Generator: Uses 'yield' — generates one integer at a time on the fly!
-def number_stream(max_val):
-    current = 0
-    while current < max_val:
-        yield current
-        current += 1
+### Rule 9 — Use appropriate formatting
+- Paragraphs for explanations.
+- Numbered lists for sequential procedures or proofs.
+- Markdown tables when comparing alternatives.
+- Fenced code blocks with language specifiers for programming.
+- Mathematical notation for equations.
 
-gen = number_stream(5)
-print(next(gen)) # 0
-print(next(gen)) # 1
+### Rule 10 — Be helpful, safe, and responsible
+Provide safe guidance. For medical, legal, or financial inquiries, appropriately communicate uncertainty and advise consulting qualified professionals. Never guarantee external real-world outcomes.`;
 
-# Or loop over it cleanly without loading everything into memory:
-for num in number_stream(3):
-    print("Streamed:", num)
-\`\`\`
+function queryNeedsWebSearch(query: string, explicit?: boolean): boolean {
+  if (explicit) return true;
+  const q = query.toLowerCase();
+  const searchTriggers = [
+    "latest", "current", "recent", "today", "news", "price", "release",
+    "2024", "2025", "2026", "who is the current", "what is the current",
+    "documentation for", "search", "browse", "lookup", "look up", "update", "newest"
+  ];
+  return searchTriggers.some((t) => q.includes(t));
+}
 
-#### 💡 Key Takeaway:
-Use generators whenever you're processing large log files, database query streams, or huge datasets where loading everything into RAM would crash your machine!`;
-  }
+export async function chatWithAuraMindAI(params: ChatAIParams): Promise<ChatAIResult> {
+  const { userMessage, history, goalContext, enableWebSearch } = params;
+  const key = process.env.GEMINI_API_KEY;
 
-  // 3. Object-Oriented Programming (OOP, Classes, __init__, self)
-  if (/(oop|class|object|__init__|inheritance|polymorphism|encapsulation)/i.test(msg)) {
-    return `### 🏗️ Masterclass: OOP & Classes in Python
-
-Think of a **Class** as the blueprint (e.g. "Architectural plan for a House") and an **Object** as the actual building constructed from that plan.
-
-\`\`\`python
-class HabitTracker:
-    def __init__(self, goal_name: str, daily_minutes: int):
-        # 'self' refers to the specific instance created
-        self.goal_name = goal_name
-        self.daily_minutes = daily_minutes
-        self.completed_days = 0
-
-    def log_session(self, minutes_spent: int) -> str:
-        if minutes_spent >= self.daily_minutes:
-            self.completed_days += 1
-            return f"🔥 Target hit! Streak: {self.completed_days} days."
-        return "⚠️ Partial block logged. Keep going!"
-
-# Instantiating the object
-tracker = HabitTracker("Master Python", 60)
-print(tracker.log_session(60)) # 🔥 Target hit! Streak: 1 days.
-\`\`\`
-
-#### ⚡ Rules of Thumb:
-- \`__init__\`: The constructor that initializes the object's starting state.
-- \`self\`: The pointer that allows each instance to access its own attributes without clashing with others.`;
+  if (!key) {
+    throw new Error("GEMINI_API_KEY is not configured in the server environment. Please set GEMINI_API_KEY.");
   }
 
-  // 4. Data Structures (Lists, Dictionaries, Sets, Tuples)
-  if (/(list|dict|dictionary|tuple|set|comprehension)/i.test(msg)) {
-    return `### 📊 Masterclass: Python Core Data Structures
-
-Choosing the right data structure directly impacts algorithmic speed and memory:
-
-| Structure | Syntax | Mutability | Lookup Speed | Best For |
-|---|---|---|---|---|
-| **List** | \`[1, 2, 3]\` | Mutable | \`O(N)\` search | Ordered sequence of items |
-| **Dict** | \`{"a": 1}\` | Mutable | **\`O(1)\` instant** | Key-Value mappings / lookups |
-| **Set** | \`{1, 2, 3}\` | Mutable | **\`O(1)\` instant** | Unique items & membership tests |
-| **Tuple** | \`(1, 2)\` | **Immutable** | \`O(N)\` search | Fixed records / coordinate data |
-
-\`\`\`python
-# Idiomatic Dictionary Comprehension
-words = ["python", "auramind", "deliberate", "code"]
-lengths = {word: len(word) for word in words if len(word) > 4}
-print(lengths) # {'python': 6, 'auramind': 8, 'deliberate': 10}
-\`\`\`
-
-**Pro Tip**: Whenever you find yourself writing \`if x in my_list:\` repeatedly inside a loop, convert that list to a **Set** — it changes your search from linear scanning to instantaneous hash lookup!`;
+  // 1. Check if real-time web research is needed via Tavily
+  let searchResults: { title: string; url: string; content: string; score: number }[] = [];
+  if (queryNeedsWebSearch(userMessage, enableWebSearch)) {
+    try {
+      searchResults = await searchTavily(userMessage, 4);
+    } catch (e) {
+      console.warn("[gemini-ai] Web search attempt encountered an issue:", e);
+    }
   }
 
-  // 5. Error Handling & Debugging (try, except)
-  if (/(error|exception|try|except|bug|debug|breakpoint)/i.test(msg)) {
-    return `### 🛠️ Masterclass: Robust Error Handling & Debugging
+  // 2. Build contextual prompt addenda
+  let promptAddenda = "";
 
-Python embraces the **EAFP** philosophy: *"Easier to Ask for Forgiveness than Permission"*.
-
-\`\`\`python
-def safe_divide(a: float, b: float) -> float:
-    try:
-        result = a / b
-    except ZeroDivisionError as err:
-        print(f"Diagnostics: Caught expected edge case ({err})")
-        return 0.0
-    except TypeError:
-        print("Invalid types provided. Ensure inputs are numeric.")
-        raise
-    else:
-        # Runs ONLY if no exceptions were thrown
-        return result
-    finally:
-        # Runs ALWAYS (great for closing database or file handles)
-        pass
-\`\`\`
-
-#### ⚡ Debugging Pro-Tip:
-Insert \`breakpoint()\` anywhere in your Python script. When the execution hits that line, Python will drop into the interactive **PDB debugger**, allowing you to inspect live variables, step through lines, and test expressions!`;
+  if (goalContext && (goalContext.goal || (goalContext.todayTasks && goalContext.todayTasks.length > 0))) {
+    promptAddenda += `\n\n[USER AUTHORIZED GOAL CONTEXT (Reference ONLY if the question relates to the user's goal, progress, or schedule)]:
+- Goal: "${goalContext.goal || "Self-Directed Mastery"}"
+- Category: ${goalContext.category || "General"}
+- Starting Level: ${goalContext.currentLevel || "Beginner"} | Target Level: ${goalContext.targetLevel || "Advanced"}
+- Daily Commitment: ${goalContext.dailyHours || 2} hours/day (${goalContext.focusWindow || "morning"} focus window)
+- Current Curriculum Day: Day ${goalContext.currentDay || 1} of 30
+- Today's Scheduled Tasks: ${JSON.stringify(goalContext.todayTasks || [])}
+- Recent Check-in Signals: ${JSON.stringify((goalContext.recentCheckins || []).slice(0, 3))}
+`;
   }
 
-  // 6. Functions, *args, **kwargs, Scope
-  if (/(function|args|kwargs|def|lambda|scope)/i.test(msg)) {
-    return `### ⚙️ Masterclass: Flexible Python Functions & \`*args\`, \`**kwargs\`
+  if (searchResults.length > 0) {
+    promptAddenda += `\n\n[VERIFIED LIVE WEB RESEARCH RESULTS (Grounded facts)]:
+` + searchResults.map((r, i) => `Source [${i + 1}]: "${r.title}"\nURL: ${r.url}\nExcerpt: ${r.content}`).join("\n\n") + `
 
-\`\`\`python
-def build_profile(username: str, *skills, **metadata):
-    """
-    *skills: Collects arbitrary positional args into a TUPLE.
-    **metadata: Collects arbitrary keyword args into a DICTIONARY.
-    """
-    print(f"Developer: {username}")
-    print("Skills:", skills)
-    print("Meta Info:", metadata)
-
-build_profile("Learner", "Python", "Git", "SQL", current_day=1, focus="morning")
-\`\`\`
-
-#### 💡 Scope Resolution (The LEGB Rule):
-Python searches for variables in this exact order:
-1. **L**ocal: Inside the current function.
-2. **E**nclosing: Inside any outer enclosing functions.
-3. **G**lobal: At the top level of the module/file.
-4. **B**uilt-in: Pre-loaded Python names (like \`len\`, \`print\`, \`range\`).`;
+Instruction on web sources:
+- Base time-sensitive facts on the verified web search results above.
+- Cite sources naturally using Markdown links: [Source Title](URL).
+- Never fabricate sources or links.`;
   }
 
-  // 7. General Coding / Python questions
-  if (/(python|code|syntax|how to|program|learn|project|start)/i.test(msg)) {
-    return `### 🚀 Deep Coaching: Mastering **"${c.goal}"**
+  // 3. Construct multi-turn contents array with proper role alternations for Gemini
+  const contents: any[] = [];
 
-To reach your target standard (**${c.target_level}**), avoid passive video watching. Apply **Deliberate Practice Architecture**:
+  if (history && history.length > 0) {
+    const recentHistory = history.slice(-14);
+    for (const h of recentHistory) {
+      const role = h.role === "assistant" || h.role === "model" ? "model" : "user";
+      const text = (h.content || "").trim();
+      if (!text) continue;
 
-1. **The 80/20 Implementation Rule**: Spend 20% of your time reading/learning syntax and 80% actively writing, breaking, and fixing code in an interactive terminal or IDE.
-2. **Read Tracebacks Backwards**: When Python throws an error, start reading from the **very bottom line** — it tells you the exact exception and line number where execution failed.
-3. **Day ${day} Mission**:
-   - Focus Task: **${topTask}**
-   - Window: **${c.focus}**
-
-What specific script, feature, or concept are you building right now? Share your code or questions and let's optimize it!`;
+      if (contents.length > 0 && contents[contents.length - 1].role === role) {
+        contents[contents.length - 1].parts.push({ text });
+      } else {
+        contents.push({
+          role,
+          parts: [{ text }],
+        });
+      }
+    }
   }
 
-  // 8. Distraction / Procrastination / Tired / Stuck
-  if (/(phone|distract|tired|exhaust|bored|procrastinat|cannot focus|can't focus|stuck|hard|lazy|demotivat)/i.test(msg)) {
-    return `### 🧠 Cognitive Diagnostics: Overcoming Resistance
+  const finalUserMessage = promptAddenda ? `${userMessage}\n${promptAddenda}` : userMessage;
 
-Resistance is not a character flaw — it is **neurological telemetry** indicating cognitive load, ambiguity, or friction.
-
-\`\`\`text
-Resistance Formula: Friction / Perceived Reward = Procrastination
-\`\`\`
-
-#### 🛡️ Execute This 3-Minute Protocol Right Now:
-1. **Eliminate Friction**: Physically place ${c.distractions || "your phone"} in another room or out of line-of-sight.
-2. **The 5-Minute Micro-Agreement**: Do not tell your brain you must study for ${c.hours} hours. Tell yourself: *"I will open my editor and write code for exactly 5 minutes."* Once momentum kicks in, dopamine follows action.
-3. **Slice the Task**: Break **${topTask}** into one microscopic action: define a single variable or write 3 lines of comments outlining what the function should do.
-
-Click on the **Focus Timer** tab on your dashboard, set it to 15 minutes, and let's log your first win!`;
+  if (contents.length > 0 && contents[contents.length - 1].role === "user") {
+    contents[contents.length - 1].parts.push({ text: finalUserMessage });
+  } else {
+    contents.push({
+      role: "user",
+      parts: [{ text: finalUserMessage }],
+    });
   }
 
-  // 9. Schedule / Timetable / Plan queries
-  if (/(schedule|timetable|today|next|task|plan|what.*(do|next))/i.test(msg)) {
-    return `### 📅 Day ${day} Action Blueprint
+  // 4. Call Gemini candidate models
+  const models = getCandidateModels();
+  let lastError: any = null;
 
-Target Goal: **"${c.goal}"** (${c.current_level} → ${c.target_level})
+  for (const model of models) {
+    const ac = new AbortController();
+    const timeout = setTimeout(() => ac.abort(), 38000);
 
-#### Today's Scheduled Focus Blocks:
-${tasks.map((t) => `• **${t}**`).join("\n") || `• **${topTask}**`}
+    try {
+      const payload: any = {
+        contents,
+        systemInstruction: {
+          parts: [{ text: AURAMIND_AI_SYSTEM_INSTRUCTION }],
+        },
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 4096,
+        },
+      };
 
-#### ⚡ Tactical Execution Rules:
-- **Peak Window Alignment**: Your focus window is **${c.focus}**. Reserve this period strictly for heavy problem-solving, never passive reading.
-- **Log Promptly**: As soon as a block ends, log it in **Hourly Check-In** to feed our adaptive algorithm.`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+      const res = await fetch(url, {
+        method: "POST",
+        signal: ac.signal,
+        headers: {
+          "content-type": "application/json",
+          "x-goog-api-key": key,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      clearTimeout(timeout);
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.warn(`[gemini] Model ${model} returned HTTP ${res.status}:`, errText.slice(0, 200));
+        if (res.status === 404 || res.status === 400) {
+          lastError = new Error(`Model ${model} HTTP ${res.status}: ${errText.slice(0, 180)}`);
+          continue;
+        }
+        throw new Error(`Gemini API error (HTTP ${res.status}): ${errText.slice(0, 250)}`);
+      }
+
+      const data = await res.json();
+      const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!reply) {
+        const finishReason = data?.candidates?.[0]?.finishReason || "NO_OUTPUT";
+        throw new Error(`Gemini returned empty text (finishReason: ${finishReason})`);
+      }
+
+      return {
+        reply: reply.trim(),
+        sources: searchResults.length > 0 ? searchResults.map((s) => ({ title: s.title, url: s.url })) : undefined,
+        modelUsed: model,
+      };
+    } catch (err: any) {
+      clearTimeout(timeout);
+      lastError = err;
+      console.warn(`[gemini] Attempt with model ${model} failed:`, err.message);
+    }
   }
 
-  // 10. Greetings
-  if (/^(hi|hello|hey|yo|good\s*(morning|afternoon|evening)|sup)\b/i.test(msg) || msg.length < 5) {
-    return `Hey! I'm AuraMind, your AI accountability coach and technical strategist.
-
-You are actively operating on **Day ${day}** of your 30-day timetable for **"${c.goal}"** (${c.current_level} → ${c.target_level}).
-
-🎯 **Priority Block Today**: ${topTask}
-⚡ **Optimal Window**: ${c.focus}
-
-What technical challenge, concept breakdown, or study obstacle can we tackle right now? Fire away!`;
-  }
-
-  // 11. Comprehensive Contextual Fallback
-  return `### 💡 AuraMind Strategic Advisory: "${c.goal}"
-
-Regarding: *"${raw}"*
-
-When progressing from **${c.current_level}** to **${c.target_level}**, master learners focus on **mental models & feedback loops**:
-
-1. **Deconstruct**: Break the topic into its foundational primitives.
-2. **Active Sandbox**: Never verify understanding mentally. Write a quick minimal reproduction or test script to prove the behavior.
-3. **Diagnostic Logging**: Record any confusion in your hourly check-in notes so we can adapt the upcoming curriculum.
-
-Ask me to break down any specific syntax, explain an algorithmic pattern, or troubleshoot your current task!`;
+  throw new Error(
+    lastError?.message || "Google Gemini API is currently unavailable or quota exceeded. Please try again in a moment."
+  );
 }
 
 export async function chatWithAuraMind(
@@ -649,61 +620,31 @@ export async function chatWithAuraMind(
     focusSessionStats?: any;
   }
 ): Promise<string> {
-  const currentDay = extraContext?.currentDay || 1;
-  const sys = `${buildSystemPrompt(c)}
+  const result = await chatWithAuraMindAI({
+    userMessage,
+    history: conversationHistory,
+    goalContext: {
+      goal: c.goal,
+      category: c.category,
+      currentLevel: c.current_level,
+      targetLevel: c.target_level,
+      dailyHours: c.hours,
+      focusWindow: c.focus,
+      currentDay: extraContext?.currentDay,
+      todayTasks: extraContext?.todayTasks,
+      recentCheckins: extraContext?.recentCheckins,
+      focusSessionStats: extraContext?.focusSessionStats,
+    },
+  });
+  return result.reply;
+}
 
-ROLE & INSTRUCTIONAL BEHAVIOR:
-You are AuraMind — the user's elite AI accountability partner, cognitive strategist, and master domain tutor.
-You have full access to their active 30-day curriculum, hourly check-in records, and focus metrics.
-
-RESPONSE QUALITY MANDATE:
-1. NEVER GIVE GENERIC OR BORING RESPONSES:
-   - Avoid robotic greetings or repetitive boilerplate summaries like "Hey I am your coach you are on Day X...".
-   - When the user asks a question, dive IMMEDIATELY into the substance of their question with insight, depth, and actionable clarity.
-2. TECHNICAL & SUBJECT-MATTER MASTERY:
-   - If they ask for explanations, concepts, code, syntax, algorithms, or techniques related to their goal:
-     * Provide clean, crystal-clear conceptual explanations with vivid mental models.
-     * Give practical, idiomatic code examples with comments highlighting key mechanics.
-     * Point out common beginner vs intermediate pitfalls.
-     * End with a fast 1-question active recall drill or challenge to lock in the learning.
-3. RUTHLESSLY PRACTICAL ACCOUNTABILITY:
-   - When they feel stuck, lazy, overwhelmed, or tempted by distractions:
-     * Diagnose the friction precisely (task scope too large, fear of failure, cognitive fatigue).
-     * Provide a tactical 3-step intervention (e.g. The 5-Minute Micro-Start, Environment Scrub, Low-Stakes Practice).
-4. TIMETABLE & SCHEDULING STRATEGY:
-   - When discussing their schedule or daily blocks:
-     * Leverage their current day (Day ${currentDay}) and their peak focus window (${c.focus}).
-     * Offer concrete ways to optimize their schedule without cognitive burnout.
-5. FORMATTING:
-   - Use crisp Markdown formatting: bold highlights, bullet points, clean code snippets, and short paragraphs.`;
-
-  const contextAddendum = extraContext ? `
-Live Dashboard Context:
-- Current Day in 30-Day Plan: Day ${currentDay}
-- Today's Planned Tasks: ${JSON.stringify(extraContext.todayTasks || [])}
-- Recent Check-ins: ${JSON.stringify(extraContext.recentCheckins || [])}
-- Focus Timer Stats Today: ${JSON.stringify(extraContext.focusSessionStats || {})}
-` : "";
-
-  const messagesFormatted = conversationHistory
-    .slice(-8)
-    .map((m) => `${m.role === "user" ? "User" : "AuraMind"}: ${m.content}`)
-    .join("\n\n");
-
-  const prompt = `${contextAddendum}
-
-Recent Conversation:
-${messagesFormatted}
-
-User: ${userMessage}
-AuraMind:`;
-
-  try {
-    return await genText(prompt, sys);
-  } catch (err) {
-    console.warn("[gemini] chatWithAuraMind LLM call failed, returning intelligent coaching fallback:", err);
-    return generateSmartChatFallback(c, userMessage, extraContext);
-  }
+export function generateSmartChatFallback(
+  _c: Ctx,
+  _userMessage: string,
+  _extraContext?: any
+): string {
+  return "I am currently unable to reach the Google Gemini AI engine. Please check your network connection or try again in a few moments.";
 }
 
 export async function generateCheckinCoaching(

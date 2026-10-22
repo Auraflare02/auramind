@@ -125,8 +125,18 @@ export const TimerSessionInput = z.object({
 export type TimerSessionInput = z.infer<typeof TimerSessionInput>;
 
 export const ChatInput = z.object({
-  request_id: z.string(),
-  message: z.string().trim().min(1).max(2000),
+  request_id: z.string().optional(),
+  conversation_id: z.string().optional(),
+  message: z.string().trim().min(1).max(4000),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(["user", "assistant", "model", "system"]),
+        content: z.string(),
+      })
+    )
+    .optional(),
+  enable_search: z.boolean().optional(),
 });
 
 export type ChatInput = z.infer<typeof ChatInput>;
