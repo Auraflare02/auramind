@@ -579,7 +579,7 @@ Instruction on web sources:
       if (!res.ok) {
         const errText = await res.text();
         console.warn(`[gemini] Model ${model} returned HTTP ${res.status}:`, errText.slice(0, 200));
-        if (res.status === 404 || res.status === 400) {
+        if (res.status === 404 || res.status === 400 || res.status === 503 || res.status === 429) {
           lastError = new Error(`Model ${model} HTTP ${res.status}: ${errText.slice(0, 180)}`);
           continue;
         }
