@@ -2,6 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
+import AuthNav from "@/components/AuthNav";
 
 export const metadata: Metadata = {
   title: "AuraMind — AI Accountability & Goal Execution Platform",
@@ -137,6 +138,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               >
                 Admin
               </Link>
+
+              {/* Authentication Nav State */}
+              <AuthNav />
 
               {/* Dark / Light Mode Switch */}
               <ThemeToggle />

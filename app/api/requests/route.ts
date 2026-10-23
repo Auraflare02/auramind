@@ -4,6 +4,7 @@ import { Ctx, Plan, ResearchSchema } from "@/lib/schemas";
 import { researchGoal, generatePlan, isGeminiConfigured } from "@/lib/gemini";
 import { fallbackPlan } from "@/lib/fallback";
 import { searchTavily } from "@/lib/tavily";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 
 export const maxDuration = 60;
 
@@ -136,28 +137,46 @@ export const POST = guard(async (req) => {
   const requestCode = generateRequestCode();
   const nowIso = new Date().toISOString();
 
+  // Check if session belongs to an authenticated user
+  let userId: string | null = null;
+  try {
+    const supabaseServer = createServerClient();
+    const { data: { user } } = await supabaseServer.auth.getUser();
+    if (user?.id) {
+      userId = user.id;
+    }
+  } catch {
+    // Unauthenticated anonymous goal creation allowed via requestCode
+  }
+
   // Instant AI Synthesis in front of user
   const { researchData, plan, planSource } = await synthesizePlan(p.data);
 
   const client = db();
+  const insertPayload: any = {
+    request_code: requestCode,
+    status: "ready", // IMMEDIATELY ready
+    category,
+    current_level,
+    target_level,
+    timezone,
+    context: p.data,
+    research: researchData.summary,
+    research_data: researchData,
+    plan,
+    plan_source: planSource,
+    ready_at: nowIso,
+    created_at: nowIso,
+    updated_at: nowIso,
+  };
+
+  if (userId) {
+    insertPayload.user_id = userId;
+  }
+
   const insertRes = await client
     .from("requests")
-    .insert({
-      request_code: requestCode,
-      status: "ready", // IMMEDIATELY ready! No 12-hour wait!
-      category,
-      current_level,
-      target_level,
-      timezone,
-      context: p.data,
-      research: researchData.summary,
-      research_data: researchData,
-      plan,
-      plan_source: planSource,
-      ready_at: nowIso,
-      created_at: nowIso,
-      updated_at: nowIso,
-    })
+    .insert(insertPayload)
     .select("id, request_code, status, plan, research_data, created_at, ready_at")
     .single();
 

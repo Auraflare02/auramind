@@ -15,9 +15,19 @@ drop view if exists auramind_run_logs cascade;
 
 create extension if not exists "pgcrypto";
 
--- 2. Create All 7 Core Tables
+-- 2. Create Core Tables
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  full_name text,
+  email text,
+  avatar_url text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table requests (
   id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade,
   request_code text unique,
   status text not null default 'pending',
   category text not null default 'other',
@@ -38,6 +48,7 @@ create table requests (
 
 create index idx_requests_status on requests(status);
 create index idx_requests_code on requests(request_code);
+create index idx_requests_user_id on requests(user_id);
 create index idx_requests_created_at on requests(created_at desc);
 
 create table checkins (
@@ -131,6 +142,7 @@ grant all on all tables in schema public to service_role;
 grant all on all sequences in schema public to service_role;
 grant all on all routines in schema public to service_role;
 
+alter table public.profiles enable row level security;
 alter table requests enable row level security;
 alter table checkins enable row level security;
 alter table auramind_focus_sessions enable row level security;
@@ -139,10 +151,44 @@ alter table auramind_messages enable row level security;
 alter table auramind_run_reports enable row level security;
 alter table auramind_knowledge enable row level security;
 
+create policy "service_role_profiles" on public.profiles for all to service_role using (true) with check (true);
+create policy "users_own_profile_select" on public.profiles for select to authenticated using (auth.uid() = id);
+create policy "users_own_profile_update" on public.profiles for update to authenticated using (auth.uid() = id) with check (auth.uid() = id);
+
 create policy "service_role_requests" on requests for all to service_role using (true) with check (true);
+create policy "users_own_requests" on requests for select to authenticated using (auth.uid() = user_id or user_id is null);
 create policy "service_role_checkins" on checkins for all to service_role using (true) with check (true);
 create policy "service_role_focus" on auramind_focus_sessions for all to service_role using (true) with check (true);
 create policy "service_role_runs" on auramind_goal_runs for all to service_role using (true) with check (true);
 create policy "service_role_messages" on auramind_messages for all to service_role using (true) with check (true);
 create policy "service_role_reports" on auramind_run_reports for all to service_role using (true) with check (true);
 create policy "service_role_knowledge" on auramind_knowledge for all to service_role using (true) with check (true);
+
+-- 4. Auth User Profile Trigger
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.profiles (id, full_name, email, avatar_url, created_at, updated_at)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
+    new.email,
+    coalesce(new.raw_user_meta_data->>'avatar_url', new.raw_user_meta_data->>'picture', null),
+    now(),
+    now()
+  )
+  on conflict (id) do update set
+    full_name = coalesce(excluded.full_name, profiles.full_name),
+    avatar_url = coalesce(excluded.avatar_url, profiles.avatar_url),
+    updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
