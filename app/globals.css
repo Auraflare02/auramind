@@ -1,5 +1,7 @@
 :root {
-  /* Brand Color Tokens - Pure Black & Engineered Yellow System */
+  /* Default: Dark Theme */
+  color-scheme: dark;
+
   --bg-primary: #0A0A0A;
   --bg-secondary: #111111;
   --bg-surface: #171717;
@@ -15,13 +17,21 @@
 
   --text-primary: #F5F5F5;
   --text-secondary: #A3A3A3;
-  --text-muted: #6B7280;
+  --text-muted: #737373;
   --text-inverse: #0A0A0A;
 
   --border-subtle: #242424;
   --border-default: #303030;
   --border-strong: #404040;
   --border-accent: rgba(255, 214, 0, 0.35);
+
+  --header-bg: rgba(10, 10, 10, 0.92);
+  --code-bg: #141414;
+  --bento-ring-color: rgba(255, 214, 0, 0.04);
+  --bento-ring-color-subtle: rgba(255, 214, 0, 0.025);
+  --bento-ring-color-faint: rgba(255, 214, 0, 0.015);
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --card-shadow-hover: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 214, 0, 0.06);
 
   --success: #22C55E;
   --success-bg: rgba(34, 197, 94, 0.10);
@@ -51,6 +61,54 @@
   --transition-normal: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+[data-theme="light"], html.light {
+  color-scheme: light;
+
+  /* Brand Color Tokens - Clean Minimalist Light Mode */
+  --bg-primary: #FAFAFA;
+  --bg-secondary: #F4F4F5;
+  --bg-surface: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #F4F4F5;
+  --bg-hover: #E4E4E7;
+
+  /* Engineered High-Contrast Amber Accent for Light Mode */
+  --accent-primary: #D97706;
+  --accent-hover: #B45309;
+  --accent-muted: rgba(217, 119, 6, 0.10);
+  --accent-border: rgba(217, 119, 6, 0.32);
+  --accent-glow: rgba(217, 119, 6, 0.18);
+
+  --text-primary: #09090B;
+  --text-secondary: #52525B;
+  --text-muted: #71717A;
+  --text-inverse: #FFFFFF;
+
+  --border-subtle: #E4E4E7;
+  --border-default: #D4D4D8;
+  --border-strong: #A1A1AA;
+  --border-accent: rgba(217, 119, 6, 0.45);
+
+  --header-bg: rgba(250, 250, 250, 0.90);
+  --code-bg: #F4F4F5;
+  --bento-ring-color: rgba(217, 119, 6, 0.05);
+  --bento-ring-color-subtle: rgba(217, 119, 6, 0.03);
+  --bento-ring-color-faint: rgba(217, 119, 6, 0.015);
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --card-shadow-hover: 0 10px 28px rgba(0, 0, 0, 0.08), 0 0 16px rgba(217, 119, 6, 0.08);
+
+  --success: #16A34A;
+  --success-bg: rgba(22, 163, 74, 0.08);
+  --success-border: rgba(22, 163, 74, 0.25);
+
+  --error: #DC2626;
+  --error-bg: rgba(220, 38, 38, 0.08);
+  --error-border: rgba(220, 38, 38, 0.25);
+
+  --warning: #D97706;
+  --warning-bg: rgba(217, 119, 6, 0.08);
+}
+
 /* Base Reset */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -62,7 +120,6 @@ html {
   font-size: 16px;
   scroll-behavior: smooth;
   background-color: var(--bg-primary);
-  color-scheme: dark;
 }
 
 body {
@@ -76,6 +133,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
 /* Custom Scrollbar */
@@ -220,7 +278,7 @@ p {
 .btn-primary:hover:not(:disabled) {
   background-color: var(--accent-hover);
   border-color: var(--accent-hover);
-  box-shadow: 0 2px 12px rgba(255, 214, 0, 0.25);
+  box-shadow: 0 2px 12px var(--accent-glow);
 }
 
 .btn-secondary {
@@ -232,7 +290,7 @@ p {
 .btn-secondary:hover:not(:disabled) {
   background-color: var(--bg-elevated);
   border-color: var(--border-strong);
-  color: #FFFFFF;
+  color: var(--text-primary);
 }
 
 .btn-ghost {
@@ -281,17 +339,18 @@ p {
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
   padding: 24px;
+  box-shadow: var(--card-shadow);
   transition: all var(--transition-fast);
 }
 
 .card:hover {
-  border-color: rgba(255, 214, 0, 0.35);
+  border-color: var(--border-accent);
 }
 
 .card-highlight {
   background-color: var(--bg-card);
-  border: 1px solid rgba(255, 214, 0, 0.3);
-  box-shadow: 0 0 24px rgba(255, 214, 0, 0.05);
+  border: 1px solid var(--border-accent);
+  box-shadow: var(--card-shadow-hover);
 }
 
 /* Bento Card System Matching Reference Design */
@@ -304,14 +363,15 @@ p {
   display: flex;
   flex-direction: column;
   justifyContent: space-between;
+  box-shadow: var(--card-shadow);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
 }
 
 .bento-card:hover {
-  border-color: rgba(255, 214, 0, 0.45);
+  border-color: var(--border-accent);
   transform: translateY(-2px);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 214, 0, 0.06);
+  box-shadow: var(--card-shadow-hover);
 }
 
 .bento-card-tag {
@@ -395,7 +455,7 @@ p {
   pointer-events: none;
   z-index: 0;
   border-radius: 50%;
-  background: radial-gradient(circle at center, transparent 38%, rgba(255, 214, 0, 0.04) 39%, transparent 40%, transparent 60%, rgba(255, 214, 0, 0.025) 61%, transparent 62%, transparent 80%, rgba(255, 214, 0, 0.015) 81%, transparent 82%);
+  background: radial-gradient(circle at center, transparent 38%, var(--bento-ring-color) 39%, transparent 40%, transparent 60%, var(--bento-ring-color-subtle) 61%, transparent 62%, transparent 80%, var(--bento-ring-color-faint) 81%, transparent 82%);
 }
 
 .dot-matrix {
@@ -541,7 +601,7 @@ p {
 
 .form-input::placeholder,
 .form-textarea::placeholder {
-  color: #525252;
+  color: var(--text-muted);
 }
 
 .form-input:focus,

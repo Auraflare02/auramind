@@ -329,7 +329,7 @@ export default function ChatPage() {
                     fontFamily: "ui-monospace, monospace",
                     fontSize: "0.85rem",
                     lineHeight: 1.5,
-                    color: "#F5F5F5",
+                    color: "var(--text-primary)",
                   }}
                 >
                   <code>{p.code}</code>

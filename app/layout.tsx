@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import Link from "next/link";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export const metadata: Metadata = {
   title: "AuraMind — AI Accountability & Goal Execution Platform",
@@ -9,22 +10,28 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#0A0A0A" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var s=localStorage.getItem('auramind_theme')||'dark';document.documentElement.setAttribute('data-theme',s);document.documentElement.classList.add(s);var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',s==='light'?'#FAFAFA':'#0A0A0A');}catch(e){}})();`,
+          }}
+        />
       </head>
       <body>
         {/* TOP WORKSPACE NAVIGATION */}
         <header
           style={{
             borderBottom: "1px solid var(--border-subtle)",
-            backgroundColor: "rgba(10, 10, 10, 0.92)",
+            backgroundColor: "var(--header-bg)",
             backdropFilter: "blur(14px)",
             WebkitBackdropFilter: "blur(14px)",
             position: "sticky",
             top: 0,
             zIndex: 100,
+            transition: "background-color var(--transition-normal), border-color var(--transition-normal)",
           }}
         >
           <div
@@ -57,8 +64,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   justifyContent: "center",
                   fontWeight: 900,
                   fontSize: "15px",
-                  color: "#0A0A0A",
-                  boxShadow: "0 0 12px rgba(255, 214, 0, 0.25)",
+                  color: "var(--text-inverse)",
+                  boxShadow: "0 0 12px var(--accent-glow)",
+                  transition: "background-color var(--transition-fast)",
                 }}
               >
                 A
@@ -76,7 +84,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </Link>
 
             {/* NAV LINKS */}
-            <nav style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+            <nav style={{ display: "flex", alignItems: "center", gap: "16px" }}>
               <Link
                 href="/chat"
                 style={{
@@ -116,19 +124,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link
                 href="/admin"
                 style={{
-                  color: "#F5F5F5",
+                  color: "var(--text-primary)",
                   textDecoration: "none",
                   fontSize: "0.825rem",
                   fontWeight: 600,
                   padding: "6px 18px",
                   borderRadius: "9999px",
-                  backgroundColor: "#171717",
-                  border: "1px solid #303030",
+                  backgroundColor: "var(--bg-surface)",
+                  border: "1px solid var(--border-default)",
                   transition: "all var(--transition-fast)",
                 }}
               >
                 Admin
               </Link>
+
+              {/* Dark / Light Mode Switch */}
+              <ThemeToggle />
 
               {/* Status Indicator */}
               <div

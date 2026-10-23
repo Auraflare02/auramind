@@ -1409,7 +1409,7 @@ export default function GoalHub() {
                       cx="145"
                       cy="145"
                       r="130"
-                      stroke="#202020"
+                      stroke="var(--bg-elevated)"
                       strokeWidth="6"
                       fill="transparent"
                     />
@@ -1529,7 +1529,7 @@ export default function GoalHub() {
                     left: 0,
                     width: "100vw",
                     height: "100vh",
-                    backgroundColor: "#0A0A0A",
+                    backgroundColor: "var(--bg-primary)",
                     zIndex: 9999,
                     display: "flex",
                     flexDirection: "column",
@@ -1561,7 +1561,7 @@ export default function GoalHub() {
                         cx="190"
                         cy="190"
                         r="170"
-                        stroke="#202020"
+                        stroke="var(--bg-elevated)"
                         strokeWidth="8"
                         fill="transparent"
                       />
