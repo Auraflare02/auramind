@@ -136,7 +136,7 @@ GOAL BLUEPRINT & STRATEGY:
 
 MANDATORY SCHEDULING SPECIFICATIONS:
 1. Return EXACTLY ${daysCount} sequential days starting with day ${startDay} and ending with day ${endDay}.
-2. For each day, schedule 2 to 4 focused deliberate practice blocks.
+2. For each day, schedule 1 to 2 deeply focused deliberate practice blocks (Block 1: Primary Execution Drill; Block 2: Feedback, Error Analysis & Retrieval Synthesis). Keep instructions punchy, specific, and directly relevant to "${c.goal}".
 3. The sum of block durations on regular days MUST match approximately ${targetMinutesPerDay} minutes (+/- 15 mins).
 4. Days that are multiples of 7 (Day 7, 14, 21, 28) MUST be lighter consolidation / checkpoint days (~50% time budget, e.g. ${Math.round(targetMinutesPerDay * 0.5)} mins).
 5. Put the highest priority ("high") and most demanding cognitive block during the user's ${c.focus} focus window.

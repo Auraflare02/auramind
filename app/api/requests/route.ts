@@ -16,14 +16,18 @@ export const maxDuration = 60;
 async function synthesizePlan(ctx: Ctx, allowDemo = false): Promise<{ researchData: any; plan: Plan; planSource: "ai" | "demo" }> {
   let externalEvidence = "";
 
-  // 1. External Evidence Search (Tavily if configured)
+  // 1. External Evidence Search (Tavily if configured, bounded to 2.5s)
   try {
-    const searchResults = await searchTavily(`${ctx.goal} curriculum milestones deliberate practice`);
-    if (searchResults.length) {
-      externalEvidence = searchResults.map((s) => `Title: ${s.title}\nContent: ${s.content}`).join("\n\n");
+    const searchPromise = searchTavily(`${ctx.goal} curriculum milestones deliberate practice`);
+    const searchResults = await Promise.race([
+      searchPromise,
+      new Promise<any[]>((_, reject) => setTimeout(() => reject(new Error("Tavily timeout")), 2500)),
+    ]);
+    if (searchResults && searchResults.length) {
+      externalEvidence = searchResults.map((s: any) => `Title: ${s.title}\nContent: ${s.content}`).join("\n\n");
     }
   } catch (err) {
-    console.warn("[requests-api] Tavily search skipped:", err);
+    console.warn("[requests-api] Tavily search skipped or timed out:", err);
   }
 
   // 2. Synthesize using Real Gemini Multi-Stage Pipeline
