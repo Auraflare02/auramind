@@ -3,7 +3,6 @@
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 
 function LoginForm() {
   const router = useRouter();
@@ -45,28 +44,20 @@ function LoginForm() {
     setIsLoading(true);
 
     try {
-      const supabase = createClient();
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password }),
       });
 
-      if (error) {
-        if (error.message.includes("Invalid login credentials")) {
-          throw new Error("Incorrect email or password. Please verify and try again.");
-        }
-        if (error.message.includes("Email not confirmed")) {
-          throw new Error("Please verify your email address before logging in. Check your inbox for the confirmation link.");
-        }
-        throw new Error(error.message);
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to log in.");
       }
 
-      if (data.session) {
-        // Safe redirect to intended destination
-        const safeDestination = nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/dashboard";
-        router.push(safeDestination);
-        router.refresh();
-      }
+      const safeDestination = nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/dashboard";
+      router.push(safeDestination);
+      router.refresh();
     } catch (err: any) {
       setErrorMessage(err.message || "An unexpected error occurred during login.");
     } finally {
@@ -75,39 +66,11 @@ function LoginForm() {
   };
 
   // Handle Google OAuth Login
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = () => {
     if (isLoading || isGoogleLoading) return;
-
     setErrorMessage("");
     setIsGoogleLoading(true);
-
-    try {
-      const supabase = createClient();
-      const origin = window.location.origin;
-      const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(nextPath)}`;
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo,
-          queryParams: {
-            access_type: "offline",
-            prompt: "select_account",
-          },
-        },
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      if (data?.url) {
-        window.location.href = data.url;
-      }
-    } catch (err: any) {
-      setErrorMessage(err.message || "Failed to initialize Google authentication.");
-      setIsGoogleLoading(false);
-    }
+    window.location.href = `/api/auth/google?next=${encodeURIComponent(nextPath)}`;
   };
 
   return (

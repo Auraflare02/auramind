@@ -3,7 +3,6 @@
 import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 
 function SignupForm() {
   const router = useRouter();
@@ -66,35 +65,28 @@ function SignupForm() {
     setIsLoading(true);
 
     try {
-      const supabase = createClient();
-      const origin = window.location.origin;
-      const emailRedirectTo = `${origin}/auth/callback?next=${encodeURIComponent(nextPath)}`;
-
-      const { data, error } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: {
-          data: {
-            full_name: fullName.trim(),
-          },
-          emailRedirectTo,
-        },
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+          full_name: fullName.trim(),
+          next: nextPath,
+        }),
       });
 
-      if (error) {
-        throw new Error(error.message);
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to create an account.");
       }
 
-      // Check if email confirmation is required by Supabase project settings
-      if (data?.user && (!data.session || data.user.identities?.length === 0)) {
+      if (data.needsConfirmation) {
         setConfirmationNotice(true);
-      } else if (data?.session) {
-        // Immediate session granted (email confirmation disabled in Supabase)
+      } else {
         const safeDestination = nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/dashboard";
         router.push(safeDestination);
         router.refresh();
-      } else {
-        setConfirmationNotice(true);
       }
     } catch (err: any) {
       setErrorMessage(err.message || "Failed to create an account. Please try again.");
@@ -104,39 +96,11 @@ function SignupForm() {
   };
 
   // Handle Google OAuth
-  const handleGoogleSignup = async () => {
+  const handleGoogleSignup = () => {
     if (isLoading || isGoogleLoading) return;
-
     setErrorMessage("");
     setIsGoogleLoading(true);
-
-    try {
-      const supabase = createClient();
-      const origin = window.location.origin;
-      const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(nextPath)}`;
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo,
-          queryParams: {
-            access_type: "offline",
-            prompt: "select_account",
-          },
-        },
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      if (data?.url) {
-        window.location.href = data.url;
-      }
-    } catch (err: any) {
-      setErrorMessage(err.message || "Failed to initialize Google authentication.");
-      setIsGoogleLoading(false);
-    }
+    window.location.href = `/api/auth/google?next=${encodeURIComponent(nextPath)}`;
   };
 
   return (

@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -26,9 +25,14 @@ export default function SettingsPage() {
   useEffect(() => {
     async function loadUser() {
       try {
-        const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const res = await fetch("/api/auth/user");
+        if (!res.ok) {
+          router.push("/login?next=/settings");
+          return;
+        }
 
+        const data = await res.json();
+        const user = data.user;
         if (!user) {
           router.push("/login?next=/settings");
           return;
@@ -39,12 +43,13 @@ export default function SettingsPage() {
         setProvider(user.app_metadata?.provider || "email");
 
         const name =
+          data.profile?.full_name ||
           user.user_metadata?.full_name ||
           user.user_metadata?.name ||
           user.email?.split("@")[0] ||
           "";
         setFullName(name);
-        setAvatarUrl(user.user_metadata?.avatar_url || user.user_metadata?.picture || null);
+        setAvatarUrl(data.profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture || null);
       } catch (e) {
         console.error("[settings load error]", e);
       } finally {
@@ -63,14 +68,14 @@ export default function SettingsPage() {
     setIsSavingProfile(true);
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.updateUser({
-        data: {
-          full_name: fullName.trim(),
-        },
+      const res = await fetch("/api/auth/profile", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ full_name: fullName.trim() }),
       });
 
-      if (error) throw new Error(error.message);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update profile.");
 
       setProfileMessage({ type: "success", text: "Profile details updated successfully." });
     } catch (err: any) {
@@ -99,12 +104,14 @@ export default function SettingsPage() {
     setIsUpdatingPassword(true);
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
+      const res = await fetch("/api/auth/profile", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ password: newPassword }),
       });
 
-      if (error) throw new Error(error.message);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update password.");
 
       setPasswordMessage({ type: "success", text: "Password changed successfully." });
       setNewPassword("");
@@ -118,8 +125,7 @@ export default function SettingsPage() {
 
   const handleSignOut = async () => {
     try {
-      const supabase = createClient();
-      await supabase.auth.signOut();
+      await fetch("/api/auth/logout", { method: "POST" });
       router.push("/login");
       router.refresh();
     } catch {

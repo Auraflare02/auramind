@@ -14,6 +14,9 @@ export async function GET() {
         configured: isDbConfigured(),
         status: dbHealth.ok ? "connected" : "error",
         message: dbHealth.message,
+        host: process.env.SUPABASE_URL && process.env.SUPABASE_URL.startsWith("http")
+          ? new URL(process.env.SUPABASE_URL).hostname
+          : "unconfigured",
       },
       gemini: {
         configured: isGeminiConfigured(),

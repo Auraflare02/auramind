@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 
 interface UserInfo {
   id: string;
@@ -18,16 +17,24 @@ export default function AuthNav() {
   useEffect(() => {
     async function checkAuth() {
       try {
-        const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const res = await fetch("/api/auth/user");
+        if (!res.ok) {
+          setUser(null);
+          return;
+        }
+
+        const data = await res.json();
+        const user = data.user;
 
         if (user) {
           const name =
+            data.profile?.full_name ||
             user.user_metadata?.full_name ||
             user.user_metadata?.name ||
             user.email?.split("@")[0] ||
             "Pioneer";
           const avatarUrl =
+            data.profile?.avatar_url ||
             user.user_metadata?.avatar_url ||
             user.user_metadata?.picture ||
             null;

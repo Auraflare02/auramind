@@ -25,10 +25,14 @@ export async function updateSession(request: NextRequest) {
   }
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+  const key =
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    "";
 
   try {
-    const supabase = createServerClient(url, anonKey, {
+    const supabase = createServerClient(url, key, {
       cookies: {
         get(name: string) {
           return request.cookies.get(name)?.value;

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 
 export default function SetNewPasswordPage() {
   const router = useRouter();
@@ -33,13 +32,15 @@ export default function SetNewPasswordPage() {
     setIsLoading(true);
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
+      const res = await fetch("/api/auth/profile", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ password: newPassword }),
       });
 
-      if (error) {
-        throw new Error(error.message);
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to update password. Your reset link may have expired.");
       }
 
       setIsDone(true);

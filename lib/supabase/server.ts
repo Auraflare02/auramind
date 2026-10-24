@@ -3,16 +3,24 @@ import { cookies } from "next/headers";
 
 export function isSupabaseAuthConfigured(): boolean {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "";
-  return Boolean(url && anonKey && anonKey !== "[SENSITIVE]" && url !== "[SENSITIVE]");
+  const key =
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    "";
+  return Boolean(url && key && key !== "[SENSITIVE]" && url !== "[SENSITIVE]");
 }
 
 export function createClient() {
   const cookieStore = cookies();
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "https://placeholder.supabase.co";
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "placeholder-anon-key";
+  const key =
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    "placeholder-anon-key";
 
-  return createServerClient(url, anonKey, {
+  return createServerClient(url, key, {
     cookies: {
       get(name: string) {
         return cookieStore.get(name)?.value;
