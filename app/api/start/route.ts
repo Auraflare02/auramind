@@ -1,6 +1,8 @@
 import { db, ok, maybeOk } from "@/lib/db";
 import { J, guard, isUuid, generateSessionToken } from "@/lib/http";
 import { Ctx, Plan } from "@/lib/schemas";
+import { isGeminiConfigured } from "@/lib/ai/config";
+import { synthesizePersonalizedPlan } from "@/lib/ai/planner";
 import { fallbackPlan } from "@/lib/fallback";
 
 export const POST = guard(async (req) => {
@@ -27,16 +29,31 @@ export const POST = guard(async (req) => {
 
   const nowIso = new Date().toISOString();
 
-  // If plan was not generated yet, generate it instantly
+  // If plan was not generated yet, synthesize it
   if (r.status !== "ready" || !r.plan) {
     const ctx = Ctx.parse(r.context);
-    const plan = fallbackPlan(ctx);
+    let plan: Plan;
+    let planSource: "ai" | "demo" = "ai";
+
+    if (isGeminiConfigured()) {
+      try {
+        const synth = await synthesizePersonalizedPlan(ctx);
+        plan = synth.plan;
+        planSource = "ai";
+      } catch (err: any) {
+        return J({ error: `Could not synthesize plan for start: ${err.message || err}` }, 500);
+      }
+    } else {
+      plan = fallbackPlan(ctx);
+      planSource = "demo";
+    }
+
     await client
       .from("requests")
       .update({
         status: "ready",
         plan,
-        plan_source: "fallback",
+        plan_source: planSource,
         ready_at: nowIso,
         updated_at: nowIso,
       })

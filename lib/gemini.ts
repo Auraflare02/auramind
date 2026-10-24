@@ -6,22 +6,21 @@ import { AdaptivePlanProposal, ResearchData } from "./types";
 import { searchTavily } from "./tavily";
 
 export function isGeminiConfigured(): boolean {
-  return Boolean(process.env.GEMINI_API_KEY);
+  const key = process.env.GEMINI_API_KEY;
+  return Boolean(key && key !== "[SENSITIVE]" && key.length > 10);
 }
 
 export function getCandidateModels(): string[] {
   const configured = process.env.GEMINI_MODEL?.trim();
   const validStandards = [
-    "gemini-flash-latest",
-    "gemini-3-flash-preview",
-    "gemini-3.1-pro-preview",
     "gemini-2.5-flash",
-    "gemini-pro-latest",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
     "gemini-2.5-pro",
-    "gemini-3.1-flash-lite",
+    "gemini-1.5-pro",
   ];
 
-  if (configured && configured !== "gemini-2.5-flash" && configured !== "gemini-1.5-flash") {
+  if (configured && validStandards.includes(configured)) {
     return [configured, ...validStandards.filter((m) => m !== configured)];
   }
   return validStandards;
@@ -204,179 +203,30 @@ MASTER COACHING PRINCIPLES:
 4. RIGOROUS & DIRECT: Speak with energy, precision, intellectual depth, and warm mentorship. Format answers cleanly using bold highlights, structured bullet points, and code blocks when helpful.`;
 };
 
+import { generateGoalBlueprint, synthesizePersonalizedPlan } from "./ai/planner";
+
 export async function researchGoal(c: Ctx, externalEvidence = ""): Promise<ResearchData> {
-  const sys = buildSystemPrompt(c);
-  const prompt = `Conduct a rigorous learning-science breakdown for this goal.
-${externalEvidence ? `External research evidence:\n${externalEvidence}\n` : ""}
-Provide a comprehensive research strategy in JSON format conforming to this exact schema:
-{
-  "summary": string (concise 2-3 paragraph breakdown of requirements, realistic trajectory, and skill acquisition dynamics),
-  "requirements": string[] (list of 4-6 essential competencies needed to reach the target level),
-  "prerequisites": string[] (list of 3-5 foundational skills or knowledge required before advanced practice),
-  "common_bottlenecks": string[] (list of 4-5 major friction points or failure modes learners encounter),
-  "strategy": string (clear pedagogical roadmap explaining how deliberate practice and feedback loops will overcome bottlenecks),
-  "sources": string[] (scientific or pedagogical principles applied, e.g. "Spaced Retrieval Practice (Roediger & Butler)", "CEFR Framework Standards")
-}`;
-  const res = await genJson(prompt, ResearchSchema, sys);
+  const { blueprint } = await generateGoalBlueprint(c, externalEvidence);
   return {
-    summary: res.summary,
-    strategy: res.strategy,
-    requirements: res.requirements || [],
-    prerequisites: res.prerequisites || [],
-    common_bottlenecks: res.common_bottlenecks || [],
-    sources: res.sources || [],
+    summary: `${blueprint.intended_outcome}\n\nSuccess Definition: ${blueprint.definition_of_success}\n\nMethodology: ${blueprint.practice_methodology}`,
+    strategy: blueprint.intended_outcome,
+    requirements: blueprint.core_workstreams.map((w) => `${w.name}: ${w.description}`),
+    prerequisites: blueprint.prerequisites,
+    common_bottlenecks: blueprint.bottlenecks_and_friction,
+    sources: [
+      "Cognitive Load Theory (Sweller)",
+      "Spaced Retrieval Practice (Roediger & Butler)",
+      "Deliberate Practice Framework (Ericsson)",
+    ],
   };
 }
 
-export async function generatePlan(c: Ctx, researchSummary: string, startDate?: Date): Promise<Plan> {
-  const baseDate = startDate ? new Date(startDate) : new Date(Date.now() + 864e5);
-  const sys = buildSystemPrompt(c);
-
-  // Generate the plan in 3 cohesive 10-day phases to ensure ultra-high quality and avoid token truncation
-  const ranges: [number, number, string][] = [
-    [1, 10, "Days 1-7 Foundation & Days 8-10 Deliberate Practice Kickoff"],
-    [11, 20, "Days 11-15 Deliberate Practice Mastery & Days 16-20 Application Phase"],
-    [21, 30, "Days 21-22 Application Culmination, Days 23-27 Error Diagnostics & Repair, Days 28-30 Final Consolidation"],
-  ];
-
-  const partPromises = ranges.map(async ([startDay, endDay, phaseDesc]) => {
-    const daysCount = endDay - startDay + 1;
-    const prompt = `Research Context:
-${researchSummary}
-
-Task: Create days ${startDay} through ${endDay} (${phaseDesc}) of the 30-day timetable.
-Rules:
-- Total focused study per day <= ${c.hours} hours.
-- Put the hardest task during the user's ${c.focus} focus window.
-- Respect fixed commitments: ${c.fixed || "none"}.
-- Day 7 and Day 14 and Day 21 and Day 28 must be lighter days (50% study volume) to avoid cognitive fatigue.
-- Each task block must have:
-  - "start" and "end" in HH:MM 24-hour format.
-  - "activity": concrete action with measurable output.
-  - "category": one of ["learn", "practice", "review", "repair", "checkpoint", "rest"].
-  - "priority": one of ["high", "medium", "low"].
-  - "reason": pedagogical justification explaining why this task is scheduled now.
-- Return JSON conforming to:
-{
-  "days": [
-    {
-      "day": number,
-      "phase": string,
-      "blocks": [
-        {
-          "start": string,
-          "end": string,
-          "activity": string,
-          "category": string,
-          "priority": string,
-          "reason": string
-        }
-      ]
-    }
-  ]
-}
-Return exactly ${daysCount} days starting at day ${startDay} and ending at day ${endDay}.`;
-
-    const subSchema = z.object({
-      days: z.array(
-        z.object({
-          day: z.number(),
-          phase: z.string().default("Deliberate Practice"),
-          blocks: z.array(Block).min(1).max(8),
-        })
-      ).length(daysCount),
-    });
-
-    const res = await genJson(prompt, subSchema, sys);
-    return res.days;
+export async function generatePlan(c: Ctx, researchSummary?: string, startDate?: Date): Promise<Plan> {
+  const result = await synthesizePersonalizedPlan(c, {
+    externalResearch: researchSummary,
+    startDate,
   });
-
-  const [part1, part2, part3] = await Promise.all(partPromises);
-  const combinedRawDays = [...part1, ...part2, ...part3];
-
-  const days: Day[] = combinedRawDays.map((d, index) => {
-    const dayNum = index + 1;
-    const dayDate = new Date(baseDate.getTime() + (dayNum - 1) * 864e5);
-    const dayName = dayDate.toLocaleDateString("en-US", { weekday: "short" });
-    const calDate = dayDate.toISOString().split("T")[0];
-
-    return {
-      day: dayNum,
-      day_label: `Day ${dayNum} (${dayName})`,
-      calendar_date: calDate,
-      phase: phaseOf(dayNum),
-      blocks: d.blocks,
-    };
-  });
-
-  const curLevel = formatLevel(c.category, c.current_level, c.custom_current_level);
-  const tgtLevel = formatLevel(c.category, c.target_level, c.custom_target_level);
-
-  // Generate metadata / weekly focus overview
-  const metaPrompt = `Create the executive plan metadata for this 30-day goal: "${c.goal}" (${curLevel} to ${tgtLevel}).
-Research Findings: ${researchSummary}
-
-Return JSON with:
-{
-  "goal_summary": string,
-  "definition_of_success": string,
-  "weekly_focus": [
-    { "week": 1, "title": string, "focus": string, "expected_outcome": string },
-    { "week": 2, "title": string, "focus": string, "expected_outcome": string },
-    { "week": 3, "title": string, "focus": string, "expected_outcome": string },
-    { "week": 4, "title": string, "focus": string, "expected_outcome": string }
-  ],
-  "risk_notes": string[] (3-4 risks),
-  "milestones": [
-    { "day": 7, "milestone": string },
-    { "day": 14, "milestone": string },
-    { "day": 21, "milestone": string },
-    { "day": 30, "milestone": string }
-  ],
-  "relevant_research_findings": string[] (3 findings)
-}`;
-
-  const metaSchema = z.object({
-    goal_summary: z.string(),
-    definition_of_success: z.string(),
-    weekly_focus: z.array(
-      z.object({
-        week: z.number(),
-        title: z.string(),
-        focus: z.string(),
-        expected_outcome: z.string(),
-      })
-    ).length(4),
-    risk_notes: z.array(z.string()).min(2),
-    milestones: z.array(
-      z.object({
-        day: z.number(),
-        milestone: z.string(),
-      })
-    ).min(3),
-    relevant_research_findings: z.array(z.string()).min(2),
-  });
-
-  let meta;
-  try {
-    meta = await genJson(metaPrompt, metaSchema, sys);
-  } catch (err) {
-    console.warn("[gemini] Meta generation failed, using structured defaults:", err);
-    const fb = fallbackPlan(c, baseDate);
-    meta = {
-      goal_summary: fb.goal_summary,
-      definition_of_success: fb.definition_of_success,
-      weekly_focus: fb.weekly_focus,
-      risk_notes: fb.risk_notes,
-      milestones: fb.milestones,
-      relevant_research_findings: fb.relevant_research_findings,
-    };
-  }
-
-  return Plan.parse({
-    ...meta,
-    days,
-  });
+  return result.plan;
 }
 
 export interface ChatAIParams {

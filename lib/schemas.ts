@@ -27,10 +27,17 @@ const TimeString = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Time must be H
 export const Block = z.object({
   start: TimeString,
   end: TimeString,
-  activity: z.string().min(2).max(300),
-  category: z.enum(["learn", "practice", "review", "repair", "checkpoint", "rest"]),
+  activity: z.string().min(2).max(500),
+  category: z.enum(["learn", "practice", "review", "repair", "checkpoint", "rest", "build", "diagnose"]),
   priority: z.enum(["high", "medium", "low"]),
-  reason: z.string().min(2).max(400),
+  reason: z.string().min(2).max(600),
+  duration_minutes: z.number().int().positive().optional(),
+  instructions: z.string().max(1000).optional(),
+  expected_output: z.string().max(600).optional(),
+  completion_criterion: z.string().max(600).optional(),
+  why_it_matters: z.string().max(600).optional(),
+  resources_needed: z.string().max(400).optional(),
+  fallback_action: z.string().max(500).optional(),
 });
 
 export type Block = z.infer<typeof Block>;
@@ -40,6 +47,7 @@ export const Day = z.object({
   day_label: z.string().default(""),
   calendar_date: z.string().default(""),
   phase: z.string(),
+  daily_objective: z.string().max(500).optional(),
   blocks: z.array(Block).min(1).max(8),
 });
 
@@ -55,16 +63,77 @@ export const WeeklyFocus = z.object({
 export const Milestone = z.object({
   day: z.number(),
   milestone: z.string(),
+  deliverable: z.string().optional(),
+  validation_criteria: z.string().optional(),
 });
+
+export const GoalBlueprintSchema = z.object({
+  intended_outcome: z.string().min(10),
+  definition_of_success: z.string().min(10),
+  starting_point_analysis: z.string().min(10),
+  target_state_analysis: z.string().min(10),
+  prerequisites: z.array(z.string()).default([]),
+  core_workstreams: z.array(
+    z.object({
+      name: z.string(),
+      description: z.string(),
+      weight_percentage: z.number().min(5).max(80),
+    })
+  ).default([]),
+  activity_dependencies: z.array(z.string()).default([]),
+  milestones: z.array(
+    z.object({
+      day: z.number().min(1).max(30),
+      title: z.string(),
+      deliverable: z.string(),
+      validation_test: z.string(),
+    })
+  ).default([]),
+  bottlenecks_and_friction: z.array(z.string()).default([]),
+  practice_methodology: z.string().min(15),
+  daily_time_allocation: z.string().min(10),
+  feasibility_notes: z.string().min(10),
+  adaptation_triggers: z.array(z.string()).default([]),
+  phases: z.array(
+    z.object({
+      phase_number: z.number(),
+      name: z.string(),
+      start_day: z.number(),
+      end_day: z.number(),
+      main_objective: z.string(),
+      key_deliverable: z.string(),
+    })
+  ).default([]),
+});
+
+export type GoalBlueprint = z.infer<typeof GoalBlueprintSchema>;
+
+export const QualityReviewSchema = z.object({
+  passed: z.boolean(),
+  relevance_score: z.number().min(1).max(10),
+  specificity_score: z.number().min(1).max(10),
+  progression_score: z.number().min(1).max(10),
+  is_generic_template: z.boolean(),
+  is_time_realistic: z.boolean(),
+  strengths: z.array(z.string()).default([]),
+  critical_issues: z.array(z.string()).default([]),
+  repair_suggestions: z.array(z.string()).default([]),
+});
+
+export type QualityReview = z.infer<typeof QualityReviewSchema>;
 
 export const Plan = z.object({
   goal_summary: z.string().default(""),
   definition_of_success: z.string().default(""),
+  strategy_overview: z.string().optional(),
   weekly_focus: z.array(WeeklyFocus).default([]),
   risk_notes: z.array(z.string()).default([]),
   milestones: z.array(Milestone).default([]),
   relevant_research_findings: z.array(z.string()).default([]),
   days: z.array(Day).length(30),
+  quality_score: z.number().optional(),
+  generated_at: z.string().optional(),
+  plan_source: z.enum(["ai", "demo", "fallback"]).default("ai"),
 });
 
 export type Plan = z.infer<typeof Plan>;

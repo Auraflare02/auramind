@@ -173,9 +173,9 @@ export default function HomePage() {
 
   const GEN_STEPS = [
     { title: "Analyzing Cognitive Baseline", desc: `Calibrating ${hours}h daily budget inside your peak ${focus} window.` },
-    { title: "Mapping Learning Dynamics", desc: "Isolating prerequisite sub-skills and common behavioral friction points." },
-    { title: "Synthesizing 30-Day Phased Architecture", desc: "Sequencing deliberate practice drills, active recall, and recovery buffers." },
-    { title: "Finalizing Verification Loops", desc: "Setting diagnostic milestones and adaptive feedback telemetry." },
+    { title: "Synthesizing Goal Intelligence Blueprint", desc: "Isolating domain-specific workstreams, dependencies, and milestones." },
+    { title: "Architecting 30-Day Execution Timetable", desc: "Constructing daily deliberate practice blocks with actionable criteria." },
+    { title: "Running Personalization Quality Control Audit", desc: "Checking feasibility, eliminating generic filler, and verifying alignment." },
   ];
 
   const formatTimerDigits = (sec: number) => {

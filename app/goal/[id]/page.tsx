@@ -1282,6 +1282,11 @@ export default function GoalHub() {
                     <h2 style={{ fontSize: "1.4rem", margin: "6px 0 2px" }}>
                       {activeDayPlan?.day_label || `Day ${selectedDay}`} &bull; {activeDayPlan?.calendar_date || `Day ${selectedDay}`}
                     </h2>
+                    {activeDayPlan?.daily_objective && (
+                      <div className="text-xs text-yellow" style={{ marginTop: "4px", fontWeight: 600 }}>
+                        Focus: {activeDayPlan.daily_objective}
+                      </div>
+                    )}
                   </div>
 
                   {/* CATEGORY FILTER CHIPS */}
@@ -1332,9 +1337,36 @@ export default function GoalHub() {
                           {block.activity}
                         </div>
 
-                        <div className="text-xs text-secondary" style={{ marginBottom: "12px", lineHeight: 1.5 }}>
-                          <strong style={{ color: "var(--accent-primary)" }}>Why this task now:</strong> {block.reason}
+                        {block.instructions && (
+                          <div className="text-xs text-secondary" style={{ marginBottom: "8px", backgroundColor: "var(--bg-elevated)", padding: "8px 10px", borderRadius: "var(--radius-xs)" }}>
+                            <strong style={{ color: "var(--text-primary)" }}>Protocol:</strong> {block.instructions}
+                          </div>
+                        )}
+
+                        <div className="text-xs text-secondary" style={{ marginBottom: "8px", lineHeight: 1.5 }}>
+                          <strong style={{ color: "var(--accent-primary)" }}>Why this task now:</strong> {block.why_it_matters || block.reason}
                         </div>
+
+                        {(block.expected_output || block.completion_criterion) && (
+                          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "8px", fontSize: "0.75rem" }}>
+                            {block.expected_output && (
+                              <div style={{ color: "var(--text-secondary)" }}>
+                                <strong style={{ color: "var(--text-primary)" }}>Deliverable:</strong> {block.expected_output}
+                              </div>
+                            )}
+                            {block.completion_criterion && (
+                              <div style={{ color: "var(--text-secondary)" }}>
+                                <strong style={{ color: "var(--accent-success)" }}>Criterion:</strong> {block.completion_criterion}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {block.fallback_action && (
+                          <div className="text-xs text-muted" style={{ marginBottom: "10px", fontStyle: "italic" }}>
+                            If friction arises: {block.fallback_action}
+                          </div>
+                        )}
 
                         <div style={{ display: "flex", gap: "8px" }}>
                           <button

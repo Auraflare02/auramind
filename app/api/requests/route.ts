@@ -1,7 +1,8 @@
 import { db, ok, maybeOk } from "@/lib/db";
 import { J, guard, isUuid, isRequestCode, generateRequestCode } from "@/lib/http";
 import { Ctx, Plan, ResearchSchema } from "@/lib/schemas";
-import { researchGoal, generatePlan, isGeminiConfigured } from "@/lib/gemini";
+import { isGeminiConfigured } from "@/lib/ai/config";
+import { synthesizePersonalizedPlan } from "@/lib/ai/planner";
 import { fallbackPlan } from "@/lib/fallback";
 import { searchTavily } from "@/lib/tavily";
 import { createClient as createServerClient } from "@/lib/supabase/server";
@@ -9,11 +10,10 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 export const maxDuration = 60;
 
 /**
- * Instantly synthesizes comprehensive learning-science research
- * and an exact 30-day timetable using Gemini AI with robust deterministic fallback.
+ * Synthesizes comprehensive learning-science research
+ * and a 30-day timetable using the multi-stage Gemini AI pipeline.
  */
-async function synthesizePlan(ctx: Ctx): Promise<{ researchData: any; plan: Plan; planSource: "ai" | "fallback" }> {
-  let researchData: any = null;
+async function synthesizePlan(ctx: Ctx, allowDemo = false): Promise<{ researchData: any; plan: Plan; planSource: "ai" | "demo" }> {
   let externalEvidence = "";
 
   // 1. External Evidence Search (Tavily if configured)
@@ -26,51 +26,45 @@ async function synthesizePlan(ctx: Ctx): Promise<{ researchData: any; plan: Plan
     console.warn("[requests-api] Tavily search skipped:", err);
   }
 
-  // 2. Deep Pedagogical Research Breakdown
+  // 2. Synthesize using Real Gemini Multi-Stage Pipeline
   if (isGeminiConfigured()) {
     try {
-      researchData = await Promise.race([
-        researchGoal(ctx, externalEvidence),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Research timeout")), 12000)),
-      ]);
-    } catch (err) {
-      console.warn("[requests-api] Gemini research error or timeout, using structured fallback:", err);
+      const result = await synthesizePersonalizedPlan(ctx, { externalResearch: externalEvidence });
+      return {
+        researchData: {
+          summary: `${result.blueprint.intended_outcome}\n\nSuccess Definition: ${result.blueprint.definition_of_success}`,
+          blueprint: result.blueprint,
+          requirements: result.blueprint.core_workstreams.map((w) => `${w.name}: ${w.description}`),
+          prerequisites: result.blueprint.prerequisites,
+          common_bottlenecks: result.blueprint.bottlenecks_and_friction,
+          strategy: result.blueprint.intended_outcome,
+          quality_review: result.qualityReview,
+        },
+        plan: result.plan,
+        planSource: "ai",
+      };
+    } catch (err: any) {
+      console.error("[requests-api] Gemini generation error:", err);
+      if (!allowDemo) {
+        throw new Error(`Gemini AI Planning Failed: ${err.message || err}. Please try again.`);
+      }
     }
   }
 
-  if (!researchData) {
-    researchData = {
-      summary: `Structured pedagogical roadmap for ${ctx.goal}. Balances foundation acquisition with deliberate practice drills.`,
-      requirements: ["Daily focused practice", "Active retrieval drills", "Milestone checkpoints"],
-      prerequisites: ["Foundational domain awareness"],
-      common_bottlenecks: ["Passive consumption over active exercises", "Fatigue during unstructured hours"],
-      strategy: "30-day phased architecture: Days 1-7 Foundation, 8-15 Deliberate Practice, 16-22 Application, 23-27 Error Repair, 28-30 Consolidation.",
-      sources: ["Cognitive Load Theory", "Spaced Retrieval Practice Standards"],
-    };
+  if (!allowDemo) {
+    throw new Error("Google Gemini API is not configured. Please set GEMINI_API_KEY in the server environment to generate AI timetables.");
   }
 
-  // 3. 30-Day Phased Curriculum Synthesis
-  let plan: Plan;
-  let planSource: "ai" | "fallback" = "ai";
-
-  if (isGeminiConfigured()) {
-    try {
-      plan = await Promise.race([
-        generatePlan(ctx, researchData.summary),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Plan generation timeout")), 25000)),
-      ]);
-      planSource = "ai";
-    } catch (err) {
-      console.warn("[requests-api] Gemini plan generation failed or timed out, invoking deterministic planner:", err);
-      plan = fallbackPlan(ctx);
-      planSource = "fallback";
-    }
-  } else {
-    plan = fallbackPlan(ctx);
-    planSource = "fallback";
-  }
-
-  return { researchData, plan, planSource };
+  // Explicit demo fallback when requested
+  const plan = fallbackPlan(ctx);
+  const researchData = {
+    summary: `[DEMO] Foundational outline for ${ctx.goal}.`,
+    requirements: ["Daily practice", "Review sessions"],
+    prerequisites: ["Domain awareness"],
+    common_bottlenecks: ["Fatigue", "Distractions"],
+    strategy: "Demo progression.",
+  };
+  return { researchData, plan, planSource: "demo" };
 }
 
 export const POST = guard(async (req) => {

@@ -2,7 +2,9 @@ import { z } from "zod";
 import { db, ok, maybeOk } from "@/lib/db";
 import { J, guard, isAdmin, isUuid } from "@/lib/http";
 import { Ctx, Plan } from "@/lib/schemas";
-import { researchGoal, generatePlan, isGeminiConfigured } from "@/lib/gemini";
+import { isGeminiConfigured } from "@/lib/ai/config";
+import { synthesizePersonalizedPlan } from "@/lib/ai/planner";
+import { researchGoal } from "@/lib/gemini";
 import { fallbackPlan } from "@/lib/fallback";
 import { searchTavily } from "@/lib/tavily";
 
@@ -202,23 +204,33 @@ export const POST = guard(async (req) => {
     }
 
     let plan: Plan;
-    let planSource: "ai" | "fallback" = "ai";
+    let planSource: "ai" | "demo" = "ai";
 
     if (custom_plan) {
       plan = Plan.parse(custom_plan);
       planSource = "ai";
     } else if (isGeminiConfigured()) {
       try {
-        plan = await generatePlan(ctx, currentResearchSummary || "");
+        const synthRes = await synthesizePersonalizedPlan(ctx, { externalResearch: currentResearchSummary || "" });
+        plan = synthRes.plan;
+        researchData = {
+          summary: `${synthRes.blueprint.intended_outcome}\n\nSuccess Definition: ${synthRes.blueprint.definition_of_success}`,
+          blueprint: synthRes.blueprint,
+          requirements: synthRes.blueprint.core_workstreams.map((w) => `${w.name}: ${w.description}`),
+          prerequisites: synthRes.blueprint.prerequisites,
+          common_bottlenecks: synthRes.blueprint.bottlenecks_and_friction,
+          strategy: synthRes.blueprint.intended_outcome,
+          quality_review: synthRes.qualityReview,
+        };
+        currentResearchSummary = researchData.summary;
         planSource = "ai";
-      } catch (err) {
-        console.error("[admin] Gemini plan generation failed, invoking deterministic fallback:", err);
-        plan = fallbackPlan(ctx);
-        planSource = "fallback";
+      } catch (err: any) {
+        console.error("[admin] Gemini plan generation failed:", err);
+        return J({ error: `Gemini AI Generation Failed: ${err.message || err}. Please try again.` }, 502);
       }
     } else {
       plan = fallbackPlan(ctx);
-      planSource = "fallback";
+      planSource = "demo";
     }
 
     // Persist to Supabase and transition status to 'review'

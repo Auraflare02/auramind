@@ -2,7 +2,7 @@ export type RequestStatus = "pending" | "researching" | "review" | "ready" | "ar
 
 export type FocusWindow = "morning" | "afternoon" | "evening" | "night";
 
-export type TaskCategory = "learn" | "practice" | "review" | "repair" | "checkpoint" | "rest";
+export type TaskCategory = "learn" | "practice" | "review" | "repair" | "checkpoint" | "rest" | "build" | "diagnose";
 
 export type TaskPriority = "high" | "medium" | "low";
 

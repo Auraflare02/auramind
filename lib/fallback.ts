@@ -193,9 +193,10 @@ export function fallbackPlan(c: Ctx, startDate?: Date): Plan {
     };
   });
 
-  return {
-    goal_summary: `Structured 30-day roadmap targeting progression from ${curLevelStr} to ${tgtLevelStr} in ${c.goal}. Built with realistic pacing of ${c.hours}h daily in your ${c.focus} focus window.`,
-    definition_of_success: `Consistent completion of daily deliberate practice blocks, measured diagnostic feedback on errors, and clear readiness at the ${tgtLevelStr} benchmark.`,
+  return Plan.parse({
+    goal_summary: `[DEMO PREVIEW] 30-day foundational roadmap for "${c.goal}" (${curLevelStr} → ${tgtLevelStr}).`,
+    definition_of_success: `[OFFLINE DEMO PREVIEW] Deliberate practice template. Connect Google Gemini API for your live AI plan.`,
+    strategy_overview: `Demo preview progression for ${c.goal}.`,
     weekly_focus: [
       {
         week: 1,
@@ -239,5 +240,8 @@ export function fallbackPlan(c: Ctx, startDate?: Date): Plan {
       "Protecting 1 light day per 7 days prevents burnout and boosts long-term habit adherence.",
     ],
     days,
-  };
+    quality_score: 50,
+    generated_at: new Date().toISOString(),
+    plan_source: "demo",
+  });
 }
