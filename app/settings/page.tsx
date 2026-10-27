@@ -15,6 +15,14 @@ export default function SettingsPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  const [optionalUpdates, setOptionalUpdates] = useState(false);
+  const [isUpdatingConsent, setIsUpdatingConsent] = useState(false);
+  const [consentMessage, setConsentMessage] = useState<string | null>(null);
+
+  const [deletePhrase, setDeletePhrase] = useState("");
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
@@ -50,6 +58,7 @@ export default function SettingsPage() {
           "";
         setFullName(name);
         setAvatarUrl(data.profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture || null);
+        setOptionalUpdates(Boolean(user.user_metadata?.optional_updates_consented));
       } catch (e) {
         console.error("[settings load error]", e);
       } finally {
@@ -59,6 +68,67 @@ export default function SettingsPage() {
 
     loadUser();
   }, [router]);
+
+  const handleToggleConsent = async () => {
+    if (isUpdatingConsent) return;
+    setIsUpdatingConsent(true);
+    setConsentMessage(null);
+    const targetState = !optionalUpdates;
+
+    try {
+      const res = await fetch("/api/auth/consent", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ consent_type: "product_updates", consented: targetState }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update preference.");
+
+      setOptionalUpdates(targetState);
+      setConsentMessage(
+        targetState
+          ? "Consent granted: You are now subscribed to deliberate practice insights and product updates."
+          : "Consent withdrawn: You will no longer receive optional marketing or practice emails."
+      );
+    } catch (err: any) {
+      setConsentMessage(err.message || "Failed to update preference.");
+    } finally {
+      setIsUpdatingConsent(false);
+    }
+  };
+
+  const handleDeleteAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isDeletingAccount) return;
+    setDeleteError(null);
+
+    if (deletePhrase !== "DELETE MY ACCOUNT") {
+      setDeleteError("Please type 'DELETE MY ACCOUNT' exactly to confirm permanent erasure.");
+      return;
+    }
+
+    if (!confirm("Are you absolutely certain? This action cannot be undone. All goals, focus sessions, and records will be permanently erased.")) {
+      return;
+    }
+
+    setIsDeletingAccount(true);
+
+    try {
+      const res = await fetch("/api/auth/delete-account", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ confirm_phrase: deletePhrase }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to delete account.");
+
+      window.location.href = "/?message=Account+and+associated+data+permanently+deleted";
+    } catch (err: any) {
+      setDeleteError(err.message || "Failed to execute account deletion.");
+      setIsDeletingAccount(false);
+    }
+  };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -336,6 +406,203 @@ export default function SettingsPage() {
             style={{ borderRadius: "8px" }}
           >
             {isUpdatingPassword ? "Updating Password..." : "Update Password"}
+          </button>
+        </form>
+      </div>
+
+      {/* 3. PRIVACY & CONSENT MANAGEMENT CARD */}
+      <div className="card" style={{ padding: "28px" }}>
+        <h2 style={{ fontSize: "1.2rem", marginBottom: "8px", color: "var(--text-primary)" }}>
+          Privacy &amp; Statutory Consent Records
+        </h2>
+        <p className="text-xs text-secondary" style={{ marginBottom: "20px" }}>
+          Manage your personal data processing consents in accordance with the Digital Personal Data Protection Act, 2023 (DPDP Act).
+        </p>
+
+        {consentMessage && (
+          <div className="alert alert-success" style={{ marginBottom: "16px", fontSize: "0.85rem" }}>
+            {consentMessage}
+          </div>
+        )}
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          {/* Terms & Conditions Active Record */}
+          <div
+            style={{
+              padding: "16px",
+              backgroundColor: "var(--bg-elevated)",
+              border: "1px solid var(--border-default)",
+              borderRadius: "8px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "12px",
+            }}
+          >
+            <div>
+              <div style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--text-primary)" }}>
+                AuraMind Terms &amp; Conditions
+              </div>
+              <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "2px" }}>
+                Active Version: <strong>2026-10-V1</strong> • Required for service access.
+              </div>
+            </div>
+            <Link
+              href="/terms"
+              target="_blank"
+              className="btn btn-secondary btn-sm"
+              style={{ fontSize: "0.78rem", padding: "4px 12px", borderRadius: "6px" }}
+            >
+              View Terms ↗
+            </Link>
+          </div>
+
+          {/* Privacy Policy Active Record */}
+          <div
+            style={{
+              padding: "16px",
+              backgroundColor: "var(--bg-elevated)",
+              border: "1px solid var(--border-default)",
+              borderRadius: "8px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "12px",
+            }}
+          >
+            <div>
+              <div style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--text-primary)" }}>
+                AuraMind Privacy Policy
+              </div>
+              <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "2px" }}>
+                Active Version: <strong>2026-10-V1</strong> • Explicit consent recorded upon registration.
+              </div>
+            </div>
+            <Link
+              href="/privacy-policy"
+              target="_blank"
+              className="btn btn-secondary btn-sm"
+              style={{ fontSize: "0.78rem", padding: "4px 12px", borderRadius: "6px" }}
+            >
+              View Policy ↗
+            </Link>
+          </div>
+
+          {/* Optional Consent Toggle: Product Updates & Tips */}
+          <div
+            style={{
+              padding: "16px",
+              backgroundColor: "var(--bg-elevated)",
+              border: "1px solid var(--border-default)",
+              borderRadius: "8px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "12px",
+            }}
+          >
+            <div style={{ maxWidth: "480px" }}>
+              <div style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--text-primary)" }}>
+                Optional Product &amp; Practice Insights
+              </div>
+              <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)", marginTop: "4px" }}>
+                Receive deliberate practice articles, productivity science tips, and product enhancements via email. You can withdraw consent at any time.
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleToggleConsent}
+              disabled={isUpdatingConsent}
+              className={`btn btn-sm ${optionalUpdates ? "btn-secondary" : "btn-primary"}`}
+              style={{ fontSize: "0.78rem", padding: "5px 14px", borderRadius: "6px" }}
+            >
+              {isUpdatingConsent
+                ? "Updating..."
+                : optionalUpdates
+                ? "Withdraw Consent"
+                : "Grant Consent"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. DANGER ZONE: ACCOUNT DELETION */}
+      <div
+        className="card"
+        style={{
+          padding: "28px",
+          border: "1px solid rgba(239, 68, 68, 0.3)",
+          backgroundColor: "rgba(239, 68, 68, 0.03)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+          <div
+            style={{
+              width: "18px",
+              height: "18px",
+              borderRadius: "50%",
+              backgroundColor: "var(--error)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#fff",
+              fontSize: "11px",
+              fontWeight: 800,
+            }}
+          >
+            !
+          </div>
+          <h2 style={{ fontSize: "1.2rem", margin: 0, color: "var(--error)" }}>
+            Danger Zone: Delete Account
+          </h2>
+        </div>
+        <p className="text-xs text-secondary" style={{ marginBottom: "16px" }}>
+          Permanently erase your AuraMind account in accordance with Section 11 of the Privacy Policy and DPDP Act right to erasure. This action is immediate and non-reversible.
+        </p>
+
+        {deleteError && (
+          <div className="alert alert-error" style={{ marginBottom: "16px", fontSize: "0.85rem" }}>
+            {deleteError}
+          </div>
+        )}
+
+        <form onSubmit={handleDeleteAccount} style={{ maxWidth: "460px" }}>
+          <div className="form-group" style={{ marginBottom: "14px" }}>
+            <label className="form-label" htmlFor="delete-confirm-input" style={{ fontSize: "0.8rem" }}>
+              To confirm, type <strong style={{ color: "var(--text-primary)" }}>DELETE MY ACCOUNT</strong> below:
+            </label>
+            <input
+              id="delete-confirm-input"
+              type="text"
+              required
+              placeholder="DELETE MY ACCOUNT"
+              value={deletePhrase}
+              onChange={(e) => setDeletePhrase(e.target.value)}
+              className="form-input"
+              style={{
+                height: "40px",
+                borderRadius: "8px",
+                borderColor: deletePhrase === "DELETE MY ACCOUNT" ? "var(--error)" : "var(--border-default)",
+              }}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={deletePhrase !== "DELETE MY ACCOUNT" || isDeletingAccount}
+            className="btn btn-secondary"
+            style={{
+              borderRadius: "8px",
+              backgroundColor: deletePhrase === "DELETE MY ACCOUNT" ? "var(--error)" : "var(--bg-elevated)",
+              color: deletePhrase === "DELETE MY ACCOUNT" ? "#fff" : "var(--text-muted)",
+              borderColor: deletePhrase === "DELETE MY ACCOUNT" ? "var(--error)" : "var(--border-default)",
+              fontWeight: 700,
+            }}
+          >
+            {isDeletingAccount ? "Permanently Erasing Data..." : "Permanently Delete Account & Data"}
           </button>
         </form>
       </div>

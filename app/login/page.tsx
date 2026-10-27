@@ -394,6 +394,29 @@ function LoginForm() {
             Sign Up
           </Link>
         </div>
+
+        {/* LEGAL LINKS FOOTNOTE */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "14px",
+            marginTop: "20px",
+            paddingTop: "16px",
+            borderTop: "1px solid var(--border-subtle)",
+            fontSize: "0.76rem",
+            color: "var(--text-muted)",
+          }}
+        >
+          <Link href="/privacy-policy" style={{ color: "var(--text-muted)", textDecoration: "none" }}>
+            Privacy Policy
+          </Link>
+          <span>•</span>
+          <Link href="/terms" style={{ color: "var(--text-muted)", textDecoration: "none" }}>
+            Terms &amp; Conditions
+          </Link>
+        </div>
       </div>
     </div>
   );

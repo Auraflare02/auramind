@@ -14,6 +14,11 @@ function SignupForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  // Mandatory Consent System - Every checkbox UNCHECKED by default
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [consentPersonalData, setConsentPersonalData] = useState(false);
+  const [optionalUpdates, setOptionalUpdates] = useState(false);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -62,6 +67,17 @@ function SignupForm() {
       return;
     }
 
+    // MANDATORY CONSENT VALIDATION: Both must be checked by the user
+    if (!agreeTerms) {
+      setErrorMessage("You must agree to the AuraMind Terms & Conditions to create an account.");
+      return;
+    }
+
+    if (!consentPersonalData) {
+      setErrorMessage("You must consent to the processing of your personal information to proceed with account creation.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -73,6 +89,9 @@ function SignupForm() {
           password,
           full_name: fullName.trim(),
           next: nextPath,
+          agree_terms: agreeTerms,
+          consent_personal_data: consentPersonalData,
+          optional_updates: optionalUpdates,
         }),
       });
 
@@ -381,6 +400,163 @@ function SignupForm() {
                 />
               </div>
 
+              {/* CONSENT & COMPLIANCE SYSTEM */}
+              <div
+                style={{
+                  backgroundColor: "var(--bg-elevated)",
+                  border: "1px solid var(--border-default)",
+                  borderRadius: "10px",
+                  padding: "16px",
+                  marginBottom: "22px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "14px",
+                }}
+              >
+                {/* PRIVACY POLICY NOTICE STATEMENT */}
+                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: "1.45" }}>
+                  Please read our{" "}
+                  <Link
+                    href="/privacy-policy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      color: "var(--accent-primary)",
+                      fontWeight: 700,
+                      textDecoration: "underline",
+                      textUnderlineOffset: "2px",
+                    }}
+                  >
+                    Privacy Policy
+                  </Link>{" "}
+                  to understand how AuraMind processes your personal information.
+                </div>
+
+                {/* REQUIRED CHECKBOX A: TERMS & CONDITIONS */}
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                  <input
+                    id="consent-terms"
+                    type="checkbox"
+                    checked={agreeTerms}
+                    onChange={(e) => setAgreeTerms(e.target.checked)}
+                    required
+                    style={{
+                      accentColor: "var(--accent-primary)",
+                      cursor: "pointer",
+                      width: "18px",
+                      height: "18px",
+                      marginTop: "2px",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <label
+                    htmlFor="consent-terms"
+                    style={{
+                      fontSize: "0.825rem",
+                      color: "var(--text-primary)",
+                      cursor: "pointer",
+                      userSelect: "none",
+                      lineHeight: "1.4",
+                    }}
+                  >
+                    <span style={{ fontWeight: 600 }}>I agree to the AuraMind </span>
+                    <Link
+                      href="/terms"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        color: "var(--accent-primary)",
+                        fontWeight: 700,
+                        textDecoration: "underline",
+                        textUnderlineOffset: "2px",
+                      }}
+                    >
+                      Terms &amp; Conditions
+                    </Link>
+                    . <span style={{ color: "var(--accent-primary)", fontSize: "0.75rem", fontWeight: 700 }}>(Required)</span>
+                  </label>
+                </div>
+
+                {/* REQUIRED CHECKBOX C: PERSONAL DATA PROCESSING CONSENT */}
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                  <input
+                    id="consent-personal-data"
+                    type="checkbox"
+                    checked={consentPersonalData}
+                    onChange={(e) => setConsentPersonalData(e.target.checked)}
+                    required
+                    style={{
+                      accentColor: "var(--accent-primary)",
+                      cursor: "pointer",
+                      width: "18px",
+                      height: "18px",
+                      marginTop: "2px",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <label
+                    htmlFor="consent-personal-data"
+                    style={{
+                      fontSize: "0.825rem",
+                      color: "var(--text-primary)",
+                      cursor: "pointer",
+                      userSelect: "none",
+                      lineHeight: "1.4",
+                    }}
+                  >
+                    <span>I consent to the processing of my personal data as described in the </span>
+                    <Link
+                      href="/privacy-policy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        color: "var(--accent-primary)",
+                        fontWeight: 700,
+                        textDecoration: "underline",
+                        textUnderlineOffset: "2px",
+                      }}
+                    >
+                      Privacy Policy
+                    </Link>
+                    <span> to create my account and generate personalized AI goal execution plans.</span>{" "}
+                    <span style={{ color: "var(--accent-primary)", fontSize: "0.75rem", fontWeight: 700 }}>(Required)</span>
+                  </label>
+                </div>
+
+                {/* OPTIONAL CHECKBOX D: PRODUCT UPDATES */}
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", paddingTop: "8px", borderTop: "1px solid var(--border-subtle)" }}>
+                  <input
+                    id="consent-optional-updates"
+                    type="checkbox"
+                    checked={optionalUpdates}
+                    onChange={(e) => setOptionalUpdates(e.target.checked)}
+                    style={{
+                      accentColor: "var(--accent-primary)",
+                      cursor: "pointer",
+                      width: "18px",
+                      height: "18px",
+                      marginTop: "2px",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <label
+                    htmlFor="consent-optional-updates"
+                    style={{
+                      fontSize: "0.8rem",
+                      color: "var(--text-secondary)",
+                      cursor: "pointer",
+                      userSelect: "none",
+                      lineHeight: "1.4",
+                    }}
+                  >
+                    <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>(Optional) </span>
+                    I would like to receive deliberate practice insights, product updates, and accountability tips via email.
+                  </label>
+                </div>
+              </div>
+
               {/* CREATE ACCOUNT BUTTON */}
               <button
                 type="submit"
@@ -475,6 +651,29 @@ function SignupForm() {
                 }}
               >
                 Log In
+              </Link>
+            </div>
+
+            {/* LEGAL LINKS FOOTNOTE */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: "14px",
+                marginTop: "20px",
+                paddingTop: "16px",
+                borderTop: "1px solid var(--border-subtle)",
+                fontSize: "0.76rem",
+                color: "var(--text-muted)",
+              }}
+            >
+              <Link href="/privacy-policy" style={{ color: "var(--text-muted)", textDecoration: "none" }}>
+                Privacy Policy
+              </Link>
+              <span>•</span>
+              <Link href="/terms" style={{ color: "var(--text-muted)", textDecoration: "none" }}>
+                Terms &amp; Conditions
               </Link>
             </div>
           </>

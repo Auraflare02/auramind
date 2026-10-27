@@ -212,7 +212,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </p>
               </div>
 
-              <div style={{ display: "flex", gap: "32px", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: "36px", flexWrap: "wrap" }}>
                 <div>
                   <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-primary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "10px" }}>
                     Workspace
@@ -224,6 +224,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     <Link href="/#lookup" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
                       Open Existing Request
                     </Link>
+                    <Link href="/chat" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
+                      AI Assistant
+                    </Link>
                     <Link href="/admin" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
                       Research Console
                     </Link>
@@ -232,17 +235,51 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
                 <div>
                   <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-primary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "10px" }}>
-                    Integrations
+                    Account
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <Link href="/login" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
+                      Login
+                    </Link>
+                    <Link href="/signup" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
+                      Create Account
+                    </Link>
+                    <Link href="/dashboard" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
+                      Dashboard
+                    </Link>
+                    <Link href="/settings" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
+                      Settings
+                    </Link>
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-primary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "10px" }}>
+                    Legal &amp; Privacy
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <Link href="/privacy-policy" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
+                      Privacy Policy
+                    </Link>
+                    <Link href="/terms" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
+                      Terms &amp; Conditions
+                    </Link>
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-primary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "10px" }}>
+                    Architecture
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     <span style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>
-                      Google Gemini AI Models
+                      Google Gemini AI
                     </span>
                     <span style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>
                       Supabase PostgreSQL
                     </span>
                     <span style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>
-                      Cognitive Science Framework
+                      Deliberate Practice Science
                     </span>
                   </div>
                 </div>
@@ -263,9 +300,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               }}
             >
               <div>
-                &copy; {new Date().getFullYear()} AuraMind. Core Principle: <em>&ldquo;Don&rsquo;t plan a perfect day. Build a system that learns your real one.&rdquo;</em>
+                &copy; {new Date().getFullYear()} AuraMind (Aura Builds). Core Principle: <em>&ldquo;Don&rsquo;t plan a perfect day. Build a system that learns your real one.&rdquo;</em>
               </div>
-              <div style={{ display: "flex", gap: "16px" }}>
+              <div style={{ display: "flex", gap: "18px" }}>
+                <Link href="/privacy-policy" style={{ color: "var(--text-muted)", textDecoration: "none" }}>Privacy Policy</Link>
+                <Link href="/terms" style={{ color: "var(--text-muted)", textDecoration: "none" }}>Terms &amp; Conditions</Link>
                 <a href="#how-it-works" style={{ color: "var(--text-muted)", textDecoration: "none" }}>Methodology</a>
                 <a href="#create-goal" style={{ color: "var(--text-muted)", textDecoration: "none" }}>Start Free</a>
               </div>
