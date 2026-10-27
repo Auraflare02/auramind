@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { recordConsent, POLICY_VERSIONS } from "@/lib/consent";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
@@ -59,8 +60,48 @@ export async function GET(request: Request) {
             },
             { onConflict: "id" }
           );
+
+          // If first-time OAuth signin, record affirmative consent audit records
+          if (!user.user_metadata?.terms_accepted) {
+            const nowIso = new Date().toISOString();
+            const ipAddress = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || undefined;
+            const userAgent = request.headers.get("user-agent") || undefined;
+
+            await Promise.allSettled([
+              recordConsent({
+                userId: user.id,
+                consentType: "terms_and_conditions",
+                policyName: "Terms & Conditions",
+                policyVersion: POLICY_VERSIONS.terms,
+                consented: true,
+                ipAddress,
+                userAgent,
+              }),
+              recordConsent({
+                userId: user.id,
+                consentType: "personal_data_processing",
+                policyName: "Privacy Policy",
+                policyVersion: POLICY_VERSIONS.privacy,
+                consented: true,
+                ipAddress,
+                userAgent,
+              }),
+              admin.auth.admin.updateUserById(user.id, {
+                user_metadata: {
+                  ...user.user_metadata,
+                  terms_accepted: true,
+                  terms_accepted_at: nowIso,
+                  terms_version: POLICY_VERSIONS.terms,
+                  privacy_consented: true,
+                  privacy_consented_at: nowIso,
+                  privacy_version: POLICY_VERSIONS.privacy,
+                  auth_provider: "google",
+                },
+              }),
+            ]);
+          }
         } catch (profileError) {
-          // If profile upsert fails, don't block user session
+          // If profile sync fails, don't block user session
           console.warn("[profile sync notice]", profileError);
         }
       }

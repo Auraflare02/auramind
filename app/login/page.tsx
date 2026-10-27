@@ -380,6 +380,27 @@ function LoginForm() {
           <span>{isGoogleLoading ? "Connecting to Google..." : "Continue with Google"}</span>
         </button>
 
+        {/* GOOGLE OAUTH LEGAL NOTICE */}
+        <p
+          style={{
+            fontSize: "0.75rem",
+            color: "var(--text-muted)",
+            textAlign: "center",
+            marginTop: "10px",
+            marginBottom: "0",
+            lineHeight: "1.4",
+          }}
+        >
+          By continuing with Google, you access AuraMind under our{" "}
+          <Link href="/terms" target="_blank" style={{ color: "var(--accent-primary)", textDecoration: "underline" }}>
+            Terms &amp; Conditions
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy-policy" target="_blank" style={{ color: "var(--accent-primary)", textDecoration: "underline" }}>
+            Privacy Policy
+          </Link>.
+        </p>
+
         {/* FOOTER SWITCH */}
         <div style={{ textAlign: "center", marginTop: "24px", fontSize: "0.85rem" }}>
           <span style={{ color: "var(--text-secondary)" }}>Don&rsquo;t have an account? </span>
