@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { AuraMindLogo } from "@/components/AuraMindBrand";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -57,45 +58,8 @@ export default function ForgotPasswordPage() {
           boxShadow: "0 16px 40px rgba(0, 0, 0, 0.4)",
         }}
       >
-        <div style={{ textAlign: "center", marginBottom: "26px" }}>
-          <Link
-            href="/"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "10px",
-              textDecoration: "none",
-              marginBottom: "16px",
-            }}
-          >
-            <div
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "8px",
-                backgroundColor: "var(--accent-primary)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: 900,
-                fontSize: "18px",
-                color: "var(--text-inverse)",
-                boxShadow: "0 0 16px var(--accent-glow)",
-              }}
-            >
-              A
-            </div>
-            <span
-              style={{
-                fontSize: "1.4rem",
-                fontWeight: 800,
-                letterSpacing: "-0.03em",
-                color: "var(--text-primary)",
-              }}
-            >
-              AuraMind
-            </span>
-          </Link>
+        <div style={{ textAlign: "center", marginBottom: "24px" }}>
+          <AuraMindLogo height={34} compactOnMobile={false} />
 
           <h1
             style={{

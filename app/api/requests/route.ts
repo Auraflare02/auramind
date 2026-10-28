@@ -135,7 +135,7 @@ export const POST = guard(async (req) => {
   const requestCode = generateRequestCode();
   const nowIso = new Date().toISOString();
 
-  // Check if session belongs to an authenticated user
+  // Enforce authentication: goals cannot be created before login or signup
   let userId: string | null = null;
   try {
     const supabaseServer = createServerClient();
@@ -144,7 +144,14 @@ export const POST = guard(async (req) => {
       userId = user.id;
     }
   } catch {
-    // Unauthenticated anonymous goal creation allowed via requestCode
+    userId = null;
+  }
+
+  if (!userId) {
+    return J(
+      { error: "Authentication required. Please log in or create an account before creating a goal plan." },
+      401
+    );
   }
 
   // Instant AI Synthesis in front of user

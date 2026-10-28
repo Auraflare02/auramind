@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { AuraMindSymbol } from "@/components/AuraMindBrand";
 
 interface ChatMessage {
   id: string;
@@ -410,21 +411,7 @@ export default function ChatPage() {
           >
             &#9776; History
           </button>
-          <div
-            style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "var(--radius-xs)",
-              backgroundColor: "var(--accent-primary)",
-              color: "#0A0A0A",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 900,
-            }}
-          >
-            A
-          </div>
+          <AuraMindSymbol size={32} />
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <h1 style={{ fontSize: "1.2rem", margin: 0, fontWeight: 700 }}>AuraMind AI</h1>

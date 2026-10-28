@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { formatLevel } from "@/lib/categories";
 import { REASON_LABELS } from "@/lib/analysis";
+import { AuraMindSymbol } from "@/components/AuraMindBrand";
 
 const REASONS = [
   "too_difficult",
@@ -95,6 +96,68 @@ export default function GoalHub() {
 
   // Total XP & Stats
   const [userXp, setUserXp] = useState(50);
+
+  // Google Calendar Integration State
+  const [isCalendarSyncing, setIsCalendarSyncing] = useState(false);
+  const [calendarSyncResult, setCalendarSyncResult] = useState<string | null>(null);
+  const [calendarConflicts, setCalendarConflicts] = useState<any[]>([]);
+
+  const handleSyncToGoogleCalendar = async (selectedOnly: boolean = false) => {
+    if (!goalData?.id || isCalendarSyncing) return;
+    setIsCalendarSyncing(true);
+    setCalendarSyncResult(null);
+    setCalendarConflicts([]);
+
+    try {
+      if (selectedOnly) {
+        try {
+          const confRes = await fetch("/api/calendar/conflicts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ request_id: goalData.id, day: selectedDay }),
+          });
+          if (confRes.ok) {
+            const confData = await confRes.json();
+            if (confData.hasConflicts && confData.conflicts?.length > 0) {
+              setCalendarConflicts(confData.conflicts);
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      const res = await fetch("/api/calendar/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          request_id: goalData.id,
+          days: selectedOnly ? [selectedDay] : undefined,
+          force: false,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        if (data.error && data.error.includes("not connected")) {
+          if (confirm("Google Calendar is not connected yet. Would you like to connect it now in Settings?")) {
+            window.location.href = `/api/calendar/connect?returnUrl=/goal/${encodeURIComponent(idOrCode)}`;
+          }
+          return;
+        }
+        throw new Error(data.error || "Failed to sync with Google Calendar.");
+      }
+
+      setCalendarSyncResult(
+        `✓ Google Calendar synced: ${data.created} created, ${data.updated} updated, ${data.skipped} up to date.`
+      );
+      setTimeout(() => setCalendarSyncResult(null), 6000);
+    } catch (e: any) {
+      setCalendarSyncResult(`Sync error: ${e.message}`);
+    } finally {
+      setIsCalendarSyncing(false);
+    }
+  };
 
   // Load Goal Request
   const loadGoal = useCallback(async () => {
@@ -784,19 +847,37 @@ export default function GoalHub() {
 
           {errorMsg && <div className="alert alert-error" style={{ marginBottom: "16px" }}>{errorMsg}</div>}
 
+          {calendarSyncResult && (
+            <div className="alert alert-success" style={{ marginBottom: "16px", fontSize: "0.85rem", textAlign: "center" }}>
+              {calendarSyncResult}
+            </div>
+          )}
+
           <div style={{ textAlign: "center" }}>
             <p className="text-xs text-muted" style={{ marginBottom: "16px" }}>
               Day 1 commences the moment you activate. All timer logging, daily check-ins, and adaptive analytics will unlock.
             </p>
-            <button
-              type="button"
-              className="btn btn-primary btn-lg"
-              disabled={isStarting}
-              onClick={handleStartGoal}
-              style={{ width: "100%", maxWidth: "380px" }}
-            >
-              {isStarting ? "Activating Session..." : "Start 30-Day Goal \u2192"}
-            </button>
+            <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap", maxWidth: "520px", margin: "0 auto" }}>
+              <button
+                type="button"
+                className="btn btn-primary btn-lg"
+                disabled={isStarting}
+                onClick={handleStartGoal}
+                style={{ flex: "1 1 240px" }}
+              >
+                {isStarting ? "Activating Session..." : "Start 30-Day Goal \u2192"}
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary btn-lg"
+                disabled={isCalendarSyncing}
+                onClick={() => handleSyncToGoogleCalendar(false)}
+                style={{ flex: "1 1 220px", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+              >
+                <span>📅</span>
+                <span>{isCalendarSyncing ? "Syncing Calendar..." : "Add to Google Calendar"}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -832,22 +913,7 @@ export default function GoalHub() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-          <div
-            style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "var(--radius-xs)",
-              backgroundColor: "var(--accent-primary)",
-              color: "#0A0A0A",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 800,
-              fontSize: "1.1rem",
-            }}
-          >
-            A
-          </div>
+          <AuraMindSymbol size={36} />
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <h1 style={{ fontSize: "1.25rem", margin: 0, fontWeight: 700 }}>{goalData.goal}</h1>
@@ -1213,7 +1279,7 @@ export default function GoalHub() {
                   <span className="text-xs text-muted" style={{ textTransform: "uppercase", fontWeight: 700 }}>
                     Select Day (1&ndash;30)
                   </span>
-                  <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                  <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
                     <span className="text-xs text-yellow" style={{ fontWeight: 600 }}>
                       Current: Day {currentDay}
                     </span>
@@ -1225,8 +1291,31 @@ export default function GoalHub() {
                     >
                       Export .md
                     </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      style={{ fontSize: "0.75rem", padding: "4px 10px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                      disabled={isCalendarSyncing}
+                      onClick={() => handleSyncToGoogleCalendar(false)}
+                      title="Sync all 30 days of this curriculum to your Google Calendar"
+                    >
+                      <span>📅</span>
+                      <span>{isCalendarSyncing ? "Syncing..." : "Sync 30-Day Plan"}</span>
+                    </button>
                   </div>
                 </div>
+
+                {calendarSyncResult && (
+                  <div className="alert alert-success" style={{ margin: "10px 0 6px", fontSize: "0.82rem" }}>
+                    {calendarSyncResult}
+                  </div>
+                )}
+
+                {calendarConflicts.length > 0 && (
+                  <div className="alert alert-error" style={{ margin: "10px 0 6px", fontSize: "0.82rem" }}>
+                    <strong>Schedule Overlap Detected:</strong> {calendarConflicts.length} planned session(s) on Day {selectedDay} overlap with existing events on your Google Calendar ({calendarConflicts.map(c => `"${c.summary}" at ${c.blockStart}`).join(", ")}).
+                  </div>
+                )}
 
                 {/* HORIZONTAL DAY PICKER */}
                 <div style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "6px" }}>
@@ -1287,6 +1376,16 @@ export default function GoalHub() {
                         Focus: {activeDayPlan.daily_objective}
                       </div>
                     )}
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      style={{ fontSize: "0.72rem", padding: "3px 8px", marginTop: "6px" }}
+                      disabled={isCalendarSyncing}
+                      onClick={() => handleSyncToGoogleCalendar(true)}
+                      title="Sync only this day's blocks to Google Calendar"
+                    >
+                      📅 {isCalendarSyncing ? "Syncing..." : `Sync Day ${selectedDay} to Calendar`}
+                    </button>
                   </div>
 
                   {/* CATEGORY FILTER CHIPS */}

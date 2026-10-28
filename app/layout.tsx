@@ -3,10 +3,23 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
 import AuthNav from "@/components/AuthNav";
+import { AuraMindLogo } from "@/components/AuraMindBrand";
 
 export const metadata: Metadata = {
   title: "AuraMind — AI Accountability & Goal Execution Platform",
   description: "Don't plan a perfect day. Build a system that learns your real one. Turn ambitious goals into consistent, measurable action.",
+  applicationName: "AuraMind",
+  manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -45,44 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }}
           >
             {/* BRAND */}
-            <Link
-              href="/"
-              style={{
-                textDecoration: "none",
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-              }}
-            >
-              <div
-                style={{
-                  width: "28px",
-                  height: "28px",
-                  borderRadius: "6px",
-                  backgroundColor: "var(--accent-primary)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: 900,
-                  fontSize: "15px",
-                  color: "var(--text-inverse)",
-                  boxShadow: "0 0 12px var(--accent-glow)",
-                  transition: "background-color var(--transition-fast)",
-                }}
-              >
-                A
-              </div>
-              <span
-                style={{
-                  fontSize: "1.2rem",
-                  fontWeight: 800,
-                  letterSpacing: "-0.03em",
-                  color: "var(--text-primary)",
-                }}
-              >
-                AuraMind
-              </span>
-            </Link>
+            <AuraMindLogo height={28} compactOnMobile={true} />
 
             {/* NAV LINKS */}
             <nav style={{ display: "flex", alignItems: "center", gap: "16px" }}>
@@ -186,26 +162,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               }}
             >
               <div style={{ maxWidth: "420px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                  <div
-                    style={{
-                      width: "20px",
-                      height: "20px",
-                      borderRadius: "4px",
-                      backgroundColor: "var(--accent-primary)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontWeight: 900,
-                      fontSize: "11px",
-                      color: "#0A0A0A",
-                    }}
-                  >
-                    A
-                  </div>
-                  <strong style={{ fontSize: "1rem", color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
-                    AuraMind Platform
-                  </strong>
+                <div style={{ display: "flex", alignItems: "center", marginBottom: "12px" }}>
+                  <AuraMindLogo height={24} compactOnMobile={false} />
                 </div>
                 <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", margin: 0 }}>
                   A cognitive architecture platform that transforms ambitions into personalized 30-day deliberate practice schedules, tracks real-time focus metrics, and adapts to reality.

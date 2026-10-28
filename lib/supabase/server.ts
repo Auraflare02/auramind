@@ -13,12 +13,18 @@ export function isSupabaseAuthConfigured(): boolean {
 
 export function createClient() {
   const cookieStore = cookies();
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "https://placeholder.supabase.co";
-  const key =
+  let url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
+  if (!url || !url.startsWith("http") || url.includes("[SENSITIVE]")) {
+    url = "https://placeholder.supabase.co";
+  }
+  let key =
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
     process.env.SUPABASE_ANON_KEY ||
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    "placeholder-anon-key";
+    "";
+  if (!key || key.includes("[SENSITIVE]")) {
+    key = "placeholder-anon-key";
+  }
 
   return createServerClient(url, key, {
     cookies: {

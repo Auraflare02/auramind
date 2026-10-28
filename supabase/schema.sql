@@ -192,3 +192,59 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- 5. Google Calendar Integration Tables
+create table if not exists public.user_calendar_connections (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade unique,
+  google_email text,
+  google_account_id text,
+  encrypted_refresh_token text not null,
+  access_token text,
+  access_token_expires_at timestamptz,
+  calendar_id text not null default 'primary',
+  auto_sync boolean not null default true,
+  sync_deletions boolean not null default false,
+  last_synced_at timestamptz,
+  sync_status text not null default 'connected',
+  sync_error text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_calendar_conn_user on public.user_calendar_connections(user_id);
+create index if not exists idx_calendar_conn_status on public.user_calendar_connections(sync_status);
+
+create table if not exists public.auramind_calendar_events (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  request_id uuid not null references public.requests(id) on delete cascade,
+  day int not null,
+  block_index int not null,
+  task_activity text not null,
+  google_calendar_id text not null default 'primary',
+  google_event_id text not null,
+  event_start timestamptz not null,
+  event_end timestamptz not null,
+  sync_hash text,
+  last_synced_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  constraint uq_request_day_block unique(request_id, day, block_index)
+);
+
+create index if not exists idx_calendar_events_user on public.auramind_calendar_events(user_id);
+create index if not exists idx_calendar_events_req on public.auramind_calendar_events(request_id);
+create index if not exists idx_calendar_events_google on public.auramind_calendar_events(google_event_id);
+
+alter table public.user_calendar_connections enable row level security;
+alter table public.auramind_calendar_events enable row level security;
+
+create policy "service_role_calendar_connections" on public.user_calendar_connections for all to service_role using (true) with check (true);
+create policy "users_own_calendar_connections_select" on public.user_calendar_connections for select to authenticated using (auth.uid() = user_id);
+create policy "users_own_calendar_connections_update" on public.user_calendar_connections for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "users_own_calendar_connections_delete" on public.user_calendar_connections for delete to authenticated using (auth.uid() = user_id);
+
+create policy "service_role_calendar_events" on public.auramind_calendar_events for all to service_role using (true) with check (true);
+create policy "users_own_calendar_events_select" on public.auramind_calendar_events for select to authenticated using (auth.uid() = user_id);
+create policy "users_own_calendar_events_delete" on public.auramind_calendar_events for delete to authenticated using (auth.uid() = user_id);
+

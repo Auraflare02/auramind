@@ -1,30 +1,73 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { AuraMindLogo } from "@/components/AuraMindBrand";
+
+const COUNTRY_CODES = [
+  { code: "+91", label: "India (+91)" },
+  { code: "+1", label: "US / Canada (+1)" },
+  { code: "+44", label: "UK (+44)" },
+  { code: "+61", label: "Australia (+61)" },
+  { code: "+971", label: "UAE (+971)" },
+  { code: "+49", label: "Germany (+49)" },
+  { code: "+33", label: "France (+33)" },
+  { code: "+65", label: "Singapore (+65)" },
+];
 
 function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // Auth Method Switcher
+  const [authMethod, setAuthMethod] = useState<"phone" | "email">("phone");
+
+  // Shared state
   const [fullName, setFullName] = useState("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [consentPersonalData, setConsentPersonalData] = useState(false);
+  const [optionalUpdates, setOptionalUpdates] = useState(false);
+
+  // Email / Password state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  // Mandatory Consent System - Every checkbox UNCHECKED by default
-  const [agreeTerms, setAgreeTerms] = useState(false);
-  const [consentPersonalData, setConsentPersonalData] = useState(false);
-  const [optionalUpdates, setOptionalUpdates] = useState(false);
+  // Mobile / OTP state
+  const [countryCode, setCountryCode] = useState("+91");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [normalizedPhone, setNormalizedPhone] = useState("");
+  const [isOtpSending, setIsOtpSending] = useState(false);
+  const [isOtpVerifying, setIsOtpVerifying] = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(0);
 
+  // General Status
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [confirmationNotice, setConfirmationNotice] = useState(false);
 
   const nextPath = searchParams.get("next") || "/dashboard";
+
+  // Resend Countdown Timer
+  useEffect(() => {
+    if (resendCountdown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCountdown]);
+
+  // Format full mobile number
+  const getFullPhone = () => {
+    const raw = phoneNumber.trim().replace(/[\s\-\(\)]/g, "");
+    if (raw.startsWith("+")) return raw;
+    return `${countryCode}${raw}`;
+  };
 
   // Password strength calculation
   const getPasswordStrength = (pass: string) => {
@@ -40,8 +83,108 @@ function SignupForm() {
   const strengthLabels = ["Weak", "Fair", "Good", "Strong"];
   const strengthColors = ["#EF4444", "#F59E0B", "#22C55E", "var(--accent-primary)"];
 
-  // Handle Email / Password Signup
-  const handleSignup = async (e: React.FormEvent) => {
+  // 1. Mobile OTP: Send Code
+  const handleSendSignupOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (isOtpSending) return;
+
+    setErrorMessage("");
+
+    if (!fullName.trim()) {
+      setErrorMessage("Please enter your full name.");
+      return;
+    }
+
+    const fullPhone = getFullPhone();
+    if (!phoneNumber.trim() || fullPhone.length < 9) {
+      setErrorMessage("Please enter a valid mobile number.");
+      return;
+    }
+
+    if (!agreeTerms) {
+      setErrorMessage("You must agree to the AuraMind Terms & Conditions to create an account.");
+      return;
+    }
+
+    if (!consentPersonalData) {
+      setErrorMessage("You must consent to the processing of your personal information to proceed.");
+      return;
+    }
+
+    setIsOtpSending(true);
+
+    try {
+      const res = await fetch("/api/auth/otp/send", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          phone: fullPhone,
+          isSignup: true,
+          fullName: fullName.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to send verification code.");
+      }
+
+      setNormalizedPhone(data.phone || fullPhone);
+      setOtpSent(true);
+      setResendCountdown(30);
+    } catch (err: any) {
+      setErrorMessage(err.message || "Failed to send OTP. Please check your mobile number.");
+    } finally {
+      setIsOtpSending(false);
+    }
+  };
+
+  // 2. Mobile OTP: Verify and Register
+  const handleVerifySignupOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isOtpVerifying) return;
+
+    setErrorMessage("");
+
+    if (!otpCode.trim() || otpCode.trim().length < 4) {
+      setErrorMessage("Please enter the verification code received via SMS.");
+      return;
+    }
+
+    setIsOtpVerifying(true);
+
+    try {
+      const res = await fetch("/api/auth/otp/verify", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          phone: normalizedPhone || getFullPhone(),
+          token: otpCode.trim(),
+          isSignup: true,
+          fullName: fullName.trim(),
+          agreeTerms: true,
+          consentPersonalData: true,
+          next: nextPath,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to verify code.");
+      }
+
+      const safeDestination = data.destination || (nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/dashboard");
+      router.push(safeDestination);
+      router.refresh();
+    } catch (err: any) {
+      setErrorMessage(err.message || "Failed to verify code.");
+    } finally {
+      setIsOtpVerifying(false);
+    }
+  };
+
+  // 3. Email / Password Signup
+  const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLoading || isGoogleLoading) return;
 
@@ -67,7 +210,6 @@ function SignupForm() {
       return;
     }
 
-    // MANDATORY CONSENT VALIDATION: Both must be checked by the user
     if (!agreeTerms) {
       setErrorMessage("You must agree to the AuraMind Terms & Conditions to create an account.");
       return;
@@ -114,9 +256,9 @@ function SignupForm() {
     }
   };
 
-  // Handle Google OAuth
+  // 4. Google OAuth
   const handleGoogleSignup = () => {
-    if (isLoading || isGoogleLoading) return;
+    if (isLoading || isGoogleLoading || isOtpSending || isOtpVerifying) return;
     setErrorMessage("");
     setIsGoogleLoading(true);
     window.location.href = `/api/auth/google?next=${encodeURIComponent(nextPath)}`;
@@ -145,45 +287,10 @@ function SignupForm() {
         }}
       >
         {/* BRANDMARK */}
-        <div style={{ textAlign: "center", marginBottom: "26px" }}>
-          <Link
-            href="/"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "10px",
-              textDecoration: "none",
-              marginBottom: "16px",
-            }}
-          >
-            <div
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "8px",
-                backgroundColor: "var(--accent-primary)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: 900,
-                fontSize: "18px",
-                color: "var(--text-inverse)",
-                boxShadow: "0 0 16px var(--accent-glow)",
-              }}
-            >
-              A
-            </div>
-            <span
-              style={{
-                fontSize: "1.4rem",
-                fontWeight: 800,
-                letterSpacing: "-0.03em",
-                color: "var(--text-primary)",
-              }}
-            >
-              AuraMind
-            </span>
-          </Link>
+        <div style={{ textAlign: "center", marginBottom: "22px" }}>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "14px" }}>
+            <AuraMindLogo height={34} compactOnMobile={false} />
+          </div>
 
           <h1
             style={{
@@ -244,7 +351,7 @@ function SignupForm() {
               <div
                 className="alert alert-error"
                 style={{
-                  marginBottom: "20px",
+                  marginBottom: "18px",
                   fontSize: "0.85rem",
                   padding: "10px 14px",
                   borderRadius: "8px",
@@ -254,325 +361,547 @@ function SignupForm() {
               </div>
             )}
 
-            {/* FORM */}
-            <form onSubmit={handleSignup}>
-              <div className="form-group" style={{ marginBottom: "14px" }}>
-                <label className="form-label" htmlFor="signup-name">
-                  Full Name
-                </label>
-                <input
-                  id="signup-name"
-                  type="text"
-                  required
-                  autoComplete="name"
-                  placeholder="Alex Rivera"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="form-input"
-                  style={{
-                    height: "44px",
-                    borderRadius: "8px",
-                  }}
-                />
-              </div>
+            {/* AUTH METHOD SELECTOR TABS */}
+            <div
+              style={{
+                display: "flex",
+                backgroundColor: "var(--bg-secondary)",
+                padding: "4px",
+                borderRadius: "10px",
+                marginBottom: "20px",
+                border: "1px solid var(--border-subtle)",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMethod("phone");
+                  setErrorMessage("");
+                }}
+                style={{
+                  flex: 1,
+                  padding: "8px 12px",
+                  fontSize: "0.85rem",
+                  fontWeight: 700,
+                  borderRadius: "8px",
+                  border: "none",
+                  cursor: "pointer",
+                  transition: "all var(--transition-fast)",
+                  backgroundColor: authMethod === "phone" ? "var(--bg-card)" : "transparent",
+                  color: authMethod === "phone" ? "var(--accent-primary)" : "var(--text-secondary)",
+                  boxShadow: authMethod === "phone" ? "0 2px 8px rgba(0, 0, 0, 0.2)" : "none",
+                }}
+              >
+                Mobile &amp; OTP
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMethod("email");
+                  setErrorMessage("");
+                }}
+                style={{
+                  flex: 1,
+                  padding: "8px 12px",
+                  fontSize: "0.85rem",
+                  fontWeight: 700,
+                  borderRadius: "8px",
+                  border: "none",
+                  cursor: "pointer",
+                  transition: "all var(--transition-fast)",
+                  backgroundColor: authMethod === "email" ? "var(--bg-card)" : "transparent",
+                  color: authMethod === "email" ? "var(--accent-primary)" : "var(--text-secondary)",
+                  boxShadow: authMethod === "email" ? "0 2px 8px rgba(0, 0, 0, 0.2)" : "none",
+                }}
+              >
+                Email &amp; Password
+              </button>
+            </div>
 
-              <div className="form-group" style={{ marginBottom: "14px" }}>
-                <label className="form-label" htmlFor="signup-email">
-                  Email Address
-                </label>
-                <input
-                  id="signup-email"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  placeholder="alex@domain.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="form-input"
-                  style={{
-                    height: "44px",
-                    borderRadius: "8px",
-                  }}
-                />
-              </div>
+            {/* METHOD 1: MOBILE SIGNUP */}
+            {authMethod === "phone" ? (
+              <div>
+                {!otpSent ? (
+                  <form onSubmit={handleSendSignupOtp}>
+                    <div className="form-group" style={{ marginBottom: "14px" }}>
+                      <label className="form-label" htmlFor="signup-phone-name">
+                        Full Name
+                      </label>
+                      <input
+                        id="signup-phone-name"
+                        type="text"
+                        autoComplete="name"
+                        required
+                        placeholder="Alex Carter"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="form-input"
+                        style={{
+                          height: "44px",
+                          borderRadius: "8px",
+                        }}
+                      />
+                    </div>
 
-              <div className="form-group" style={{ marginBottom: "14px" }}>
-                <label className="form-label" htmlFor="signup-password">
-                  Password
-                </label>
-                <div style={{ position: "relative" }}>
+                    <div className="form-group" style={{ marginBottom: "16px" }}>
+                      <label className="form-label" htmlFor="signup-phone">
+                        Mobile Number
+                      </label>
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        <select
+                          value={countryCode}
+                          onChange={(e) => setCountryCode(e.target.value)}
+                          className="form-input"
+                          style={{
+                            width: "120px",
+                            height: "44px",
+                            borderRadius: "8px",
+                            padding: "0 8px",
+                            fontSize: "0.85rem",
+                            cursor: "pointer",
+                            flexShrink: 0,
+                          }}
+                        >
+                          {COUNTRY_CODES.map((c) => (
+                            <option key={c.code} value={c.code}>
+                              {c.label}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          id="signup-phone"
+                          type="tel"
+                          required
+                          placeholder="98765 43210"
+                          value={phoneNumber}
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                          className="form-input"
+                          style={{
+                            flex: 1,
+                            height: "44px",
+                            borderRadius: "8px",
+                          }}
+                        />
+                      </div>
+                      <div className="text-xs text-muted" style={{ marginTop: "6px" }}>
+                        We&rsquo;ll send a 6-digit one-time code to this number.
+                      </div>
+                    </div>
+
+                    {/* CONSENT CHECKBOXES */}
+                    <div
+                      style={{
+                        backgroundColor: "var(--bg-secondary)",
+                        padding: "14px",
+                        borderRadius: "10px",
+                        marginBottom: "20px",
+                        border: "1px solid var(--border-subtle)",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "10px",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                        <input
+                          id="consent-terms-phone"
+                          type="checkbox"
+                          checked={agreeTerms}
+                          onChange={(e) => setAgreeTerms(e.target.checked)}
+                          required
+                          style={{
+                            accentColor: "var(--accent-primary)",
+                            cursor: "pointer",
+                            width: "18px",
+                            height: "18px",
+                            marginTop: "2px",
+                            flexShrink: 0,
+                          }}
+                        />
+                        <label htmlFor="consent-terms-phone" style={{ fontSize: "0.825rem", cursor: "pointer", lineHeight: "1.4" }}>
+                          I agree to the AuraMind{" "}
+                          <Link href="/terms" target="_blank" style={{ color: "var(--accent-primary)", fontWeight: 700, textDecoration: "underline" }}>
+                            Terms &amp; Conditions
+                          </Link>{" "}
+                          <span style={{ color: "var(--accent-primary)", fontSize: "0.75rem", fontWeight: 700 }}>(Required)</span>
+                        </label>
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                        <input
+                          id="consent-privacy-phone"
+                          type="checkbox"
+                          checked={consentPersonalData}
+                          onChange={(e) => setConsentPersonalData(e.target.checked)}
+                          required
+                          style={{
+                            accentColor: "var(--accent-primary)",
+                            cursor: "pointer",
+                            width: "18px",
+                            height: "18px",
+                            marginTop: "2px",
+                            flexShrink: 0,
+                          }}
+                        />
+                        <label htmlFor="consent-privacy-phone" style={{ fontSize: "0.825rem", cursor: "pointer", lineHeight: "1.4" }}>
+                          I consent to data processing under the{" "}
+                          <Link href="/privacy-policy" target="_blank" style={{ color: "var(--accent-primary)", fontWeight: 700, textDecoration: "underline" }}>
+                            Privacy Policy
+                          </Link>{" "}
+                          <span style={{ color: "var(--accent-primary)", fontSize: "0.75rem", fontWeight: 700 }}>(Required)</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isOtpSending}
+                      className="btn btn-primary"
+                      style={{
+                        width: "100%",
+                        height: "44px",
+                        fontSize: "0.95rem",
+                        fontWeight: 700,
+                        borderRadius: "8px",
+                      }}
+                    >
+                      {isOtpSending ? "Sending OTP..." : "Send Verification Code \u2192"}
+                    </button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleVerifySignupOtp}>
+                    <div
+                      style={{
+                        backgroundColor: "var(--bg-secondary)",
+                        padding: "12px 14px",
+                        borderRadius: "8px",
+                        marginBottom: "18px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        border: "1px solid var(--border-subtle)",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Code sent to</div>
+                        <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--text-primary)" }}>
+                          {normalizedPhone}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOtpSent(false);
+                          setOtpCode("");
+                          setErrorMessage("");
+                        }}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "var(--accent-primary)",
+                          fontSize: "0.8rem",
+                          cursor: "pointer",
+                          fontWeight: 600,
+                          textDecoration: "underline",
+                        }}
+                      >
+                        Change
+                      </button>
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: "18px" }}>
+                      <label className="form-label" htmlFor="signup-otp">
+                        Enter 6-Digit OTP
+                      </label>
+                      <input
+                        id="signup-otp"
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        maxLength={8}
+                        required
+                        placeholder="123456"
+                        value={otpCode}
+                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                        className="form-input"
+                        autoFocus
+                        style={{
+                          height: "48px",
+                          borderRadius: "8px",
+                          textAlign: "center",
+                          fontSize: "1.4rem",
+                          letterSpacing: "0.25em",
+                          fontWeight: 700,
+                        }}
+                      />
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginTop: "8px",
+                          fontSize: "0.8rem",
+                        }}
+                      >
+                        <span style={{ color: "var(--text-muted)" }}>Didn&rsquo;t receive code?</span>
+                        {resendCountdown > 0 ? (
+                          <span style={{ color: "var(--text-muted)" }}>Resend in {resendCountdown}s</span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleSendSignupOtp()}
+                            disabled={isOtpSending}
+                            style={{
+                              background: "none",
+                              border: "none",
+                              color: "var(--accent-primary)",
+                              cursor: "pointer",
+                              fontWeight: 700,
+                              padding: 0,
+                            }}
+                          >
+                            Resend OTP
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isOtpVerifying}
+                      className="btn btn-primary"
+                      style={{
+                        width: "100%",
+                        height: "44px",
+                        fontSize: "0.95rem",
+                        fontWeight: 700,
+                        borderRadius: "8px",
+                      }}
+                    >
+                      {isOtpVerifying ? "Verifying..." : "Verify & Create Account"}
+                    </button>
+                  </form>
+                )}
+              </div>
+            ) : (
+              /* METHOD 2: EMAIL & PASSWORD SIGNUP */
+              <form onSubmit={handleEmailSignup}>
+                <div className="form-group" style={{ marginBottom: "14px" }}>
+                  <label className="form-label" htmlFor="signup-name">
+                    Full Name
+                  </label>
                   <input
-                    id="signup-password"
-                    type={showPassword ? "text" : "password"}
+                    id="signup-name"
+                    type="text"
+                    autoComplete="name"
                     required
-                    autoComplete="new-password"
-                    placeholder="At least 8 characters"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Alex Carter"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
                     className="form-input"
                     style={{
                       height: "44px",
-                      paddingRight: "44px",
                       borderRadius: "8px",
                     }}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    style={{
-                      position: "absolute",
-                      right: "10px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      background: "transparent",
-                      border: "none",
-                      color: "var(--text-muted)",
-                      cursor: "pointer",
-                      padding: "6px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {showPassword ? (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                        <line x1="1" y1="1" x2="23" y2="23" />
-                      </svg>
-                    ) : (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
-                    )}
-                  </button>
                 </div>
 
-                {/* PASSWORD STRENGTH METER */}
-                {password.length > 0 && (
-                  <div style={{ marginTop: "8px" }}>
-                    <div style={{ display: "flex", gap: "4px", marginBottom: "4px" }}>
-                      {[1, 2, 3, 4].map((step) => (
-                        <div
-                          key={step}
-                          style={{
-                            flex: 1,
-                            height: "3px",
-                            borderRadius: "2px",
-                            backgroundColor:
-                              step <= strengthScore ? strengthColors[strengthScore - 1] : "var(--border-default)",
-                            transition: "all var(--transition-fast)",
-                          }}
-                        />
-                      ))}
-                    </div>
-                    <div
+                <div className="form-group" style={{ marginBottom: "14px" }}>
+                  <label className="form-label" htmlFor="signup-email">
+                    Email Address
+                  </label>
+                  <input
+                    id="signup-email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    placeholder="alex@domain.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="form-input"
+                    style={{
+                      height: "44px",
+                      borderRadius: "8px",
+                    }}
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: "14px" }}>
+                  <label className="form-label" htmlFor="signup-password">
+                    Password
+                  </label>
+                  <div style={{ position: "relative" }}>
+                    <input
+                      id="signup-password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      required
+                      placeholder="Minimum 8 characters"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="form-input"
                       style={{
-                        fontSize: "0.72rem",
-                        color: strengthScore > 0 ? strengthColors[strengthScore - 1] : "var(--text-muted)",
-                        fontWeight: 600,
+                        height: "44px",
+                        paddingRight: "44px",
+                        borderRadius: "8px",
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      style={{
+                        position: "absolute",
+                        right: "10px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        background: "transparent",
+                        border: "none",
+                        color: "var(--text-muted)",
+                        cursor: "pointer",
+                        padding: "6px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
                     >
-                      Strength: {strengthScore > 0 ? strengthLabels[strengthScore - 1] : "Enter at least 8 characters"}
-                    </div>
+                      {showPassword ? (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                          <line x1="1" y1="1" x2="23" y2="23" />
+                        </svg>
+                      ) : (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                      )}
+                    </button>
                   </div>
-                )}
-              </div>
 
-              <div className="form-group" style={{ marginBottom: "22px" }}>
-                <label className="form-label" htmlFor="signup-confirm-password">
-                  Confirm Password
-                </label>
-                <input
-                  id="signup-confirm-password"
-                  type={showPassword ? "text" : "password"}
-                  required
-                  autoComplete="new-password"
-                  placeholder="Repeat your password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="form-input"
+                  {password.length > 0 && (
+                    <div style={{ marginTop: "6px" }}>
+                      <div style={{ display: "flex", gap: "4px", height: "4px", borderRadius: "2px", overflow: "hidden", backgroundColor: "var(--bg-secondary)" }}>
+                        {[0, 1, 2, 3].map((step) => (
+                          <div
+                            key={step}
+                            style={{
+                              flex: 1,
+                              backgroundColor: step < strengthScore ? strengthColors[strengthScore - 1] : "transparent",
+                              transition: "background-color 0.2s ease",
+                            }}
+                          />
+                        ))}
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px", fontSize: "0.72rem" }}>
+                        <span style={{ color: "var(--text-muted)" }}>Strength:</span>
+                        <span style={{ fontWeight: 700, color: strengthScore > 0 ? strengthColors[strengthScore - 1] : "var(--text-muted)" }}>
+                          {strengthScore > 0 ? strengthLabels[strengthScore - 1] : "Too short"}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-group" style={{ marginBottom: "16px" }}>
+                  <label className="form-label" htmlFor="signup-confirm-password">
+                    Confirm Password
+                  </label>
+                  <input
+                    id="signup-confirm-password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    required
+                    placeholder="Repeat password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="form-input"
+                    style={{
+                      height: "44px",
+                      borderRadius: "8px",
+                    }}
+                  />
+                </div>
+
+                {/* CONSENT CHECKBOXES */}
+                <div
                   style={{
+                    backgroundColor: "var(--bg-secondary)",
+                    padding: "14px",
+                    borderRadius: "10px",
+                    marginBottom: "20px",
+                    border: "1px solid var(--border-subtle)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "10px",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                    <input
+                      id="consent-terms-email"
+                      type="checkbox"
+                      checked={agreeTerms}
+                      onChange={(e) => setAgreeTerms(e.target.checked)}
+                      required
+                      style={{
+                        accentColor: "var(--accent-primary)",
+                        cursor: "pointer",
+                        width: "18px",
+                        height: "18px",
+                        marginTop: "2px",
+                        flexShrink: 0,
+                      }}
+                    />
+                    <label htmlFor="consent-terms-email" style={{ fontSize: "0.825rem", cursor: "pointer", lineHeight: "1.4" }}>
+                      I agree to the AuraMind{" "}
+                      <Link href="/terms" target="_blank" style={{ color: "var(--accent-primary)", fontWeight: 700, textDecoration: "underline" }}>
+                        Terms &amp; Conditions
+                      </Link>{" "}
+                      <span style={{ color: "var(--accent-primary)", fontSize: "0.75rem", fontWeight: 700 }}>(Required)</span>
+                    </label>
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                    <input
+                      id="consent-privacy-email"
+                      type="checkbox"
+                      checked={consentPersonalData}
+                      onChange={(e) => setConsentPersonalData(e.target.checked)}
+                      required
+                      style={{
+                        accentColor: "var(--accent-primary)",
+                        cursor: "pointer",
+                        width: "18px",
+                        height: "18px",
+                        marginTop: "2px",
+                        flexShrink: 0,
+                      }}
+                    />
+                    <label htmlFor="consent-privacy-email" style={{ fontSize: "0.825rem", cursor: "pointer", lineHeight: "1.4" }}>
+                      I consent to data processing under the{" "}
+                      <Link href="/privacy-policy" target="_blank" style={{ color: "var(--accent-primary)", fontWeight: 700, textDecoration: "underline" }}>
+                        Privacy Policy
+                      </Link>{" "}
+                      <span style={{ color: "var(--accent-primary)", fontSize: "0.75rem", fontWeight: 700 }}>(Required)</span>
+                    </label>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading || isGoogleLoading}
+                  className="btn btn-primary"
+                  style={{
+                    width: "100%",
                     height: "44px",
+                    fontSize: "0.95rem",
+                    fontWeight: 700,
                     borderRadius: "8px",
                   }}
-                />
-              </div>
-
-              {/* CONSENT & COMPLIANCE SYSTEM */}
-              <div
-                style={{
-                  backgroundColor: "var(--bg-elevated)",
-                  border: "1px solid var(--border-default)",
-                  borderRadius: "10px",
-                  padding: "16px",
-                  marginBottom: "22px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "14px",
-                }}
-              >
-                {/* PRIVACY POLICY NOTICE STATEMENT */}
-                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: "1.45" }}>
-                  Please read our{" "}
-                  <Link
-                    href="/privacy-policy"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      color: "var(--accent-primary)",
-                      fontWeight: 700,
-                      textDecoration: "underline",
-                      textUnderlineOffset: "2px",
-                    }}
-                  >
-                    Privacy Policy
-                  </Link>{" "}
-                  to understand how AuraMind processes your personal information.
-                </div>
-
-                {/* REQUIRED CHECKBOX A: TERMS & CONDITIONS */}
-                <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                  <input
-                    id="consent-terms"
-                    type="checkbox"
-                    checked={agreeTerms}
-                    onChange={(e) => setAgreeTerms(e.target.checked)}
-                    required
-                    style={{
-                      accentColor: "var(--accent-primary)",
-                      cursor: "pointer",
-                      width: "18px",
-                      height: "18px",
-                      marginTop: "2px",
-                      flexShrink: 0,
-                    }}
-                  />
-                  <label
-                    htmlFor="consent-terms"
-                    style={{
-                      fontSize: "0.825rem",
-                      color: "var(--text-primary)",
-                      cursor: "pointer",
-                      userSelect: "none",
-                      lineHeight: "1.4",
-                    }}
-                  >
-                    <span style={{ fontWeight: 600 }}>I agree to the AuraMind </span>
-                    <Link
-                      href="/terms"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      style={{
-                        color: "var(--accent-primary)",
-                        fontWeight: 700,
-                        textDecoration: "underline",
-                        textUnderlineOffset: "2px",
-                      }}
-                    >
-                      Terms &amp; Conditions
-                    </Link>
-                    . <span style={{ color: "var(--accent-primary)", fontSize: "0.75rem", fontWeight: 700 }}>(Required)</span>
-                  </label>
-                </div>
-
-                {/* REQUIRED CHECKBOX C: PERSONAL DATA PROCESSING CONSENT */}
-                <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                  <input
-                    id="consent-personal-data"
-                    type="checkbox"
-                    checked={consentPersonalData}
-                    onChange={(e) => setConsentPersonalData(e.target.checked)}
-                    required
-                    style={{
-                      accentColor: "var(--accent-primary)",
-                      cursor: "pointer",
-                      width: "18px",
-                      height: "18px",
-                      marginTop: "2px",
-                      flexShrink: 0,
-                    }}
-                  />
-                  <label
-                    htmlFor="consent-personal-data"
-                    style={{
-                      fontSize: "0.825rem",
-                      color: "var(--text-primary)",
-                      cursor: "pointer",
-                      userSelect: "none",
-                      lineHeight: "1.4",
-                    }}
-                  >
-                    <span>I consent to the processing of my personal data as described in the </span>
-                    <Link
-                      href="/privacy-policy"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      style={{
-                        color: "var(--accent-primary)",
-                        fontWeight: 700,
-                        textDecoration: "underline",
-                        textUnderlineOffset: "2px",
-                      }}
-                    >
-                      Privacy Policy
-                    </Link>
-                    <span> to create my account and generate personalized AI goal execution plans.</span>{" "}
-                    <span style={{ color: "var(--accent-primary)", fontSize: "0.75rem", fontWeight: 700 }}>(Required)</span>
-                  </label>
-                </div>
-
-                {/* OPTIONAL CHECKBOX D: PRODUCT UPDATES */}
-                <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", paddingTop: "8px", borderTop: "1px solid var(--border-subtle)" }}>
-                  <input
-                    id="consent-optional-updates"
-                    type="checkbox"
-                    checked={optionalUpdates}
-                    onChange={(e) => setOptionalUpdates(e.target.checked)}
-                    style={{
-                      accentColor: "var(--accent-primary)",
-                      cursor: "pointer",
-                      width: "18px",
-                      height: "18px",
-                      marginTop: "2px",
-                      flexShrink: 0,
-                    }}
-                  />
-                  <label
-                    htmlFor="consent-optional-updates"
-                    style={{
-                      fontSize: "0.8rem",
-                      color: "var(--text-secondary)",
-                      cursor: "pointer",
-                      userSelect: "none",
-                      lineHeight: "1.4",
-                    }}
-                  >
-                    <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>(Optional) </span>
-                    I would like to receive deliberate practice insights, product updates, and accountability tips via email.
-                  </label>
-                </div>
-              </div>
-
-              {/* CREATE ACCOUNT BUTTON */}
-              <button
-                type="submit"
-                disabled={isLoading || isGoogleLoading}
-                className="btn btn-primary"
-                style={{
-                  width: "100%",
-                  height: "44px",
-                  fontSize: "0.95rem",
-                  fontWeight: 700,
-                  borderRadius: "8px",
-                }}
-              >
-                {isLoading ? "Creating Account..." : "Create Account"}
-              </button>
-            </form>
+                >
+                  {isLoading ? "Creating Account..." : "Create Account with Email"}
+                </button>
+              </form>
+            )}
 
             {/* DIVIDER */}
             <div
@@ -598,11 +927,11 @@ function SignupForm() {
               <div style={{ flex: 1, height: "1px", backgroundColor: "var(--border-default)" }} />
             </div>
 
-            {/* GOOGLE BUTTON */}
+            {/* GOOGLE OAUTH BUTTON */}
             <button
               type="button"
               onClick={handleGoogleSignup}
-              disabled={isLoading || isGoogleLoading}
+              disabled={isLoading || isGoogleLoading || isOtpSending || isOtpVerifying}
               className="btn btn-secondary"
               style={{
                 width: "100%",
@@ -638,27 +967,6 @@ function SignupForm() {
               </svg>
               <span>{isGoogleLoading ? "Connecting to Google..." : "Continue with Google"}</span>
             </button>
-
-            {/* GOOGLE OAUTH LEGAL NOTICE */}
-            <p
-              style={{
-                fontSize: "0.75rem",
-                color: "var(--text-muted)",
-                textAlign: "center",
-                marginTop: "10px",
-                marginBottom: "0",
-                lineHeight: "1.4",
-              }}
-            >
-              By continuing with Google, you agree to AuraMind&rsquo;s{" "}
-              <Link href="/terms" target="_blank" style={{ color: "var(--accent-primary)", textDecoration: "underline" }}>
-                Terms &amp; Conditions
-              </Link>{" "}
-              and acknowledge our{" "}
-              <Link href="/privacy-policy" target="_blank" style={{ color: "var(--accent-primary)", textDecoration: "underline" }}>
-                Privacy Policy
-              </Link>.
-            </p>
 
             {/* FOOTER SWITCH */}
             <div style={{ textAlign: "center", marginTop: "24px", fontSize: "0.85rem" }}>
@@ -717,4 +1025,3 @@ export default function SignupPage() {
     </Suspense>
   );
 }
-

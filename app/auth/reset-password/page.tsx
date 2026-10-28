@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { AuraMindLogo } from "@/components/AuraMindBrand";
 
 export default function SetNewPasswordPage() {
   const router = useRouter();
@@ -77,6 +78,11 @@ export default function SetNewPasswordPage() {
         }}
       >
         <div style={{ textAlign: "center", marginBottom: "26px" }}>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>
+            <Link href="/" style={{ display: "inline-flex", textDecoration: "none" }}>
+              <AuraMindLogo height={34} compactOnMobile={false} />
+            </Link>
+          </div>
           <h1
             style={{
               fontSize: "1.65rem",

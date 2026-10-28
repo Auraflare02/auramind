@@ -1,11 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function SettingsPage() {
+interface CalendarStatusData {
+  connected: boolean;
+  email: string | null;
+  calendarId: string;
+  autoSync: boolean;
+  syncDeletions: boolean;
+  lastSyncedAt: string | null;
+  syncStatus: "connected" | "syncing" | "synced" | "error" | "disconnected";
+  syncError: string | null;
+}
+
+function SettingsContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [user, setUser] = useState<any>(null);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -19,6 +32,13 @@ export default function SettingsPage() {
   const [isUpdatingConsent, setIsUpdatingConsent] = useState(false);
   const [consentMessage, setConsentMessage] = useState<string | null>(null);
 
+  // Google Calendar Integration State
+  const [calendarStatus, setCalendarStatus] = useState<CalendarStatusData | null>(null);
+  const [isLoadingCalendar, setIsLoadingCalendar] = useState(true);
+  const [isSyncingCalendar, setIsSyncingCalendar] = useState(false);
+  const [isDisconnectingCalendar, setIsDisconnectingCalendar] = useState(false);
+  const [calendarMessage, setCalendarMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
   const [deletePhrase, setDeletePhrase] = useState("");
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -29,6 +49,21 @@ export default function SettingsPage() {
 
   const [profileMessage, setProfileMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [passwordMessage, setPasswordMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const loadCalendarStatus = useCallback(async () => {
+    try {
+      setIsLoadingCalendar(true);
+      const res = await fetch("/api/calendar/status");
+      if (res.ok) {
+        const data = await res.json();
+        setCalendarStatus(data);
+      }
+    } catch (e) {
+      console.warn("[calendar status error]", e);
+    } finally {
+      setIsLoadingCalendar(false);
+    }
+  }, []);
 
   useEffect(() => {
     async function loadUser() {
@@ -67,7 +102,114 @@ export default function SettingsPage() {
     }
 
     loadUser();
-  }, [router]);
+    loadCalendarStatus();
+  }, [router, loadCalendarStatus]);
+
+  // Handle URL parameters from Google OAuth redirection
+  useEffect(() => {
+    const isConnected = searchParams.get("calendar_connected");
+    const accountEmail = searchParams.get("calendar_account");
+    const errorParam = searchParams.get("calendar_error");
+
+    if (isConnected === "true") {
+      setCalendarMessage({
+        type: "success",
+        text: `Google Calendar successfully connected${accountEmail ? ` (${accountEmail})` : ""}! Your scheduled blocks can now synchronize automatically.`,
+      });
+      loadCalendarStatus();
+    } else if (errorParam) {
+      setCalendarMessage({
+        type: "error",
+        text: decodeURIComponent(errorParam),
+      });
+    }
+  }, [searchParams, loadCalendarStatus]);
+
+  const handleConnectCalendar = () => {
+    window.location.href = "/api/calendar/connect?returnUrl=/settings";
+  };
+
+  const handleDisconnectCalendar = async () => {
+    if (!confirm("Are you sure you want to disconnect Google Calendar? Existing calendar events will be kept, but new schedules won't sync.")) {
+      return;
+    }
+
+    setIsDisconnectingCalendar(true);
+    setCalendarMessage(null);
+
+    try {
+      const res = await fetch("/api/calendar/disconnect", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to disconnect Google Calendar.");
+
+      setCalendarMessage({ type: "success", text: "Google Calendar disconnected. Synchronization paused." });
+      await loadCalendarStatus();
+    } catch (err: any) {
+      setCalendarMessage({ type: "error", text: err.message || "Failed to disconnect." });
+    } finally {
+      setIsDisconnectingCalendar(false);
+    }
+  };
+
+  const handleManualSync = async () => {
+    setIsSyncingCalendar(true);
+    setCalendarMessage(null);
+
+    try {
+      const res = await fetch("/api/calendar/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ force: false }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Synchronization failed.");
+
+      setCalendarMessage({
+        type: "success",
+        text: `Calendar synced: ${data.created} event(s) created, ${data.updated} updated, ${data.skipped} already up to date.`,
+      });
+      await loadCalendarStatus();
+    } catch (err: any) {
+      setCalendarMessage({ type: "error", text: err.message || "Failed to synchronize schedule." });
+    } finally {
+      setIsSyncingCalendar(false);
+    }
+  };
+
+  const handleToggleAutoSync = async () => {
+    if (!calendarStatus) return;
+    const nextVal = !calendarStatus.autoSync;
+    try {
+      const res = await fetch("/api/calendar/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ auto_sync: nextVal }),
+      });
+      if (res.ok) {
+        setCalendarStatus({ ...calendarStatus, autoSync: nextVal });
+      }
+    } catch (e) {
+      console.warn("Could not toggle auto sync:", e);
+    }
+  };
+
+  const handleToggleSyncDeletions = async () => {
+    if (!calendarStatus) return;
+    const nextVal = !calendarStatus.syncDeletions;
+    try {
+      const res = await fetch("/api/calendar/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sync_deletions: nextVal }),
+      });
+      if (res.ok) {
+        setCalendarStatus({ ...calendarStatus, syncDeletions: nextVal });
+      }
+    } catch (e) {
+      console.warn("Could not toggle sync deletions:", e);
+    }
+  };
 
   const handleToggleConsent = async () => {
     if (isUpdatingConsent) return;
@@ -211,6 +353,8 @@ export default function SettingsPage() {
     );
   }
 
+  const isConnected = calendarStatus?.connected;
+
   return (
     <div className="container-narrow" style={{ paddingTop: "40px", paddingBottom: "72px" }}>
       {/* HEADER */}
@@ -349,7 +493,7 @@ export default function SettingsPage() {
       </div>
 
       {/* 2. PASSWORD SECURITY CARD */}
-      <div className="card" style={{ padding: "28px" }}>
+      <div className="card" style={{ marginBottom: "24px", padding: "28px" }}>
         <h2 style={{ fontSize: "1.2rem", marginBottom: "8px", color: "var(--text-primary)" }}>
           Security &amp; Password
         </h2>
@@ -410,8 +554,233 @@ export default function SettingsPage() {
         </form>
       </div>
 
-      {/* 3. PRIVACY & CONSENT MANAGEMENT CARD */}
-      <div className="card" style={{ padding: "28px" }}>
+      {/* 3. GOOGLE CALENDAR INTEGRATION CARD */}
+      <div className="card" style={{ marginBottom: "24px", padding: "28px" }}>
+        <div className="flex-between" style={{ marginBottom: "12px", flexWrap: "wrap", gap: "10px" }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div
+                style={{
+                  width: "28px",
+                  height: "28px",
+                  borderRadius: "6px",
+                  backgroundColor: "#FFD600",
+                  color: "#080808",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 900,
+                  fontSize: "14px",
+                }}
+              >
+                📅
+              </div>
+              <h2 style={{ fontSize: "1.2rem", margin: 0, color: "var(--text-primary)" }}>
+                Google Calendar Integration
+              </h2>
+            </div>
+            <p className="text-xs text-secondary" style={{ marginTop: "6px", marginBottom: 0, maxWidth: "560px" }}>
+              Sync your AuraMind schedule with Google Calendar. Keep your daily tasks, study sessions, focus blocks, and planned activities organized in one place.
+            </p>
+          </div>
+
+          {!isLoadingCalendar && (
+            <div>
+              {isConnected ? (
+                <span className="badge badge-yellow" style={{ fontSize: "0.78rem" }}>
+                  ● Connected
+                </span>
+              ) : (
+                <span className="badge badge-gray" style={{ fontSize: "0.78rem" }}>
+                  Not Connected
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {calendarMessage && (
+          <div
+            className={`alert ${calendarMessage.type === "success" ? "alert-success" : "alert-error"}`}
+            style={{ margin: "16px 0", fontSize: "0.85rem" }}
+          >
+            {calendarMessage.text}
+          </div>
+        )}
+
+        {isLoadingCalendar ? (
+          <div style={{ padding: "20px 0", textAlign: "center" }}>
+            <span className="text-xs text-muted">Checking integration status...</span>
+          </div>
+        ) : !isConnected ? (
+          // Disconnected view
+          <div
+            style={{
+              padding: "20px",
+              backgroundColor: "var(--bg-elevated)",
+              border: "1px solid var(--border-default)",
+              borderRadius: "10px",
+              marginTop: "16px",
+            }}
+          >
+            <div style={{ marginBottom: "16px" }}>
+              <div style={{ fontWeight: 600, fontSize: "0.95rem", color: "var(--text-primary)", marginBottom: "4px" }}>
+                Connect Google Calendar
+              </div>
+              <p className="text-xs text-secondary" style={{ margin: 0, lineHeight: 1.5 }}>
+                AuraMind will request authorization to manage your study blocks and deliberate practice sessions. We use strict least-privilege permissions and will never alter or delete your unrelated personal calendar events.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleConnectCalendar}
+              className="btn btn-primary"
+              style={{
+                borderRadius: "8px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                fontWeight: 700,
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  fill="#000"
+                />
+                <path
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  fill="#000"
+                />
+                <path
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                  fill="#000"
+                />
+                <path
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                  fill="#000"
+                />
+              </svg>
+              Connect Google Calendar
+            </button>
+          </div>
+        ) : (
+          // Connected view
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "16px" }}>
+            {/* Status overview banner */}
+            <div
+              style={{
+                padding: "16px 20px",
+                backgroundColor: "var(--bg-elevated)",
+                border: "1px solid var(--border-default)",
+                borderRadius: "10px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "14px",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 700 }}>
+                  Connected Account
+                </div>
+                <div style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-primary)", marginTop: "2px" }}>
+                  {calendarStatus?.email || "Google Account"}
+                </div>
+                <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)", marginTop: "2px" }}>
+                  Destination: <strong style={{ color: "var(--accent-primary)" }}>Primary Google Calendar</strong>
+                  {calendarStatus?.lastSyncedAt && (
+                    <span> &bull; Last synchronized: {new Date(calendarStatus.lastSyncedAt).toLocaleString()}</span>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                <button
+                  type="button"
+                  onClick={handleManualSync}
+                  disabled={isSyncingCalendar}
+                  className="btn btn-primary btn-sm"
+                  style={{ borderRadius: "6px", fontWeight: 700 }}
+                >
+                  {isSyncingCalendar ? "Syncing Schedule..." : "⟳ Sync Now"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDisconnectCalendar}
+                  disabled={isDisconnectingCalendar}
+                  className="btn btn-secondary btn-sm"
+                  style={{ borderRadius: "6px", color: "var(--error)" }}
+                >
+                  {isDisconnectingCalendar ? "Disconnecting..." : "Disconnect"}
+                </button>
+              </div>
+            </div>
+
+            {/* Sync Settings Toggles */}
+            <div
+              style={{
+                padding: "18px 20px",
+                backgroundColor: "var(--bg-elevated)",
+                border: "1px solid var(--border-default)",
+                borderRadius: "10px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "14px",
+              }}
+            >
+              <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>
+                Synchronization Preferences
+              </div>
+
+              {/* Auto sync toggle */}
+              <div className="flex-between" style={{ flexWrap: "wrap", gap: "10px" }}>
+                <div>
+                  <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--text-primary)" }}>
+                    Sync New Schedule Automatically
+                  </div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                    When you start a new 30-day plan, automatically schedule eligible practice blocks in your calendar.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleToggleAutoSync}
+                  className={`btn btn-sm ${calendarStatus?.autoSync ? "btn-primary" : "btn-secondary"}`}
+                  style={{ fontSize: "0.78rem", padding: "4px 12px", borderRadius: "6px" }}
+                >
+                  {calendarStatus?.autoSync ? "Enabled" : "Disabled"}
+                </button>
+              </div>
+
+              {/* Sync deletions toggle */}
+              <div className="flex-between" style={{ flexWrap: "wrap", gap: "10px" }}>
+                <div>
+                  <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--text-primary)" }}>
+                    Synchronize Schedule Deletions
+                  </div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                    When a task is permanently removed in AuraMind, also remove its corresponding Google Calendar event.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleToggleSyncDeletions}
+                  className={`btn btn-sm ${calendarStatus?.syncDeletions ? "btn-primary" : "btn-secondary"}`}
+                  style={{ fontSize: "0.78rem", padding: "4px 12px", borderRadius: "6px" }}
+                >
+                  {calendarStatus?.syncDeletions ? "Enabled" : "Disabled"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 4. PRIVACY & CONSENT MANAGEMENT CARD */}
+      <div className="card" style={{ marginBottom: "24px", padding: "28px" }}>
         <h2 style={{ fontSize: "1.2rem", marginBottom: "8px", color: "var(--text-primary)" }}>
           Privacy &amp; Statutory Consent Records
         </h2>
@@ -529,7 +898,7 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* 4. DANGER ZONE: ACCOUNT DELETION */}
+      {/* 5. DANGER ZONE: ACCOUNT DELETION */}
       <div
         className="card"
         style={{
@@ -607,5 +976,19 @@ export default function SettingsPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container-narrow" style={{ paddingTop: "80px", textAlign: "center" }}>
+          <span className="badge badge-yellow pulse">Loading Account Settings...</span>
+        </div>
+      }
+    >
+      <SettingsContent />
+    </Suspense>
   );
 }

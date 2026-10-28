@@ -93,16 +93,17 @@ export default function PrivacyPolicyPage() {
             <a href="#why-process" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>3. Why We Process Information</a>
             <a href="#cookies" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>4. Cookies &amp; Tracking</a>
             <a href="#ai-processing" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>5. AI Processing (Google Gemini)</a>
-            <a href="#hosting" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>6. Hosting &amp; Infrastructure</a>
-            <a href="#sharing" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>7. Sharing of Information</a>
-            <a href="#retention" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>8. Data Retention</a>
-            <a href="#security" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>9. Data Security</a>
-            <a href="#privacy-rights" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>10. User Privacy Rights (DPDP Act)</a>
-            <a href="#account-deletion" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>11. Account Deletion Workflow</a>
-            <a href="#minors" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>12. Minors &amp; Children&rsquo;s Privacy</a>
-            <a href="#international" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>13. International Data Processing</a>
-            <a href="#changes" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>14. Changes to This Policy</a>
-            <a href="#contact" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>15. Contact &amp; Grievance Redressal</a>
+            <a href="#google-calendar" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>6. Google Calendar Integration</a>
+            <a href="#hosting" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>7. Hosting &amp; Infrastructure</a>
+            <a href="#sharing" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>8. Sharing of Information</a>
+            <a href="#retention" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>9. Data Retention</a>
+            <a href="#security" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>10. Data Security</a>
+            <a href="#privacy-rights" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>11. User Privacy Rights (DPDP Act)</a>
+            <a href="#account-deletion" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>12. Account Deletion Workflow</a>
+            <a href="#minors" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>13. Minors &amp; Children&rsquo;s Privacy</a>
+            <a href="#international" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>14. International Data Processing</a>
+            <a href="#changes" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>15. Changes to This Policy</a>
+            <a href="#contact" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>16. Contact &amp; Grievance Redressal</a>
           </div>
         </div>
 
@@ -234,68 +235,142 @@ export default function PrivacyPolicyPage() {
           </section>
 
           {/* SECTION 6 */}
+          <section id="google-calendar">
+            <h2 style={{ fontSize: "1.45rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "12px", letterSpacing: "-0.02em" }}>
+              6. Google Calendar Integration &amp; Limited Use Disclosure
+            </h2>
+            <p>
+              AuraMind offers an optional, voluntary integration with <strong>Google Calendar</strong> that allows users to synchronize their AI-synthesized 30-day curriculum, daily focus sessions, and timetable changes directly into their primary Google Calendar.
+            </p>
+            <div
+              style={{
+                backgroundColor: "var(--bg-elevated)",
+                border: "1px solid var(--border-default)",
+                borderRadius: "8px",
+                padding: "18px 20px",
+                marginBottom: "16px",
+                fontSize: "0.9rem",
+              }}
+            >
+              <div style={{ fontWeight: 700, color: "var(--accent-primary)", marginBottom: "8px" }}>
+                Compliance with Google API Services User Data Policy
+              </div>
+              <p style={{ margin: "0 0 10px", lineHeight: 1.55 }}>
+                AuraMind&rsquo;s use and transfer to any other app of information received from Google APIs will strictly adhere to the{" "}
+                <a
+                  href="https://developers.google.com/terms/api-services-user-data-policy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "var(--accent-primary)", textDecoration: "underline" }}
+                >
+                  Google API Services User Data Policy
+                </a>
+                , including the <strong>Limited Use</strong> requirements.
+              </p>
+              <ul style={{ paddingLeft: "20px", margin: 0, display: "flex", flexDirection: "column", gap: "6px" }}>
+                <li><strong>No Advertising:</strong> We never use or transfer Google Calendar user data for serving advertisements, retargeting, or interest-based profiling.</li>
+                <li><strong>No Model Training:</strong> Google Calendar event data is never used to train or fine-tune general AI foundation models.</li>
+                <li><strong>No Human Inspection:</strong> No human employees or contractors inspect your calendar events unless explicitly requested by you for technical troubleshooting or legally mandated.</li>
+              </ul>
+            </div>
+
+            <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "var(--text-primary)", marginTop: "16px", marginBottom: "8px" }}>
+              Information Accessed and Operational Scope
+            </h3>
+            <ul style={{ paddingLeft: "24px", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <li>
+                <strong style={{ color: "var(--text-primary)" }}>Event Creation &amp; Synchronization:</strong> AuraMind creates and updates only calendar events specifically associated with your deliberate practice schedules. All events created by AuraMind are clearly designated with the <code>[AuraMind]</code> title prefix and include private application identifiers.
+              </li>
+              <li>
+                <strong style={{ color: "var(--text-primary)" }}>Schedule Conflict Checking:</strong> When requested, AuraMind reads event start and end times to identify potential overlaps with your personal commitments. AuraMind does not read, index, or store unrelated private event notes, attachments, or attendee lists.
+              </li>
+              <li>
+                <strong style={{ color: "var(--text-primary)" }}>Safe Deletion Boundaries:</strong> AuraMind only deletes calendar events that it positively created and manages. AuraMind will never modify or delete your external, unrelated personal or work calendar entries.
+              </li>
+            </ul>
+
+            <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "var(--text-primary)", marginTop: "16px", marginBottom: "8px" }}>
+              Token Security, Revocation &amp; Disconnection
+            </h3>
+            <ul style={{ paddingLeft: "24px", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <li>
+                <strong style={{ color: "var(--text-primary)" }}>AES-256-GCM Encryption at Rest:</strong> Google OAuth refresh tokens are cryptographically encrypted at rest using industry-standard AES-256-GCM with distinct initialization vectors on secure server backends. Plaintext tokens are never stored or exposed to the client.
+              </li>
+              <li>
+                <strong style={{ color: "var(--text-primary)" }}>Instant Disconnection:</strong> You can disconnect Google Calendar at any time via <em>Settings &rarr; Google Calendar Integration &rarr; Disconnect</em>. Disconnection immediately deletes your stored token and revokes access at Google&rsquo;s OAuth server.
+              </li>
+              <li>
+                <strong style={{ color: "var(--text-primary)" }}>Right to Erasure:</strong> When you delete your AuraMind account, all calendar connection records, access tokens, and event tracking IDs are permanently and irreversibly purged from our database.
+              </li>
+            </ul>
+          </section>
+
+          {/* SECTION 7 */}
           <section id="hosting">
             <h2 style={{ fontSize: "1.45rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "12px", letterSpacing: "-0.02em" }}>
-              6. Hosting, Authentication and Database
+              7. Hosting, Authentication and Database
             </h2>
             <p>AuraMind relies on verified, enterprise-grade cloud infrastructure providers to deliver its services:</p>
             <ul style={{ paddingLeft: "24px", display: "flex", flexDirection: "column", gap: "8px" }}>
               <li><strong style={{ color: "var(--text-primary)" }}>Application Hosting:</strong> Vercel Inc. (serverless runtime and edge delivery).</li>
               <li><strong style={{ color: "var(--text-primary)" }}>Database &amp; Authentication:</strong> Supabase Inc. (managed PostgreSQL database, authentication, and Row-Level Security enforcement).</li>
               <li><strong style={{ color: "var(--text-primary)" }}>Model Inference:</strong> Google LLC (Google Cloud / Google AI Gemini platform).</li>
+              <li><strong style={{ color: "var(--text-primary)" }}>Calendar Synchronization:</strong> Google LLC (Google Calendar API v3 under Google API Services User Data Policy).</li>
               <li><strong style={{ color: "var(--text-primary)" }}>Domain Research:</strong> Tavily Inc. (bounded search queries to retrieve pedagogical benchmarks).</li>
             </ul>
           </section>
 
-          {/* SECTION 7 */}
+          {/* SECTION 8 */}
           <section id="sharing">
             <h2 style={{ fontSize: "1.45rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "12px", letterSpacing: "-0.02em" }}>
-              7. Sharing of Information
+              8. Sharing of Information
             </h2>
             <p>
-              AuraMind does <strong>never sell, rent, trade, or monetize your personal information</strong>. Information is shared only with the operational infrastructure service providers listed in Section 6 solely to host the application, execute AI requests, and maintain the database.
+              AuraMind does <strong>never sell, rent, trade, or monetize your personal information</strong>. Information is shared only with the operational infrastructure service providers listed in Section 7 solely to host the application, execute AI requests, maintain the database, and synchronize calendar events when explicitly authorized.
             </p>
             <p>
               We may disclose information only if required by a valid, legally binding court order or governmental authority under applicable law.
             </p>
           </section>
 
-          {/* SECTION 8 */}
+          {/* SECTION 9 */}
           <section id="retention">
             <h2 style={{ fontSize: "1.45rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "12px", letterSpacing: "-0.02em" }}>
-              8. Data Retention
+              9. Data Retention
             </h2>
             <p>
               We retain your personal information, goal data, and progress metrics for as long as your account remains active.
             </p>
             <ul style={{ paddingLeft: "24px", display: "flex", flexDirection: "column", gap: "8px" }}>
               <li><strong style={{ color: "var(--text-primary)" }}>Account Data:</strong> Retained until you request account deletion.</li>
+              <li><strong style={{ color: "var(--text-primary)" }}>Calendar Tokens &amp; Credentials:</strong> Retained in encrypted form only while Google Calendar integration is connected. Purged immediately upon disconnection or account deletion.</li>
               <li><strong style={{ color: "var(--text-primary)" }}>Transient Web Logs:</strong> Retained for a maximum of 30 days for security diagnostics before automated purging.</li>
               <li><strong style={{ color: "var(--text-primary)" }}>Consent Records:</strong> Retained for the statutory limitation period required under data protection regulations to demonstrate affirmative compliance.</li>
             </ul>
           </section>
 
-          {/* SECTION 9 */}
+          {/* SECTION 10 */}
           <section id="security">
             <h2 style={{ fontSize: "1.45rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "12px", letterSpacing: "-0.02em" }}>
-              9. Data Security
+              10. Data Security
             </h2>
             <p>We implement multi-layered technical and organizational safeguards:</p>
             <ul style={{ paddingLeft: "24px", display: "flex", flexDirection: "column", gap: "8px" }}>
               <li><strong style={{ color: "var(--text-primary)" }}>Encryption in Transit:</strong> All HTTP traffic is enforced over TLS 1.3/HTTPS.</li>
-              <li><strong style={{ color: "var(--text-primary)" }}>Row-Level Security (RLS):</strong> PostgreSQL database policies ensure that authenticated users can only query, read, or modify their own goals, profiles, and consent records.</li>
+              <li><strong style={{ color: "var(--text-primary)" }}>Encryption at Rest:</strong> All external API credentials, including Google OAuth refresh tokens, are encrypted with AES-256-GCM.</li>
+              <li><strong style={{ color: "var(--text-primary)" }}>Row-Level Security (RLS):</strong> PostgreSQL database policies ensure that authenticated users can only query, read, or modify their own goals, profiles, calendar links, and consent records.</li>
               <li><strong style={{ color: "var(--text-primary)" }}>Cryptographic Hashing:</strong> Passwords are cryptographically salted and hashed via bcrypt before storage; plaintext passwords are never accessible.</li>
-              <li><strong style={{ color: "var(--text-primary)" }}>Environment Secret Isolation:</strong> Server-side API keys (Google Gemini, Supabase Service Role) are kept in isolated server environments and never exposed in browser bundles.</li>
+              <li><strong style={{ color: "var(--text-primary)" }}>Environment Secret Isolation:</strong> Server-side API keys (Google Gemini, Supabase Service Role, Google OAuth Client Secret) are kept in isolated server environments and never exposed in browser bundles.</li>
             </ul>
             <p style={{ fontSize: "0.875rem", fontStyle: "italic" }}>
               While we adhere to high security engineering standards, no internet transmission or electronic storage method can guarantee 100% absolute security.
             </p>
           </section>
 
-          {/* SECTION 10 */}
+          {/* SECTION 11 */}
           <section id="privacy-rights">
             <h2 style={{ fontSize: "1.45rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "12px", letterSpacing: "-0.02em" }}>
-              10. User Privacy Rights (DPDP Act 2023 &amp; Global Standards)
+              11. User Privacy Rights (DPDP Act 2023 &amp; Global Standards)
             </h2>
             <p>
               In accordance with India&rsquo;s <strong>Digital Personal Data Protection Act, 2023 (DPDP Act)</strong>, the Digital Personal Data Protection Rules, 2025, and international privacy principles, users possess the following rights regarding their digital personal data:
@@ -309,10 +384,10 @@ export default function PrivacyPolicyPage() {
             </ul>
           </section>
 
-          {/* SECTION 11 */}
+          {/* SECTION 12 */}
           <section id="account-deletion">
             <h2 style={{ fontSize: "1.45rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "12px", letterSpacing: "-0.02em" }}>
-              11. Account Deletion Workflow
+              12. Account Deletion Workflow
             </h2>
             <p>
               Users can initiate permanent account deletion directly through their account settings or by submitting a formal deletion request.
@@ -328,10 +403,10 @@ export default function PrivacyPolicyPage() {
             </ul>
           </section>
 
-          {/* SECTION 12 */}
+          {/* SECTION 13 */}
           <section id="minors">
             <h2 style={{ fontSize: "1.45rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "12px", letterSpacing: "-0.02em" }}>
-              12. Minors and Children&rsquo;s Privacy
+              13. Minors and Children&rsquo;s Privacy
             </h2>
             <p>
               AuraMind is designed for adult professionals, university students, and self-directed learners aged 18 and older. Minors between the ages of 13 and 17 may use the platform only with the knowledge and affirmative consent of a parent or legal guardian.
@@ -341,20 +416,20 @@ export default function PrivacyPolicyPage() {
             </p>
           </section>
 
-          {/* SECTION 13 */}
+          {/* SECTION 14 */}
           <section id="international">
             <h2 style={{ fontSize: "1.45rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "12px", letterSpacing: "-0.02em" }}>
-              13. International Data Processing
+              14. International Data Processing
             </h2>
             <p>
               AuraMind&rsquo;s cloud infrastructure is hosted in enterprise data centers operated by Vercel and Supabase across secure cloud regions (including AWS and Google Cloud infrastructure). Depending on your location, your information may be processed in data centers located outside your jurisdiction. We ensure that all cross-border processing satisfies standard data protection clauses and statutory transfer requirements.
             </p>
           </section>
 
-          {/* SECTION 14 */}
+          {/* SECTION 15 */}
           <section id="changes">
             <h2 style={{ fontSize: "1.45rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "12px", letterSpacing: "-0.02em" }}>
-              14. Changes to This Privacy Policy
+              15. Changes to This Privacy Policy
             </h2>
             <p>
               We may update this Privacy Policy from time to time to reflect evolving legal standards or product enhancements. When material updates are published, we will update the version identifier (e.g. <code>2026-10-V1</code>) and post a prominent notice on the website or via email.
@@ -364,10 +439,10 @@ export default function PrivacyPolicyPage() {
             </p>
           </section>
 
-          {/* SECTION 15 */}
+          {/* SECTION 16 */}
           <section id="contact">
             <h2 style={{ fontSize: "1.45rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "12px", letterSpacing: "-0.02em" }}>
-              15. Contact &amp; Grievance Redressal
+              16. Contact &amp; Grievance Redressal
             </h2>
             <p>
               If you have questions, feedback, or complaints regarding this Privacy Policy or wish to exercise your statutory privacy rights, please reach out to our designated Privacy &amp; Grievance Redressal channel:

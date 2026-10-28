@@ -1,9 +1,13 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, isSupabaseAuthConfigured } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
+    if (!isSupabaseAuthConfigured()) {
+      return NextResponse.json({ authenticated: false, user: null, profile: null }, { status: 200 });
+    }
+
     const supabase = createClient();
     const {
       data: { user },

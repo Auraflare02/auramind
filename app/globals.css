@@ -939,3 +939,23 @@ p {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* AuraMind Official Brand Logo Responsive Rules */
+.auramind-brand-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.auramind-brand-text {
+  font-family: inherit;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+@media (max-width: 480px) {
+  .auramind-brand-wrapper {
+    gap: 8px;
+  }
+}
+

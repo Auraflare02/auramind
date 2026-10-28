@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { formatLevel } from "@/lib/categories";
+import { AuraMindLogo, AuraMindSymbol } from "@/components/AuraMindBrand";
 
 export default function AdminPage() {
   const [adminKey, setAdminKey] = useState("");
@@ -136,22 +137,8 @@ export default function AdminPage() {
       <div className="container-narrow" style={{ paddingTop: "80px", paddingBottom: "80px" }}>
         <div className="card card-highlight" style={{ padding: "40px 32px", maxWidth: "460px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "28px" }}>
-            <div
-              style={{
-                width: "44px",
-                height: "44px",
-                borderRadius: "var(--radius-xs)",
-                backgroundColor: "var(--accent-primary)",
-                color: "#0A0A0A",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: 900,
-                fontSize: "1.25rem",
-                margin: "0 auto 16px",
-              }}
-            >
-              A
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>
+              <AuraMindLogo height={32} compactOnMobile={false} />
             </div>
             <span className="badge badge-yellow" style={{ marginBottom: "8px" }}>Operations Console</span>
             <h1 style={{ fontSize: "1.6rem", margin: "4px 0 8px" }}>AuraMind Admin</h1>
@@ -207,21 +194,7 @@ export default function AdminPage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div
-            style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "var(--radius-xs)",
-              backgroundColor: "var(--accent-primary)",
-              color: "#0A0A0A",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 900,
-            }}
-          >
-            A
-          </div>
+          <AuraMindSymbol size={36} />
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <h1 style={{ fontSize: "1.25rem", margin: 0, fontWeight: 700 }}>Curriculum Research &amp; Dispatch</h1>

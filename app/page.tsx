@@ -2,9 +2,14 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { GOAL_CATEGORIES, getCategoryConfig } from "@/lib/categories";
 
 export default function HomePage() {
+  const router = useRouter();
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+
   // Goal creation form state
   const [goal, setGoal] = useState("");
   const [category, setCategory] = useState("coding_technology");
@@ -58,6 +63,26 @@ export default function HomePage() {
     }
   }, []);
 
+  // Check user authentication status
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const res = await fetch("/api/auth/user");
+        if (res.ok) {
+          const data = await res.json();
+          setCurrentUser(data.user || null);
+        } else {
+          setCurrentUser(null);
+        }
+      } catch {
+        setCurrentUser(null);
+      } finally {
+        setAuthChecked(true);
+      }
+    }
+    checkAuth();
+  }, []);
+
   // Mini timer runner for interactive hero preview
   useEffect(() => {
     let interval: any;
@@ -96,6 +121,11 @@ export default function HomePage() {
 
   async function submitGoal(e?: React.FormEvent) {
     if (e) e.preventDefault();
+    if (!currentUser) {
+      setErr("Authentication required. Please sign in or create an account before creating a goal plan.");
+      router.push("/login?redirect=/#create-goal");
+      return;
+    }
     if (busy) return;
     setBusy(true);
     setErr("");
@@ -854,6 +884,53 @@ export default function HomePage() {
 
               <div className="text-xs text-muted">
                 Connecting with Gemini learning-science models... takes only a few seconds.
+              </div>
+            </div>
+          ) : authChecked && !currentUser ? (
+            /* STATE: AUTHENTICATION REQUIRED TO CREATE GOAL */
+            <div
+              className="surface"
+              style={{
+                padding: "48px 32px",
+                textAlign: "center",
+                maxWidth: "600px",
+                margin: "0 auto",
+                border: "1px solid var(--accent-border)",
+                borderRadius: "var(--radius-lg)",
+                boxShadow: "0 12px 36px rgba(0, 0, 0, 0.4)",
+              }}
+            >
+              <div style={{ display: "inline-flex", justifyContent: "center", marginBottom: "16px" }}>
+                <span className="badge badge-yellow">Sign In Required</span>
+              </div>
+
+              <h2 style={{ fontSize: "1.85rem", fontWeight: 800, marginBottom: "12px", color: "var(--text-primary)" }}>
+                Sign In to Create Your 30-Day Plan
+              </h2>
+
+              <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", lineHeight: 1.6, maxWidth: "480px", margin: "0 auto 28px" }}>
+                AuraMind crafts personalized deliberate practice timetables and syncs your daily milestones to Google Calendar. Please log in or create a free account to access goal creation.
+              </p>
+
+              <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+                <Link
+                  href="/login?redirect=/#create-goal"
+                  className="btn btn-primary btn-lg"
+                  style={{ minWidth: "180px" }}
+                >
+                  Sign In to Continue &rarr;
+                </Link>
+                <Link
+                  href="/signup?redirect=/#create-goal"
+                  className="btn btn-secondary btn-lg"
+                  style={{ minWidth: "180px" }}
+                >
+                  Create Free Account
+                </Link>
+              </div>
+
+              <div style={{ marginTop: "24px", fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                Instant access with Google or Email. All progress automatically saved.
               </div>
             </div>
           ) : (
