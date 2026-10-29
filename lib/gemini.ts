@@ -11,11 +11,18 @@ export function isGeminiConfigured(): boolean {
 }
 
 export function getCandidateModels(): string[] {
-  return [
-    "gemini-3.5-flash",
-    "gemini-3.1-flash-lite",
-    "gemini-3.8-flash",
+  const configured = process.env.GEMINI_MODEL?.trim();
+  const validModels = [
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-2.5-pro",
+    "gemini-1.5-pro",
   ];
+  if (configured && validModels.includes(configured)) {
+    return [configured, ...validModels.filter((m) => m !== configured)];
+  }
+  return validModels;
 }
 
 export function getGeminiModel(): string {

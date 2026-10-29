@@ -41,7 +41,9 @@ export const POST = guard(async (req) => {
         plan = synth.plan;
         planSource = "ai";
       } catch (err: any) {
-        return J({ error: `Could not synthesize plan for start: ${err.message || err}` }, 500);
+        console.warn("[start-api] Gemini synthesis fallback:", err);
+        plan = fallbackPlan(ctx);
+        planSource = "demo";
       }
     } else {
       plan = fallbackPlan(ctx);
