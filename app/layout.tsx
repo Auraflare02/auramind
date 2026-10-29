@@ -75,6 +75,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 AI Assistant
               </Link>
               <Link
+                href="/friends"
+                style={{
+                  color: "var(--text-primary)",
+                  textDecoration: "none",
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                  transition: "color var(--transition-fast)",
+                }}
+              >
+                Friends
+              </Link>
+              <Link
                 href="/#create-goal"
                 style={{
                   color: "var(--text-primary)",

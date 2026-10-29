@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient, isSupabaseAuthConfigured } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { ensureProfileIdentity } from "@/lib/friends/client";
 import DashboardClient from "@/components/DashboardClient";
 
 export const metadata = {
@@ -23,12 +24,22 @@ export default async function DashboardPage() {
   }
 
   // Retrieve user profile
-  let profile = {
+  let profile: {
+    id: string;
+    full_name: string | null;
+    email: string | null;
+    avatar_url: string | null;
+    created_at: string;
+    username?: string | null;
+    auramind_id?: string | null;
+  } = {
     id: user.id,
     full_name: (user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "AuraMind Pioneer") as string,
     email: user.email || "",
     avatar_url: (user.user_metadata?.avatar_url || user.user_metadata?.picture || null) as string | null,
     created_at: user.created_at || new Date().toISOString(),
+    username: null,
+    auramind_id: null,
   };
 
   try {
@@ -44,6 +55,12 @@ export default async function DashboardPage() {
         ...profile,
         ...dbProfile,
       };
+      const ensured = await ensureProfileIdentity(profile);
+      profile = {
+        ...profile,
+        username: ensured.username,
+        auramind_id: ensured.auramindId,
+      };
     } else {
       // Upsert profile in background
       await admin.from("profiles").upsert(
@@ -57,6 +74,12 @@ export default async function DashboardPage() {
         },
         { onConflict: "id" }
       );
+      const ensured = await ensureProfileIdentity(profile);
+      profile = {
+        ...profile,
+        username: ensured.username,
+        auramind_id: ensured.auramindId,
+      };
     }
   } catch (err) {
     console.warn("[dashboard profile warning]", err);

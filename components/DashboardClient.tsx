@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -10,6 +10,8 @@ interface UserProfile {
   email: string | null;
   avatar_url: string | null;
   created_at: string;
+  username?: string | null;
+  auramind_id?: string | null;
 }
 
 interface GoalRequest {
@@ -48,6 +50,25 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
+  const [pendingFriendsCount, setPendingFriendsCount] = useState<number>(0);
+  const [friendsCount, setFriendsCount] = useState<number>(0);
+  const [copiedId, setCopiedId] = useState(false);
+
+  useEffect(() => {
+    async function loadFriendsMeta() {
+      try {
+        const res = await fetch("/api/friends/data");
+        if (res.ok) {
+          const data = await res.json();
+          setPendingFriendsCount(data.incomingRequests?.length || 0);
+          setFriendsCount(data.friends?.length || 0);
+        }
+      } catch {
+        // Silently ignore
+      }
+    }
+    loadFriendsMeta();
+  }, []);
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
@@ -58,6 +79,14 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
       router.refresh();
     } catch {
       window.location.href = "/login";
+    }
+  };
+
+  const copyAuraMindId = () => {
+    if (profile.auramind_id) {
+      navigator.clipboard.writeText(profile.auramind_id);
+      setCopiedId(true);
+      setTimeout(() => setCopiedId(false), 2000);
     }
   };
 
@@ -135,6 +164,33 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
               <h1 style={{ fontSize: "1.5rem", fontWeight: 800, margin: 0, color: "var(--text-primary)" }}>
                 {displayName}
               </h1>
+              {profile.username && (
+                <span className="badge badge-neutral" style={{ fontSize: "0.75rem", fontFamily: "monospace" }}>
+                  @{profile.username}
+                </span>
+              )}
+              {profile.auramind_id && (
+                <button
+                  type="button"
+                  onClick={copyAuraMindId}
+                  title="Click to copy your unique AuraMind ID"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    background: "none",
+                    border: "1px dashed var(--border-default)",
+                    borderRadius: "9999px",
+                    padding: "2px 8px",
+                    color: "var(--accent-primary)",
+                    fontSize: "0.72rem",
+                    fontFamily: "monospace",
+                    cursor: "pointer",
+                  }}
+                >
+                  <span>{copiedId ? "Copied!" : profile.auramind_id}</span>
+                </button>
+              )}
               <span className="badge badge-yellow" style={{ fontSize: "0.72rem" }}>
                 Member since {new Date(profile.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}
               </span>
@@ -149,6 +205,53 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
         <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
           <Link href="/#create-goal" className="btn btn-primary">
             + New Goal
+          </Link>
+          <Link
+            href="/friends"
+            className="btn btn-secondary"
+            style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            <span>Friends</span>
+            {pendingFriendsCount > 0 ? (
+              <span
+                style={{
+                  backgroundColor: "var(--accent-primary)",
+                  color: "#000000",
+                  fontSize: "0.7rem",
+                  fontWeight: 800,
+                  borderRadius: "9999px",
+                  padding: "1px 6px",
+                  lineHeight: 1.2,
+                }}
+              >
+                {pendingFriendsCount}
+              </span>
+            ) : friendsCount > 0 ? (
+              <span
+                style={{
+                  color: "var(--text-muted)",
+                  fontSize: "0.72rem",
+                  fontWeight: 600,
+                }}
+              >
+                ({friendsCount})
+              </span>
+            ) : null}
           </Link>
           <Link href="/settings" className="btn btn-secondary">
             Settings

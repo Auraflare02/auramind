@@ -97,6 +97,42 @@ export default function GoalHub() {
   // Total XP & Stats
   const [userXp, setUserXp] = useState(50);
 
+  // Friends Social Accountability Sharing State
+  const [isSharedWithFriends, setIsSharedWithFriends] = useState(false);
+  const [isSharingLoading, setIsSharingLoading] = useState(false);
+
+  useEffect(() => {
+    if (goalData) {
+      setIsSharedWithFriends(!!goalData.is_shared_with_friends);
+    }
+  }, [goalData]);
+
+  const handleToggleFriendShare = async () => {
+    if (!goalData?.id || isSharingLoading) return;
+    setIsSharingLoading(true);
+    const nextState = !isSharedWithFriends;
+    try {
+      const res = await fetch("/api/friends/share-goal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          goalId: goalData.id,
+          isShared: nextState,
+        }),
+      });
+      if (res.ok) {
+        setIsSharedWithFriends(nextState);
+      } else {
+        const err = await res.json();
+        alert(err.error || "Unable to update sharing settings.");
+      }
+    } catch {
+      alert("Network error updating sharing settings.");
+    } finally {
+      setIsSharingLoading(false);
+    }
+  };
+
   // Google Calendar Integration State
   const [isCalendarSyncing, setIsCalendarSyncing] = useState(false);
   const [calendarSyncResult, setCalendarSyncResult] = useState<string | null>(null);
@@ -927,7 +963,36 @@ export default function GoalHub() {
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+          <button
+            type="button"
+            onClick={handleToggleFriendShare}
+            disabled={isSharingLoading}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "5px 10px",
+              borderRadius: "var(--radius-xs)",
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "all var(--transition-fast)",
+              backgroundColor: isSharedWithFriends ? "rgba(255, 214, 0, 0.15)" : "var(--bg-elevated)",
+              border: isSharedWithFriends ? "1px solid var(--accent-primary)" : "1px solid var(--border-subtle)",
+              color: isSharedWithFriends ? "var(--accent-primary)" : "var(--text-secondary)",
+            }}
+            title={isSharedWithFriends ? "Visible to accepted friends on your profile" : "Share trajectory with friends"}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            <span>{isSharedWithFriends ? "Shared with Friends" : "Share with Friends"}</span>
+          </button>
+
           <button
             type="button"
             onClick={copyAccessCode}

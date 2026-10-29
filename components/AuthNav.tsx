@@ -12,6 +12,7 @@ interface UserInfo {
 
 export default function AuthNav() {
   const [user, setUser] = useState<UserInfo | null>(null);
+  const [pendingRequests, setPendingRequests] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -45,6 +46,19 @@ export default function AuthNav() {
             name,
             avatarUrl,
           });
+
+          // Fetch pending incoming friend requests count
+          try {
+            const fRes = await fetch("/api/friends/data");
+            if (fRes.ok) {
+              const fData = await fRes.json();
+              if (Array.isArray(fData.incomingRequests)) {
+                setPendingRequests(fData.incomingRequests.length);
+              }
+            }
+          } catch {
+            // Silently ignore network warning
+          }
         } else {
           setUser(null);
         }
@@ -75,6 +89,62 @@ export default function AuthNav() {
   if (user) {
     return (
       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <Link
+          href="/friends"
+          style={{
+            color: "var(--text-primary)",
+            textDecoration: "none",
+            fontSize: "0.85rem",
+            fontWeight: 600,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            padding: "5px 10px",
+            borderRadius: "9999px",
+            backgroundColor: "var(--bg-surface)",
+            border: "1px solid var(--border-default)",
+            transition: "all var(--transition-fast)",
+          }}
+          title="Friends & Social Accountability"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+          <span>Friends</span>
+          {pendingRequests > 0 && (
+            <span
+              style={{
+                backgroundColor: "var(--accent-primary)",
+                color: "#000000",
+                fontSize: "0.68rem",
+                fontWeight: 800,
+                borderRadius: "9999px",
+                minWidth: "16px",
+                height: "16px",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "0 4px",
+                lineHeight: 1,
+              }}
+            >
+              {pendingRequests}
+            </span>
+          )}
+        </Link>
+
         <Link
           href="/dashboard"
           className="btn btn-secondary btn-sm"
