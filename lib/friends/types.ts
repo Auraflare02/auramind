@@ -98,11 +98,13 @@ export interface FriendsDashboardData {
   friends: FriendSummary[];
   incomingRequests: FriendRequest[];
   outgoingRequests: FriendRequest[];
+  blockedUsers: PublicProfile[];
   activities: FriendActivity[];
   stats: {
     totalFriends: number;
     pendingIncomingCount: number;
     pendingOutgoingCount: number;
     unreadActivitiesCount: number;
+    blockedCount: number;
   };
 }

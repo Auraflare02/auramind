@@ -277,9 +277,10 @@ function FriendProfileContent() {
                   onClick={() => handleAction("remove")}
                   disabled={isBusy}
                   className="btn btn-secondary btn-sm"
-                  style={{ color: "var(--text-muted)" }}
+                  style={{ color: "var(--text-secondary)" }}
+                  title="Unfriend this member"
                 >
-                  Remove Friend
+                  Unfriend
                 </button>
                 <button
                   type="button"
@@ -287,6 +288,7 @@ function FriendProfileContent() {
                   disabled={isBusy}
                   className="btn btn-ghost btn-sm"
                   style={{ color: "#EF4444" }}
+                  title="Block this member"
                 >
                   Block
                 </button>
@@ -322,15 +324,43 @@ function FriendProfileContent() {
                   Decline
                 </button>
               </div>
+            ) : friendshipStatus === "blocked" ? (
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <span className="badge badge-neutral" style={{ color: "#EF4444", borderColor: "#EF4444" }}>
+                  Blocked
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleAction("unblock")}
+                  disabled={isBusy}
+                  className="btn btn-secondary btn-sm"
+                >
+                  {isBusy ? "Unblocking..." : "Unblock User"}
+                </button>
+              </div>
+            ) : friendshipStatus === "blocked_by" ? (
+              <span className="badge badge-neutral">Unavailable</span>
             ) : (
-              <button
-                type="button"
-                onClick={handleSendRequest}
-                disabled={isBusy}
-                className="btn btn-primary"
-              >
-                {isBusy ? "Sending..." : "+ Add Friend"}
-              </button>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <button
+                  type="button"
+                  onClick={handleSendRequest}
+                  disabled={isBusy}
+                  className="btn btn-primary"
+                >
+                  {isBusy ? "Sending..." : "+ Add Friend"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAction("block")}
+                  disabled={isBusy}
+                  className="btn btn-ghost btn-sm"
+                  style={{ color: "#EF4444" }}
+                  title="Block this member"
+                >
+                  Block
+                </button>
+              </div>
             )}
           </div>
         </div>

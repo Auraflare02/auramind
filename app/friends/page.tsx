@@ -18,8 +18,8 @@ function FriendsContent() {
 
   // Active tab state
   const initialTab = (searchParams.get("tab") as any) || "friends";
-  const [activeTab, setActiveTab] = useState<"friends" | "requests" | "search" | "activity">(
-    ["friends", "requests", "search", "activity"].includes(initialTab) ? initialTab : "friends"
+  const [activeTab, setActiveTab] = useState<"friends" | "requests" | "search" | "activity" | "blocked">(
+    ["friends", "requests", "search", "activity", "blocked"].includes(initialTab) ? initialTab : "friends"
   );
   const [requestSubTab, setRequestSubTab] = useState<"incoming" | "outgoing">("incoming");
 
@@ -414,6 +414,23 @@ function FriendsContent() {
             />
           )}
         </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("blocked")}
+          className={`tabs-nav-btn ${activeTab === "blocked" ? "active" : ""}`}
+          style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}
+        >
+          <span>Blocked</span>
+          {(data?.stats.blockedCount || 0) > 0 && (
+            <span
+              className="badge badge-neutral"
+              style={{ fontSize: "0.7rem", padding: "1px 6px", color: "#EF4444", borderColor: "#EF4444" }}
+            >
+              {data?.stats.blockedCount}
+            </span>
+          )}
+        </button>
       </div>
 
       {/* 3. TAB CONTENT */}
@@ -602,11 +619,11 @@ function FriendsContent() {
                   </div>
 
                   {/* Actions */}
-                  <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "auto" }}>
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "auto", flexWrap: "wrap" }}>
                     <Link
                       href={`/friends/${friend.username}`}
                       className="btn btn-secondary btn-sm"
-                      style={{ flex: 1, textAlign: "center" }}
+                      style={{ flex: 1, minWidth: "100px", textAlign: "center" }}
                     >
                       View Profile &rarr;
                     </Link>
@@ -621,10 +638,26 @@ function FriendsContent() {
                         })
                       }
                       className="btn btn-ghost btn-sm"
-                      style={{ color: "var(--text-muted)" }}
-                      title="Remove Friend"
+                      style={{ color: "var(--text-secondary)", fontSize: "0.78rem" }}
+                      title="Unfriend this member"
                     >
-                      Remove
+                      Unfriend
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setConfirmModal({
+                          isOpen: true,
+                          type: "block",
+                          targetUserId: friend.id,
+                          targetName: friend.fullName,
+                        })
+                      }
+                      className="btn btn-ghost btn-sm"
+                      style={{ color: "#EF4444", fontSize: "0.78rem" }}
+                      title="Block this member"
+                    >
+                      Block
                     </button>
                   </div>
                 </div>
@@ -976,7 +1009,7 @@ function FriendsContent() {
             </div>
           )}
         </div>
-      ) : (
+      ) : activeTab === "activity" ? (
         /* ================= SECTION D: FRIENDSHIP ACTIVITY ================= */
         <div>
           {!data || data.activities.length === 0 ? (
@@ -1036,6 +1069,129 @@ function FriendsContent() {
                   </span>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        /* ================= SECTION E: BLOCKED MEMBERS ================= */
+        <div>
+          {!data || !data.blockedUsers || data.blockedUsers.length === 0 ? (
+            <div
+              className="surface"
+              style={{
+                padding: "60px 24px",
+                textAlign: "center",
+                borderRadius: "16px",
+                border: "1px solid var(--border-default)",
+              }}
+            >
+              <div
+                style={{
+                  width: "56px",
+                  height: "56px",
+                  borderRadius: "50%",
+                  backgroundColor: "var(--bg-secondary)",
+                  color: "var(--text-muted)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "0 auto 16px",
+                  fontSize: "1.5rem",
+                }}
+              >
+                🛡️
+              </div>
+              <h2 style={{ fontSize: "1.35rem", fontWeight: 700, margin: "0 0 8px" }}>No blocked members</h2>
+              <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", maxWidth: "440px", margin: "0 auto" }}>
+                You have not blocked any members. Blocked users cannot view your accountability trajectories, search your profile, or send requests.
+              </p>
+            </div>
+          ) : (
+            <div>
+              <div style={{ marginBottom: "16px" }}>
+                <h3 style={{ fontSize: "1.15rem", fontWeight: 700, margin: "0 0 4px", color: "var(--text-primary)" }}>
+                  Blocked Members ({data.blockedUsers.length})
+                </h3>
+                <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", margin: 0 }}>
+                  These members cannot interact with you or see your deliberate practice goals.
+                </p>
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+                  gap: "16px",
+                }}
+              >
+                {data.blockedUsers.map((blocked) => (
+                  <div
+                    key={blocked.id}
+                    className="card"
+                    style={{
+                      padding: "18px 20px",
+                      borderRadius: "14px",
+                      backgroundColor: "var(--bg-card)",
+                      border: "1px solid var(--border-default)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: "16px",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                      {blocked.avatarUrl ? (
+                        <img
+                          src={blocked.avatarUrl}
+                          alt={blocked.fullName}
+                          referrerPolicy="no-referrer"
+                          style={{
+                            width: "44px",
+                            height: "44px",
+                            borderRadius: "50%",
+                            objectFit: "cover",
+                            opacity: 0.7,
+                          }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: "44px",
+                            height: "44px",
+                            borderRadius: "50%",
+                            backgroundColor: "var(--bg-elevated)",
+                            color: "var(--text-muted)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontWeight: 700,
+                          }}
+                        >
+                          {blocked.fullName.slice(0, 1).toUpperCase()}
+                        </div>
+                      )}
+                      <div>
+                        <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, color: "var(--text-primary)" }}>
+                          {blocked.fullName}
+                        </h4>
+                        <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontFamily: "monospace" }}>
+                          @{blocked.username}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleRelationshipAction("unblock", blocked.id, blocked.fullName)}
+                      disabled={actionBusyMap[`unblock_${blocked.id}`]}
+                      className="btn btn-secondary btn-sm"
+                      style={{ whiteSpace: "nowrap" }}
+                    >
+                      {actionBusyMap[`unblock_${blocked.id}`] ? "Unblocking..." : "Unblock"}
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -1246,12 +1402,12 @@ function FriendsContent() {
             }}
           >
             <h3 style={{ fontSize: "1.25rem", margin: "0 0 10px" }}>
-              {confirmModal.type === "remove" ? "Remove Friend?" : "Block User?"}
+              {confirmModal.type === "remove" ? "Unfriend Member?" : "Block Member?"}
             </h3>
             <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", margin: "0 0 24px" }}>
               {confirmModal.type === "remove"
-                ? `Are you sure you want to remove ${confirmModal.targetName} from your accountability circle? You will no longer share mutual goal progress.`
-                : `Are you sure you want to block ${confirmModal.targetName}? They will no longer be able to find your profile or send you requests.`}
+                ? `Are you sure you want to unfriend ${confirmModal.targetName}? You will both be removed from each other's circle and will no longer see mutual goals or practice telemetry.`
+                : `Are you sure you want to block ${confirmModal.targetName}? They will be removed from your friends, unable to find your profile, or send you requests.`}
             </p>
 
             <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
@@ -1264,11 +1420,11 @@ function FriendsContent() {
               </button>
               <button
                 type="button"
-                onClick={() => handleRelationshipAction(confirmModal.type, confirmModal.targetUserId)}
+                onClick={() => handleRelationshipAction(confirmModal.type, confirmModal.targetUserId, confirmModal.targetName)}
                 className="btn btn-primary"
                 style={{ backgroundColor: "#EF4444", borderColor: "#EF4444", color: "#FFFFFF" }}
               >
-                {confirmModal.type === "remove" ? "Yes, Remove" : "Yes, Block"}
+                {confirmModal.type === "remove" ? "Yes, Unfriend" : "Yes, Block User"}
               </button>
             </div>
           </div>

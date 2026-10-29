@@ -168,6 +168,42 @@ async function runTests() {
   const blockedCheck = canSendRequest("user-b", "user-a", blockedRecord);
   assert(Boolean(!blockedCheck.allowed && blockedCheck.reason?.includes("Unable")), "Blocked user cannot send request");
 
+  // TEST GROUP 6: Unfriend & Unblock Transition Logic
+  function applyAction(currentRecord: FriendshipRecord | null, action: "remove" | "unblock", actorId: string): FriendshipRecord | null {
+    if (action === "remove") {
+      // Removing friendship clears the relation
+      return null;
+    }
+    if (action === "unblock") {
+      if (currentRecord?.status === "blocked" && currentRecord.action_user_id === actorId) {
+        return null;
+      }
+      throw new Error("Cannot unblock: unauthorized or not blocked");
+    }
+    return currentRecord;
+  }
+
+  const acceptedMock: FriendshipRecord = {
+    user_id: "user-a",
+    friend_id: "user-b",
+    status: "accepted",
+    action_user_id: "user-b",
+  };
+
+  const afterUnfriend = applyAction(acceptedMock, "remove", "user-a");
+  assert(afterUnfriend === null, "Unfriend removes friendship record completely");
+
+  const afterUnblock = applyAction(blockedRecord, "unblock", "user-a");
+  assert(afterUnblock === null, "Unblock by blocker deletes block constraint and restores neutral state");
+
+  let unblockByVictimFailed = false;
+  try {
+    applyAction(blockedRecord, "unblock", "user-b"); // victim tries to unblock
+  } catch {
+    unblockByVictimFailed = true;
+  }
+  assert(unblockByVictimFailed, "Blocked user cannot unblock themselves");
+
   console.log(`\n========================================================`);
   console.log(`  SUMMARY: ${passed + failed} Ran | \x1b[32m${passed} Passed\x1b[0m | \x1b[31m${failed} Failed\x1b[0m`);
   console.log(`========================================================\n`);

@@ -189,6 +189,7 @@ export async function getDashboardFriendsData(currentUserId: string): Promise<Fr
   const acceptedList: FriendSummary[] = [];
   const incomingList: FriendRequest[] = [];
   const outgoingList: FriendRequest[] = [];
+  const blockedList: PublicProfile[] = [];
 
   const otherUserIds: string[] = [];
   const friendshipRecords = friendships || [];
@@ -301,6 +302,10 @@ export async function getDashboardFriendsData(currentUserId: string): Promise<Fr
           direction: "incoming",
         });
       }
+    } else if (f.status === "blocked") {
+      if (f.action_user_id === currentUserId) {
+        blockedList.push(profile);
+      }
     }
   }
 
@@ -339,12 +344,14 @@ export async function getDashboardFriendsData(currentUserId: string): Promise<Fr
     friends: acceptedList,
     incomingRequests: incomingList,
     outgoingRequests: outgoingList,
+    blockedUsers: blockedList,
     activities,
     stats: {
       totalFriends: acceptedList.length,
       pendingIncomingCount: incomingList.length,
       pendingOutgoingCount: outgoingList.length,
       unreadActivitiesCount: activities.filter((a) => !a.isRead).length,
+      blockedCount: blockedList.length,
     },
   };
 }
