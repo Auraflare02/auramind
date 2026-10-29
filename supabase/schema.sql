@@ -309,4 +309,43 @@ create policy "service_role_activities" on public.friendship_activities for all 
 create policy "users_own_activities_select" on public.friendship_activities for select to authenticated using (auth.uid() = user_id);
 create policy "users_own_activities_update" on public.friendship_activities for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+-- =========================================================================
+-- LIVE CHAT SYSTEM (World Public Room & Private Friend Chat)
+-- =========================================================================
+create table if not exists public.auramind_world_messages (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  message text not null check (char_length(trim(message)) > 0 and char_length(message) <= 2000),
+  reactions jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_world_messages_created_at on public.auramind_world_messages (created_at desc);
+create index if not exists idx_world_messages_user_id on public.auramind_world_messages (user_id);
+
+alter table public.auramind_world_messages enable row level security;
+create policy "World messages viewable by authenticated users" on public.auramind_world_messages for select to authenticated using (true);
+create policy "Users post world messages" on public.auramind_world_messages for insert to authenticated with check (auth.uid() = user_id);
+create policy "Service role world messages" on public.auramind_world_messages for all to service_role using (true) with check (true);
+
+create table if not exists public.auramind_direct_messages (
+  id uuid primary key default gen_random_uuid(),
+  sender_id uuid not null references auth.users(id) on delete cascade,
+  recipient_id uuid not null references auth.users(id) on delete cascade,
+  message text not null check (char_length(trim(message)) > 0 and char_length(message) <= 2000),
+  is_read boolean not null default false,
+  read_at timestamptz,
+  created_at timestamptz not null default now(),
+  constraint check_dm_participants_distinct check (sender_id != recipient_id)
+);
+
+create index if not exists idx_dm_pair_chronological on public.auramind_direct_messages (sender_id, recipient_id, created_at desc);
+create index if not exists idx_dm_recipient_unread on public.auramind_direct_messages (recipient_id, is_read, created_at desc);
+
+alter table public.auramind_direct_messages enable row level security;
+create policy "Users view own direct messages" on public.auramind_direct_messages for select to authenticated using (auth.uid() = sender_id or auth.uid() = recipient_id);
+create policy "Users send direct messages" on public.auramind_direct_messages for insert to authenticated with check (auth.uid() = sender_id);
+create policy "Users mark direct messages as read" on public.auramind_direct_messages for update to authenticated using (auth.uid() = recipient_id) with check (auth.uid() = recipient_id);
+create policy "Service role direct messages" on public.auramind_direct_messages for all to service_role using (true) with check (true);
+
 

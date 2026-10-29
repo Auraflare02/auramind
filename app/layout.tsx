@@ -87,6 +87,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 Friends
               </Link>
               <Link
+                href="/community"
+                style={{
+                  color: "var(--text-primary)",
+                  textDecoration: "none",
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                  transition: "color var(--transition-fast)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "5px",
+                }}
+              >
+                <span>Live Chat</span>
+                <span
+                  style={{
+                    width: "7px",
+                    height: "7px",
+                    borderRadius: "50%",
+                    backgroundColor: "#10B981",
+                  }}
+                />
+              </Link>
+              <Link
                 href="/#create-goal"
                 style={{
                   color: "var(--text-primary)",

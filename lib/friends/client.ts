@@ -78,7 +78,7 @@ export async function ensureProfileIdentity(profile: any): Promise<PublicProfile
 }
 
 /**
- * Searches for users by public username or unique AuraMind ID.
+ * Searches for users by public username, full name, email, or unique AuraMind ID.
  * Excludes private/non-discoverable profiles and blocked relationships.
  */
 export async function searchUsers(
@@ -86,36 +86,75 @@ export async function searchUsers(
   query: string
 ): Promise<Array<{ profile: PublicProfile; status: FriendshipStatus }>> {
   const admin = getAdminClient();
-  const cleaned = query.trim().replace(/^@/, "").toLowerCase();
+  const rawQuery = query.trim();
+  const cleaned = rawQuery.replace(/^@/, "").toLowerCase();
 
   if (!cleaned || cleaned.length < 2) {
     return [];
   }
 
-  // 1. Fetch potential matches from profiles
-  const isAuraMindId = cleaned.toUpperCase().startsWith("AM-") || /^[A-Z0-9]{6,8}$/i.test(cleaned);
-  let builder = admin
+  // 1. Fetch potential matches from profiles across username, full_name, email, auramind_id
+  const pattern = `%${cleaned}%`;
+  const isAmPattern = cleaned.toUpperCase().startsWith("AM-")
+    ? cleaned.toUpperCase()
+    : `AM-${cleaned.toUpperCase()}`;
+
+  const orClauses = [
+    `username.ilike.${pattern}`,
+    `full_name.ilike.${pattern}`,
+    `email.ilike.${pattern}`,
+    `auramind_id.ilike.${pattern}`,
+    `auramind_id.eq.${isAmPattern}`,
+  ];
+
+  let { data: rawProfiles, error: searchErr } = await admin
     .from("profiles")
     .select("*")
     .neq("id", currentUserId)
-    .limit(20);
+    .or(orClauses.join(","))
+    .limit(25);
 
-  if (isAuraMindId) {
-    const formattedId = cleaned.toUpperCase().startsWith("AM-")
-      ? cleaned.toUpperCase()
-      : `AM-${cleaned.toUpperCase()}`;
-    builder = builder.or(`auramind_id.eq.${formattedId},username.ilike.${cleaned}%`);
-  } else {
-    builder = builder.ilike("username", `${cleaned}%`);
+  let candidates: any[] = rawProfiles || [];
+
+  // Fallback 1: If no profile match found, check if auth.users has an account with this email/name
+  if (candidates.length === 0) {
+    try {
+      const { data: authData } = await admin.auth.admin.listUsers({ perPage: 50 });
+      if (authData?.users) {
+        for (const u of authData.users) {
+          if (u.id === currentUserId) continue;
+          const uEmail = (u.email || "").toLowerCase();
+          const uName = (u.user_metadata?.full_name || u.user_metadata?.name || "").toLowerCase();
+          if (uEmail.includes(cleaned) || uName.includes(cleaned)) {
+            // Check if profile exists
+            const { data: existingP } = await admin.from("profiles").select("*").eq("id", u.id).maybeSingle();
+            if (existingP) {
+              candidates.push(existingP);
+            } else {
+              const newP = {
+                id: u.id,
+                full_name: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split("@")[0] || "Pioneer",
+                email: u.email || "",
+                avatar_url: u.user_metadata?.avatar_url || u.user_metadata?.picture || null,
+                created_at: u.created_at || new Date().toISOString(),
+              };
+              await admin.from("profiles").upsert(newP, { onConflict: "id" });
+              candidates.push(newP);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("[searchUsers] auth.admin check error:", err);
+    }
   }
 
-  const { data: rawProfiles, error } = await builder;
-  if (error || !rawProfiles || rawProfiles.length === 0) {
+  if (candidates.length === 0) {
     return [];
   }
 
   // 2. Fetch existing relationships between current user and candidate users
-  const candidateIds = rawProfiles.map((p) => p.id);
+  const candidateIds = candidates.map((p) => p.id);
   const { data: relationships } = await admin
     .from("friendships")
     .select("*")
@@ -133,7 +172,7 @@ export async function searchUsers(
 
   const results: Array<{ profile: PublicProfile; status: FriendshipStatus }> = [];
 
-  for (const raw of rawProfiles) {
+  for (const raw of candidates) {
     // Check discoverability: must be discoverable or already have a relationship
     const rel = relMap.get(raw.id);
     if (!rel && raw.privacy_discoverable === false) {
@@ -367,27 +406,71 @@ export async function sendFriendRequest(
 
   // 1. Resolve target user
   let targetProfile: any = null;
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetUserIdOrUsername);
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetUserIdOrUsername.trim());
 
   if (isUuid) {
-    const { data } = await admin.from("profiles").select("*").eq("id", targetUserIdOrUsername).maybeSingle();
+    const { data } = await admin.from("profiles").select("*").eq("id", targetUserIdOrUsername.trim()).maybeSingle();
     targetProfile = data;
   }
 
   if (!targetProfile) {
     const cleaned = targetUserIdOrUsername.trim().replace(/^@/, "").toLowerCase();
-    const isAuraMindId = cleaned.toUpperCase().startsWith("AM-");
-    if (isAuraMindId) {
-      const { data } = await admin.from("profiles").select("*").eq("auramind_id", cleaned.toUpperCase()).maybeSingle();
-      targetProfile = data;
-    } else {
-      const { data } = await admin.from("profiles").select("*").ilike("username", cleaned).maybeSingle();
-      targetProfile = data;
+    const formattedAmId = cleaned.toUpperCase().startsWith("AM-")
+      ? cleaned.toUpperCase()
+      : `AM-${cleaned.toUpperCase()}`;
+
+    // 1. Try AuraMind ID exact
+    const { data: byId } = await admin.from("profiles").select("*").eq("auramind_id", formattedAmId).maybeSingle();
+    targetProfile = byId;
+
+    // 2. Try username exact
+    if (!targetProfile) {
+      const { data: byUser } = await admin.from("profiles").select("*").ilike("username", cleaned).maybeSingle();
+      targetProfile = byUser;
+    }
+
+    // 3. Try email exact or ilike
+    if (!targetProfile) {
+      const { data: byEmail } = await admin.from("profiles").select("*").ilike("email", cleaned).maybeSingle();
+      targetProfile = byEmail;
+    }
+
+    // 4. Try full_name substring
+    if (!targetProfile) {
+      const { data: byName } = await admin.from("profiles").select("*").ilike("full_name", `%${cleaned}%`).limit(1).maybeSingle();
+      targetProfile = byName;
+    }
+
+    // 5. Try auth.users directly
+    if (!targetProfile) {
+      try {
+        const { data: authData } = await admin.auth.admin.listUsers({ perPage: 50 });
+        if (authData?.users) {
+          const match = authData.users.find(
+            (u) =>
+              (u.email && u.email.toLowerCase() === cleaned) ||
+              (u.user_metadata?.full_name && u.user_metadata.full_name.toLowerCase().includes(cleaned))
+          );
+          if (match) {
+            const newP = {
+              id: match.id,
+              full_name: match.user_metadata?.full_name || match.email?.split("@")[0] || "Pioneer",
+              email: match.email || "",
+              avatar_url: match.user_metadata?.avatar_url || null,
+              created_at: match.created_at || new Date().toISOString(),
+            };
+            await admin.from("profiles").upsert(newP, { onConflict: "id" });
+            targetProfile = newP;
+          }
+        }
+      } catch (err) {
+        console.warn("[sendFriendRequest] auth fallback:", err);
+      }
     }
   }
 
   if (!targetProfile) {
-    throw new Error("User not found. Please verify the username or AuraMind ID.");
+    throw new Error("User not found. Please verify the username, email, or AuraMind ID.");
   }
 
   if (targetProfile.id === currentUserId) {
@@ -717,18 +800,36 @@ export async function getFriendProfile(
   const cleaned = targetUsernameOrId.trim().replace(/^@/, "").toLowerCase();
 
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleaned);
-  let builder = admin.from("profiles").select("*");
+  let rawProfile: any = null;
 
   if (isUuid) {
-    builder = builder.eq("id", cleaned);
+    const { data } = await admin.from("profiles").select("*").eq("id", cleaned).maybeSingle();
+    rawProfile = data;
   } else if (cleaned.toUpperCase().startsWith("AM-")) {
-    builder = builder.eq("auramind_id", cleaned.toUpperCase());
+    const { data } = await admin.from("profiles").select("*").eq("auramind_id", cleaned.toUpperCase()).maybeSingle();
+    rawProfile = data;
   } else {
-    builder = builder.ilike("username", cleaned);
+    const { data } = await admin.from("profiles").select("*").ilike("username", cleaned).maybeSingle();
+    rawProfile = data;
+
+    if (!rawProfile) {
+      const { data: byEmail } = await admin.from("profiles").select("*").ilike("email", cleaned).maybeSingle();
+      rawProfile = byEmail;
+    }
+
+    if (!rawProfile) {
+      const formattedAmId = `AM-${cleaned.toUpperCase()}`;
+      const { data: byAmId } = await admin.from("profiles").select("*").eq("auramind_id", formattedAmId).maybeSingle();
+      rawProfile = byAmId;
+    }
+
+    if (!rawProfile) {
+      const { data: byName } = await admin.from("profiles").select("*").ilike("full_name", `%${cleaned}%`).limit(1).maybeSingle();
+      rawProfile = byName;
+    }
   }
 
-  const { data: rawProfile, error: profileErr } = await builder.maybeSingle();
-  if (profileErr || !rawProfile) {
+  if (!rawProfile) {
     throw new Error("Profile not found.");
   }
 

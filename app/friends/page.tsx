@@ -621,11 +621,19 @@ function FriendsContent() {
                   {/* Actions */}
                   <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "auto", flexWrap: "wrap" }}>
                     <Link
+                      href={`/community?tab=private&friendId=${friend.id}`}
+                      className="btn btn-primary btn-sm"
+                      style={{ fontSize: "0.78rem", padding: "5px 10px" }}
+                      title="Open private live chat with this friend"
+                    >
+                      💬 Chat
+                    </Link>
+                    <Link
                       href={`/friends/${friend.username}`}
                       className="btn btn-secondary btn-sm"
-                      style={{ flex: 1, minWidth: "100px", textAlign: "center" }}
+                      style={{ flex: 1, minWidth: "90px", textAlign: "center" }}
                     >
-                      View Profile &rarr;
+                      Profile &rarr;
                     </Link>
                     <button
                       type="button"
@@ -843,13 +851,13 @@ function FriendsContent() {
           <div className="surface" style={{ padding: "24px", borderRadius: "14px", marginBottom: "24px" }}>
             <h2 style={{ fontSize: "1.25rem", margin: "0 0 8px", fontWeight: 700 }}>Search AuraMind Members</h2>
             <p style={{ color: "var(--text-secondary)", fontSize: "0.875rem", margin: "0 0 16px" }}>
-              Search by username (e.g. <code>@alex</code>) or unique AuraMind ID (e.g. <code>AM-928173</code>).
+              Find friends by username (e.g. <code>@alex</code>), AuraMind ID (e.g. <code>AM-928173</code>), name, or email.
             </p>
 
             <form onSubmit={handleSearch} style={{ display: "flex", gap: "10px" }}>
               <input
                 type="text"
-                placeholder="Search by username or AuraMind ID..."
+                placeholder="Search by username, AuraMind ID, name, or email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="form-input"

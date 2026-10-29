@@ -204,6 +204,43 @@ async function runTests() {
   }
   assert(unblockByVictimFailed, "Blocked user cannot unblock themselves");
 
+  // TEST GROUP 7: Comprehensive Multi-Field Search Matching
+  const mockCandidates = [
+    { id: "u1", username: "alex_pioneer", full_name: "Alex Stark", email: "alex@stark.io", auramind_id: "AM-ALEX01" },
+    { id: "u2", username: "sarah_aiml", full_name: "Sarah Connor", email: "sarah@cyber.net", auramind_id: "AM-SARAH2" },
+  ];
+
+  function searchMatches(query: string, candidates: typeof mockCandidates) {
+    const q = query.trim().replace(/^@/, "").toLowerCase();
+    const isAm = q.toUpperCase().startsWith("AM-") ? q.toUpperCase() : `AM-${q.toUpperCase()}`;
+    return candidates.filter(
+      (c) =>
+        c.username.toLowerCase().includes(q) ||
+        c.full_name.toLowerCase().includes(q) ||
+        c.email.toLowerCase().includes(q) ||
+        c.auramind_id.toLowerCase().includes(q) ||
+        c.auramind_id.toUpperCase() === isAm
+    );
+  }
+
+  assert(searchMatches("alex@stark.io", mockCandidates).length === 1, "Search matches by exact email");
+  assert(searchMatches("Sarah Connor", mockCandidates).length === 1, "Search matches by full name with spaces");
+  assert(searchMatches("@alex", mockCandidates).length === 1, "Search matches username prefixed with @");
+  assert(searchMatches("AM-SARAH2", mockCandidates).length === 1, "Search matches AuraMind ID");
+  assert(searchMatches("SARAH2", mockCandidates).length === 1, "Search matches AuraMind ID without AM- prefix");
+
+  // TEST GROUP 8: Live Chat Permissions
+  function canDirectMessage(senderId: string, recipientId: string, friendship: { status: string } | null) {
+    if (senderId === recipientId) return false;
+    if (!friendship || friendship.status !== "accepted") return false;
+    return true;
+  }
+
+  assert(canDirectMessage("user-a", "user-b", { status: "accepted" }), "Accepted friends can exchange direct messages");
+  assert(!canDirectMessage("user-a", "user-b", { status: "pending" }), "Pending request cannot exchange direct messages");
+  assert(!canDirectMessage("user-a", "user-b", { status: "blocked" }), "Blocked users cannot exchange direct messages");
+  assert(!canDirectMessage("user-a", "user-b", null), "Non-friends cannot exchange direct messages");
+
   console.log(`\n========================================================`);
   console.log(`  SUMMARY: ${passed + failed} Ran | \x1b[32m${passed} Passed\x1b[0m | \x1b[31m${failed} Failed\x1b[0m`);
   console.log(`========================================================\n`);

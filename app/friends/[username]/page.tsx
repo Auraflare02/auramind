@@ -272,6 +272,14 @@ function FriendProfileContent() {
               </Link>
             ) : friendshipStatus === "accepted" ? (
               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <Link
+                  href={`/community?tab=private&friendId=${data.profile.id}`}
+                  className="btn btn-primary btn-sm"
+                  style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+                >
+                  <span>💬</span>
+                  <span>Message</span>
+                </Link>
                 <button
                   type="button"
                   onClick={() => handleAction("remove")}
