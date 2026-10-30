@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getDirectMessages, sendDirectMessage } from "@/lib/chat/client";
+import { assertMessageSecurity } from "@/lib/chat/security-bot";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -55,6 +56,20 @@ export async function POST(request: Request) {
 
     if (!message || typeof message !== "string" || message.trim().length === 0) {
       return NextResponse.json({ error: "Message cannot be empty." }, { status: 400 });
+    }
+
+    // AuraSentinel AI Security Bot: Enforce strict anti-social media & on-topic goal focus in Private Chat
+    const security = await assertMessageSecurity(message, { isDirect: true });
+    if (!security.allowed) {
+      return NextResponse.json(
+        {
+          error: security.botMessage || security.reason || "Message blocked by AuraSentinel Security Bot.",
+          blocked: true,
+          category: security.category,
+          botMessage: security.botMessage,
+        },
+        { status: 400 }
+      );
     }
 
     const newMsg = await sendDirectMessage(user.id, recipientId, message);

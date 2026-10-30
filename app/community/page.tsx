@@ -39,7 +39,8 @@ function CommunityChatContent() {
   const directChatBottomRef = useRef<HTMLDivElement>(null);
 
   // Error / Status Alert
-  const [alertMsg, setAlertMsg] = useState<{ type: "error" | "success"; text: string } | null>(null);
+  const [alertMsg, setAlertMsg] = useState<{ type: "error" | "success" | "security"; text: string; category?: string } | null>(null);
+  const [showGuidelines, setShowGuidelines] = useState(false);
 
   // 1. Check Authenticated User
   useEffect(() => {
@@ -113,15 +114,27 @@ function CommunityChatContent() {
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || "Failed to post message.");
+        const isSecurity = Boolean(err.blocked || err.botMessage || err.error?.includes("AuraSentinel") || err.error?.includes("blocked"));
+        setAlertMsg({
+          type: isSecurity ? "security" : "error",
+          text: err.botMessage || err.error || "Failed to post message.",
+          category: err.category,
+        });
+        setWorldInput(text); // restore
+        setTimeout(() => setAlertMsg(null), 8000);
+        return;
       }
 
       await loadWorldMessages(false);
       worldChatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
     } catch (err: any) {
-      setAlertMsg({ type: "error", text: err.message || "Failed to send message." });
+      const isSecurity = err.message?.includes("AuraSentinel") || err.message?.includes("blocked");
+      setAlertMsg({
+        type: isSecurity ? "security" : "error",
+        text: err.message || "Failed to send message.",
+      });
       setWorldInput(text); // restore
-      setTimeout(() => setAlertMsg(null), 4000);
+      setTimeout(() => setAlertMsg(null), 8000);
     } finally {
       setIsSendingWorld(false);
     }
@@ -234,16 +247,28 @@ function CommunityChatContent() {
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || "Failed to send private message.");
+        const isSecurity = Boolean(err.blocked || err.botMessage || err.error?.includes("AuraSentinel") || err.error?.includes("blocked"));
+        setAlertMsg({
+          type: isSecurity ? "security" : "error",
+          text: err.botMessage || err.error || "Failed to send private message.",
+          category: err.category,
+        });
+        setDirectInput(text); // restore
+        setTimeout(() => setAlertMsg(null), 8000);
+        return;
       }
 
       await loadDirectMessages(selectedFriendId, false);
       await loadConversations(false);
       directChatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
     } catch (err: any) {
-      setAlertMsg({ type: "error", text: err.message || "Failed to send message." });
+      const isSecurity = err.message?.includes("AuraSentinel") || err.message?.includes("blocked");
+      setAlertMsg({
+        type: isSecurity ? "security" : "error",
+        text: err.message || "Failed to send message.",
+      });
       setDirectInput(text); // restore
-      setTimeout(() => setAlertMsg(null), 4000);
+      setTimeout(() => setAlertMsg(null), 8000);
     } finally {
       setIsSendingDirect(false);
     }
@@ -265,16 +290,41 @@ function CommunityChatContent() {
         }}
       >
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
             <h1 style={{ fontSize: "1.75rem", fontWeight: 900, margin: 0, color: "var(--text-primary)" }}>
               Live Community Chat
             </h1>
             <span className="badge badge-yellow" style={{ fontSize: "0.72rem" }}>
               Real-time
             </span>
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px",
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                color: "var(--accent-primary)",
+                backgroundColor: "rgba(255, 214, 0, 0.1)",
+                padding: "3px 10px",
+                borderRadius: "9999px",
+                border: "1px solid rgba(255, 214, 0, 0.3)",
+              }}
+            >
+              <span>🛡️</span>
+              <span>AuraSentinel AI Protected</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowGuidelines(!showGuidelines)}
+              className="btn btn-ghost btn-sm"
+              style={{ fontSize: "0.75rem", padding: "3px 8px", textDecoration: "underline" }}
+            >
+              {showGuidelines ? "Hide Security Rules" : "View Security Rules"}
+            </button>
           </div>
-          <p style={{ margin: "4px 0 0", fontSize: "0.875rem", color: "var(--text-secondary)" }}>
-            Connect with all AuraMind pioneers in the World room, or message your accountability partners privately.
+          <p style={{ margin: "6px 0 0", fontSize: "0.875rem", color: "var(--text-secondary)" }}>
+            Connect with pioneers in the World room or message accountability partners. Supervised by AuraSentinel AI to enforce goal focus & zero social media sharing.
           </p>
         </div>
 
@@ -326,17 +376,120 @@ function CommunityChatContent() {
         </div>
       </div>
 
+      {/* 1.5 SECURITY GUIDELINES BANNER */}
+      {showGuidelines && (
+        <div
+          className="card"
+          style={{
+            marginBottom: "20px",
+            padding: "18px 22px",
+            backgroundColor: "var(--bg-card)",
+            border: "1px solid var(--accent-primary)",
+            borderRadius: "14px",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.45)",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "1.3rem" }}>🛡️</span>
+              <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 800, color: "var(--text-primary)" }}>
+                AuraSentinel AI Security Bot Policy
+              </h3>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowGuidelines(false)}
+              className="btn btn-ghost btn-sm"
+              style={{ padding: "2px 8px", fontSize: "0.8rem" }}
+            >
+              ✕ Close
+            </button>
+          </div>
+          <p style={{ margin: "0 0 14px", fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+            AuraMind is an elite AI goal execution community. AuraSentinel actively monitors all World and Private chat messages in real time to enforce our two golden standards:
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "12px" }}>
+            <div style={{ padding: "14px", borderRadius: "10px", backgroundColor: "var(--bg-surface)", border: "1px solid rgba(239, 68, 68, 0.3)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                <span style={{ fontSize: "1.1rem" }}>🚫</span>
+                <strong style={{ fontSize: "0.88rem", color: "#EF4444" }}>Rule 1: Zero Social Media Sharing</strong>
+              </div>
+              <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.45 }}>
+                Sharing Instagram, Snapchat, Discord, Telegram, Twitter/X, TikTok, WhatsApp links or handles, phone numbers, or external chat invitations is strictly blocked in both World & Private chats.
+              </p>
+            </div>
+            <div style={{ padding: "14px", borderRadius: "10px", backgroundColor: "var(--bg-surface)", border: "1px solid rgba(255, 214, 0, 0.3)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                <span style={{ fontSize: "1.1rem" }}>🎯</span>
+                <strong style={{ fontSize: "0.88rem", color: "var(--accent-primary)" }}>Rule 2: Strictly On-Topic Goal Focus</strong>
+              </div>
+              <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.45 }}>
+                Discussions must relate to personal goals, learning, coding, fitness, exams, projects, time management, and accountability encouragement. Off-topic dating, gaming lobbies, or political fighting are blocked.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ALERT NOTIFICATION */}
       {alertMsg && (
         <div
-          className={`alert alert-${alertMsg.type}`}
-          style={{ marginBottom: "16px", display: "flex", justifyContent: "space-between" }}
+          style={{
+            marginBottom: "16px",
+            padding: "14px 18px",
+            borderRadius: "12px",
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            gap: "12px",
+            backgroundColor: alertMsg.type === "security" ? "rgba(255, 214, 0, 0.08)" : alertMsg.type === "error" ? "rgba(239, 68, 68, 0.1)" : "rgba(16, 185, 129, 0.1)",
+            border: alertMsg.type === "security" ? "1px solid var(--accent-primary)" : alertMsg.type === "error" ? "1px solid rgba(239, 68, 68, 0.3)" : "1px solid rgba(16, 185, 129, 0.3)",
+            boxShadow: alertMsg.type === "security" ? "0 0 20px rgba(255, 214, 0, 0.15)" : "none",
+          }}
         >
-          <span>{alertMsg.text}</span>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+            <span style={{ fontSize: "1.25rem", lineHeight: 1 }}>
+              {alertMsg.type === "security" ? "🛡️" : alertMsg.type === "error" ? "⚠️" : "✅"}
+            </span>
+            <div>
+              {alertMsg.type === "security" && (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                  <span style={{ fontWeight: 800, fontSize: "0.82rem", color: "var(--accent-primary)", letterSpacing: "0.03em" }}>
+                    AURASENTINEL AI SECURITY BOT
+                  </span>
+                  <span className="badge badge-yellow" style={{ fontSize: "0.62rem", padding: "1px 6px" }}>
+                    Enforcement Active
+                  </span>
+                </div>
+              )}
+              <span style={{ fontSize: "0.88rem", color: "var(--text-primary)", lineHeight: 1.45 }}>
+                {alertMsg.text}
+              </span>
+              {alertMsg.type === "security" && (
+                <div style={{ marginTop: "6px" }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowGuidelines(true)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "var(--accent-primary)",
+                      fontSize: "0.78rem",
+                      textDecoration: "underline",
+                      cursor: "pointer",
+                      padding: 0,
+                    }}
+                  >
+                    View Community & Security Guidelines &rarr;
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
           <button
             type="button"
             onClick={() => setAlertMsg(null)}
-            style={{ background: "none", border: "none", color: "inherit", cursor: "pointer" }}
+            style={{ background: "none", border: "none", color: "var(--text-secondary)", fontSize: "1.2rem", cursor: "pointer", padding: "0 4px" }}
           >
             &times;
           </button>
@@ -429,6 +582,34 @@ function CommunityChatContent() {
               setAutoScrollWorld(atBottom);
             }}
           >
+            {/* Pinned AuraSentinel Security Announcement */}
+            <div
+              style={{
+                padding: "12px 16px",
+                borderRadius: "10px",
+                backgroundColor: "rgba(255, 214, 0, 0.06)",
+                border: "1px solid rgba(255, 214, 0, 0.22)",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "12px",
+                marginBottom: "4px",
+              }}
+            >
+              <div style={{ fontSize: "1.4rem", lineHeight: 1 }}>🛡️</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                  <span style={{ fontWeight: 800, fontSize: "0.85rem", color: "var(--accent-primary)" }}>
+                    AuraSentinel AI Security Bot
+                  </span>
+                  <span className="badge badge-yellow" style={{ fontSize: "0.62rem", padding: "1px 6px" }}>
+                    Active Guardian
+                  </span>
+                </div>
+                <p style={{ margin: "4px 0 0", fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.45 }}>
+                  This room is guarded by AI. <strong>Sharing external social media handles</strong> and <strong>off-topic chat</strong> (dating, politics, crypto, gaming lobbies) are automatically blocked to keep this space focused on goals and accountability.
+                </p>
+              </div>
+            </div>
             {isWorldLoading ? (
               <div style={{ margin: "auto", textAlign: "center", padding: "40px 0" }}>
                 <span className="badge badge-yellow pulse">Connecting to World Stream...</span>
@@ -598,32 +779,41 @@ function CommunityChatContent() {
               borderTop: "1px solid var(--border-default)",
               backgroundColor: "var(--bg-card)",
               display: "flex",
-              gap: "10px",
-              alignItems: "center",
+              flexDirection: "column",
+              gap: "8px",
             }}
           >
-            <input
-              type="text"
-              placeholder="Send a live message to everyone in World Room..."
-              value={worldInput}
-              onChange={(e) => setWorldInput(e.target.value)}
-              maxLength={2000}
-              className="form-input"
-              style={{
-                flex: 1,
-                height: "44px",
-                borderRadius: "8px",
-                backgroundColor: "var(--bg-surface)",
-              }}
-            />
-            <button
-              type="submit"
-              disabled={isSendingWorld || worldInput.trim().length === 0}
-              className="btn btn-primary"
-              style={{ height: "44px", padding: "0 20px" }}
-            >
-              {isSendingWorld ? "Posting..." : "Send"}
-            </button>
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <input
+                type="text"
+                placeholder="Send a live message to everyone in World Room (Goals & Accountability only)..."
+                value={worldInput}
+                onChange={(e) => setWorldInput(e.target.value)}
+                maxLength={2000}
+                className="form-input"
+                style={{
+                  flex: 1,
+                  height: "44px",
+                  borderRadius: "8px",
+                  backgroundColor: "var(--bg-surface)",
+                }}
+              />
+              <button
+                type="submit"
+                disabled={isSendingWorld || worldInput.trim().length === 0}
+                className="btn btn-primary"
+                style={{ height: "44px", padding: "0 20px" }}
+              >
+                {isSendingWorld ? "Verifying..." : "Send"}
+              </button>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.72rem", color: "var(--text-muted)", padding: "0 2px" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                <span>🛡️</span>
+                <span>Protected by AuraSentinel AI &bull; Social media handles & off-topic chat strictly prohibited</span>
+              </span>
+              <span>{worldInput.length}/2000</span>
+            </div>
           </form>
         </div>
       )}
@@ -881,6 +1071,24 @@ function CommunityChatContent() {
                     gap: "10px",
                   }}
                 >
+                  {/* AuraSentinel Private Chat Guardian Banner */}
+                  <div
+                    style={{
+                      padding: "8px 12px",
+                      borderRadius: "8px",
+                      backgroundColor: "rgba(255, 214, 0, 0.05)",
+                      border: "1px solid rgba(255, 214, 0, 0.2)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    <span style={{ fontSize: "1rem" }}>🛡️</span>
+                    <span style={{ fontSize: "0.76rem", color: "var(--text-secondary)" }}>
+                      <strong>AuraSentinel AI:</strong> Private chat is strictly for goal accountability. Off-topic chat & social media handles are prohibited.
+                    </span>
+                  </div>
                   {isDirectLoading ? (
                     <div style={{ margin: "auto", textAlign: "center" }}>
                       <span className="badge badge-yellow pulse">Loading conversation...</span>
@@ -954,32 +1162,41 @@ function CommunityChatContent() {
                     borderTop: "1px solid var(--border-default)",
                     backgroundColor: "var(--bg-card)",
                     display: "flex",
-                    gap: "10px",
-                    alignItems: "center",
+                    flexDirection: "column",
+                    gap: "8px",
                   }}
                 >
-                  <input
-                    type="text"
-                    placeholder={`Direct message ${activeFriend.fullName}...`}
-                    value={directInput}
-                    onChange={(e) => setDirectInput(e.target.value)}
-                    maxLength={2000}
-                    className="form-input"
-                    style={{
-                      flex: 1,
-                      height: "44px",
-                      borderRadius: "8px",
-                      backgroundColor: "var(--bg-surface)",
-                    }}
-                  />
-                  <button
-                    type="submit"
-                    disabled={isSendingDirect || directInput.trim().length === 0}
-                    className="btn btn-primary"
-                    style={{ height: "44px", padding: "0 20px" }}
-                  >
-                    {isSendingDirect ? "Sending..." : "Send"}
-                  </button>
+                  <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                    <input
+                      type="text"
+                      placeholder={`Direct message ${activeFriend.fullName} (Accountability & Goals only)...`}
+                      value={directInput}
+                      onChange={(e) => setDirectInput(e.target.value)}
+                      maxLength={2000}
+                      className="form-input"
+                      style={{
+                        flex: 1,
+                        height: "44px",
+                        borderRadius: "8px",
+                        backgroundColor: "var(--bg-surface)",
+                      }}
+                    />
+                    <button
+                      type="submit"
+                      disabled={isSendingDirect || directInput.trim().length === 0}
+                      className="btn btn-primary"
+                      style={{ height: "44px", padding: "0 20px" }}
+                    >
+                      {isSendingDirect ? "Verifying..." : "Send"}
+                    </button>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.72rem", color: "var(--text-muted)", padding: "0 2px" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                      <span>🛡️</span>
+                      <span>AuraSentinel AI Active &bull; Zero external social sharing enforced</span>
+                    </span>
+                    <span>{directInput.length}/2000</span>
+                  </div>
                 </form>
               </>
             )}

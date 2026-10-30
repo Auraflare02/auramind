@@ -241,6 +241,33 @@ async function runTests() {
   assert(!canDirectMessage("user-a", "user-b", { status: "blocked" }), "Blocked users cannot exchange direct messages");
   assert(!canDirectMessage("user-a", "user-b", null), "Non-friends cannot exchange direct messages");
 
+  // TEST GROUP 9: AuraSentinel AI Security Bot Moderation
+  const { evaluateSecurityDeterministic } = await import("../lib/chat/security-bot");
+
+  const instaBlocked = evaluateSecurityDeterministic("Check my instagram.com/dev_alex or my insta @alex_dev");
+  assert(!instaBlocked.allowed && instaBlocked.category === "social_media", "AuraSentinel blocks Instagram links and handles");
+
+  const snapBlocked = evaluateSecurityDeterministic("Add me on snap: alex_snap21");
+  assert(!snapBlocked.allowed && snapBlocked.category === "social_media", "AuraSentinel blocks Snapchat handles");
+
+  const tgBlocked = evaluateSecurityDeterministic("Reach me at t.me/alex_crypto or telegram @alex");
+  assert(!tgBlocked.allowed && tgBlocked.category === "social_media", "AuraSentinel blocks Telegram links and handles");
+
+  const discordBlocked = evaluateSecurityDeterministic("Join my discord server discord.gg/12345");
+  assert(!discordBlocked.allowed && discordBlocked.category === "social_media", "AuraSentinel blocks Discord invites");
+
+  const waBlocked = evaluateSecurityDeterministic("Text me on whatsapp +1 555-123-4567");
+  assert(!waBlocked.allowed && waBlocked.category === "social_media", "AuraSentinel blocks WhatsApp & phone numbers");
+
+  const datingBlocked = evaluateSecurityDeterministic("Hey are you single wanna date sometime?");
+  assert(!datingBlocked.allowed && datingBlocked.category === "off_topic", "AuraSentinel blocks dating and romantic advances");
+
+  const cryptoBlocked = evaluateSecurityDeterministic("Buy my token pump guaranteed 10x profit!");
+  assert(!cryptoBlocked.allowed && cryptoBlocked.category === "off_topic", "AuraSentinel blocks crypto and financial shilling");
+
+  const onTopicAllowed = evaluateSecurityDeterministic("Completed Day 7 of my Python 30-day goal! 2 hours of focus done.");
+  assert(onTopicAllowed.allowed === true, "AuraSentinel permits on-topic goal milestones and study progress");
+
   console.log(`\n========================================================`);
   console.log(`  SUMMARY: ${passed + failed} Ran | \x1b[32m${passed} Passed\x1b[0m | \x1b[31m${failed} Failed\x1b[0m`);
   console.log(`========================================================\n`);

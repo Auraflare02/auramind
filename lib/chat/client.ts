@@ -2,6 +2,7 @@ import { getAdminClient } from "@/lib/supabase/admin";
 import { ensureProfileIdentity, getCanonicalPair } from "@/lib/friends/client";
 import { PublicProfile } from "@/lib/friends/types";
 import { WorldMessage, DirectMessage, DirectConversationSummary } from "./types";
+import { evaluateSecurityDeterministic } from "./security-bot";
 
 // In-memory resilient fallback cache (keeps live chat active even before DB migration or during connection drops)
 const inMemoryWorldMessages: WorldMessage[] = [];
@@ -134,6 +135,12 @@ export async function sendWorldMessage(
   }
   if (trimmed.length > 2000) {
     throw new Error("Message exceeds 2000 characters.");
+  }
+
+  // AuraSentinel Security Guardrail
+  const security = evaluateSecurityDeterministic(trimmed);
+  if (!security.allowed) {
+    throw new Error(security.botMessage || security.reason || "Message blocked by AuraSentinel Security Bot.");
   }
 
   // Get user profile
@@ -417,6 +424,12 @@ export async function sendDirectMessage(
   }
   if (trimmed.length > 2000) {
     throw new Error("Message exceeds 2000 characters.");
+  }
+
+  // AuraSentinel Security Guardrail
+  const security = evaluateSecurityDeterministic(trimmed);
+  if (!security.allowed) {
+    throw new Error(security.botMessage || security.reason || "Message blocked by AuraSentinel Security Bot.");
   }
 
   // Verify mutual friendship
