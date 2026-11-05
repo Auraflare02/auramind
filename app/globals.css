@@ -832,11 +832,58 @@ p {
   .grid-3 { grid-template-columns: 1fr; }
 }
 
+@media (max-width: 768px) {
+  /* Navigation Switching */
+  .desktop-nav {
+    display: none !important;
+  }
+  .mobile-nav-trigger {
+    display: flex !important;
+  }
+  .mobile-bottom-nav {
+    display: flex !important;
+  }
+  .workspace-footer {
+    padding-bottom: 96px !important;
+  }
+
+  /* Prevent awkward stacking and clipping */
+  .hide-on-mobile {
+    display: none !important;
+  }
+  .show-on-mobile {
+    display: block !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .hide-on-desktop {
+    display: none !important;
+  }
+}
+
 @media (max-width: 640px) {
   .grid-2, .grid-4 { grid-template-columns: 1fr; }
   .container, .container-narrow, .container-wide {
     padding-left: 16px;
     padding-right: 16px;
+  }
+
+  /* Compact typography on small screens */
+  .display-title {
+    font-size: clamp(1.85rem, 7vw, 2.4rem);
+  }
+  h1 {
+    font-size: clamp(1.5rem, 5.5vw, 1.85rem);
+  }
+  h2 {
+    font-size: clamp(1.25rem, 4.5vw, 1.5rem);
+  }
+
+  /* Touch-friendly responsive buttons */
+  .btn-lg {
+    padding: 12px 18px;
+    font-size: 0.92rem;
   }
 }
 
@@ -846,12 +893,6 @@ p {
   grid-template-columns: 260px 1fr;
   gap: 24px;
   align-items: start;
-}
-
-@media (max-width: 960px) {
-  .workspace-layout {
-    grid-template-columns: 1fr;
-  }
 }
 
 .workspace-sidebar {
@@ -867,8 +908,44 @@ p {
 }
 
 @media (max-width: 960px) {
+  .workspace-layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  /* Convert vertical sidebar to sleek horizontal scrollable bar on mobile */
   .workspace-sidebar {
-    position: static;
+    position: sticky;
+    top: 64px;
+    z-index: 20;
+    background-color: var(--header-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+  }
+
+  .workspace-sidebar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .workspace-sidebar > div:first-child,
+  .workspace-sidebar > div:last-child {
+    display: none;
+  }
+
+  .workspace-nav-item {
+    flex-shrink: 0;
+    width: auto;
+    padding: 8px 14px;
+    border-radius: 9999px;
   }
 }
 
@@ -958,4 +1035,195 @@ p {
     gap: 8px;
   }
 }
+
+/* Smooth Horizontal Tabs for Mobile */
+.tabs-nav {
+  display: flex;
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 6px;
+  padding-bottom: 2px;
+}
+
+.tabs-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.tabs-nav-btn {
+  flex-shrink: 0;
+}
+
+/* Mobile Drawer Animation */
+@keyframes mobile-drawer-fade {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile Input Auto-Zoom Prevention on iOS */
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="number"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ------------------------------------------------------------- */
+/* Mobile First / Responsive Utilities for Friends, Chat & Dash   */
+/* ------------------------------------------------------------- */
+
+/* Private Direct Messaging Container */
+.chat-private-container {
+  display: grid;
+  height: 640px;
+  grid-template-columns: 300px 1fr;
+  border-radius: 16px;
+  border: 1px solid var(--border-default);
+  background-color: var(--bg-surface);
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+.chat-conversations-panel {
+  border-right: 1px solid var(--border-default);
+  background-color: var(--bg-card);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+}
+
+.chat-active-panel {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-surface);
+  overflow: hidden;
+  height: 100%;
+}
+
+.mobile-back-btn {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .chat-private-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - 200px);
+    min-height: 480px;
+  }
+
+  .chat-conversations-panel.hidden-on-mobile {
+    display: none !important;
+  }
+
+  .chat-active-panel.hidden-on-mobile {
+    display: none !important;
+  }
+
+  .mobile-back-btn {
+    display: inline-flex !important;
+  }
+}
+
+/* Universal Friends Card Grid (Zero Horizontal Overflow) */
+.friends-responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 480px) {
+  .friends-responsive-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* Dashboard Responsive Stats Grid */
+.dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+@media (max-width: 900px) {
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+}
+
+/* Dashboard Profile Header Responsive Card */
+.dashboard-profile-card {
+  padding: 28px 32px;
+  margin-bottom: 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+}
+
+.dashboard-profile-user {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.dashboard-profile-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .dashboard-profile-card {
+    padding: 20px 16px;
+    margin-bottom: 20px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .dashboard-profile-user {
+    gap: 14px;
+  }
+
+  .dashboard-profile-actions {
+    width: 100%;
+  }
+
+  .dashboard-profile-actions > * {
+    flex: 1 1 calc(50% - 6px);
+    text-align: center;
+    justify-content: center;
+  }
+}
+
 

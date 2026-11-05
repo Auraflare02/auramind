@@ -1,8 +1,8 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import Link from "next/link";
-import ThemeToggle from "@/components/ThemeToggle";
-import AuthNav from "@/components/AuthNav";
+import Navbar from "@/components/Navbar";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { AuraMindLogo } from "@/components/AuraMindBrand";
 
 export const metadata: Metadata = {
@@ -35,149 +35,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        {/* TOP WORKSPACE NAVIGATION */}
-        <header
-          style={{
-            borderBottom: "1px solid var(--border-subtle)",
-            backgroundColor: "var(--header-bg)",
-            backdropFilter: "blur(14px)",
-            WebkitBackdropFilter: "blur(14px)",
-            position: "sticky",
-            top: 0,
-            zIndex: 100,
-            transition: "background-color var(--transition-normal), border-color var(--transition-normal)",
-          }}
-        >
-          <div
-            className="container"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              height: "64px",
-            }}
-          >
-            {/* BRAND */}
-            <AuraMindLogo height={28} compactOnMobile={true} />
-
-            {/* NAV LINKS */}
-            <nav style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              <Link
-                href="/chat"
-                style={{
-                  color: "var(--accent-primary)",
-                  textDecoration: "none",
-                  fontSize: "0.875rem",
-                  fontWeight: 700,
-                  transition: "color var(--transition-fast)",
-                }}
-              >
-                AI Assistant
-              </Link>
-              <Link
-                href="/friends"
-                style={{
-                  color: "var(--text-primary)",
-                  textDecoration: "none",
-                  fontSize: "0.875rem",
-                  fontWeight: 600,
-                  transition: "color var(--transition-fast)",
-                }}
-              >
-                Friends
-              </Link>
-              <Link
-                href="/community"
-                style={{
-                  color: "var(--text-primary)",
-                  textDecoration: "none",
-                  fontSize: "0.875rem",
-                  fontWeight: 600,
-                  transition: "color var(--transition-fast)",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "5px",
-                }}
-              >
-                <span>Live Chat</span>
-                <span
-                  style={{
-                    width: "7px",
-                    height: "7px",
-                    borderRadius: "50%",
-                    backgroundColor: "#10B981",
-                  }}
-                />
-              </Link>
-              <Link
-                href="/#create-goal"
-                style={{
-                  color: "var(--text-primary)",
-                  textDecoration: "none",
-                  fontSize: "0.875rem",
-                  fontWeight: 500,
-                  transition: "color var(--transition-fast)",
-                }}
-              >
-                Start Goal
-              </Link>
-              <Link
-                href="/#lookup"
-                style={{
-                  color: "var(--text-primary)",
-                  textDecoration: "none",
-                  fontSize: "0.875rem",
-                  fontWeight: 500,
-                  transition: "color var(--transition-fast)",
-                }}
-              >
-                Access Request
-              </Link>
-              <Link
-                href="/admin"
-                style={{
-                  color: "var(--text-primary)",
-                  textDecoration: "none",
-                  fontSize: "0.825rem",
-                  fontWeight: 600,
-                  padding: "6px 18px",
-                  borderRadius: "9999px",
-                  backgroundColor: "var(--bg-surface)",
-                  border: "1px solid var(--border-default)",
-                  transition: "all var(--transition-fast)",
-                }}
-              >
-                Admin
-              </Link>
-
-              {/* Authentication Nav State */}
-              <AuthNav />
-
-              {/* Dark / Light Mode Switch */}
-              <ThemeToggle />
-
-              {/* Status Indicator */}
-              <div
-                className="badge badge-neutral"
-                style={{
-                  padding: "4px 8px",
-                  fontSize: "0.72rem",
-                  fontWeight: 600,
-                  display: "none",
-                }}
-              >
-                <span className="badge-dot" style={{ backgroundColor: "var(--success)" }} />
-                <span>Engine Active</span>
-              </div>
-            </nav>
-          </div>
-        </header>
+        {/* RESPONSIVE TOP WORKSPACE NAVIGATION */}
+        <Navbar />
 
         {/* MAIN VIEWPORT */}
         <main style={{ flex: 1 }}>{children}</main>
 
+        {/* MOBILE BOTTOM APP NAVIGATION (Screens <= 768px) */}
+        <MobileBottomNav />
+
         {/* WORKSPACE FOOTER */}
         <footer
+          className="workspace-footer"
           style={{
             borderTop: "1px solid var(--border-subtle)",
             padding: "48px 0 36px",

@@ -485,13 +485,7 @@ function FriendsContent() {
               </button>
             </div>
           ) : (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-                gap: "18px",
-              }}
-            >
+            <div className="friends-responsive-grid">
               {data.friends.map((friend) => (
                 <div
                   key={friend.id}
@@ -1125,13 +1119,7 @@ function FriendsContent() {
                 </p>
               </div>
 
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-                  gap: "16px",
-                }}
-              >
+              <div className="friends-responsive-grid">
                 {data.blockedUsers.map((blocked) => (
                   <div
                     key={blocked.id}

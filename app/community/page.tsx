@@ -176,9 +176,11 @@ function CommunityChatContent() {
         const data = await res.json();
         if (Array.isArray(data.conversations)) {
           setConversations(data.conversations);
-          // Auto select first conversation if none selected
+          // Auto select first conversation if none selected on desktop screens
           if (!selectedFriendId && data.conversations.length > 0) {
-            setSelectedFriendId(data.conversations[0].friend.id);
+            if (typeof window !== "undefined" && window.innerWidth > 768) {
+              setSelectedFriendId(data.conversations[0].friend.id);
+            }
           }
         }
       }
@@ -503,7 +505,9 @@ function CommunityChatContent() {
         <div
           className="card"
           style={{
-            height: "72vh",
+            height: "calc(100dvh - 200px)",
+            minHeight: "480px",
+            maxHeight: "780px",
             display: "flex",
             flexDirection: "column",
             borderRadius: "16px",
@@ -822,29 +826,9 @@ function CommunityChatContent() {
       {/* ROOM 2: PRIVATE DIRECT MESSAGES WITH FRIENDS             */}
       {/* ======================================================== */}
       {activeTab === "private" && (
-        <div
-          className="card"
-          style={{
-            height: "72vh",
-            display: "grid",
-            gridTemplateColumns: "300px 1fr",
-            borderRadius: "16px",
-            border: "1px solid var(--border-default)",
-            backgroundColor: "var(--bg-surface)",
-            overflow: "hidden",
-            boxShadow: "0 10px 40px rgba(0, 0, 0, 0.4)",
-          }}
-        >
+        <div className="card chat-private-container">
           {/* LEFT COLUMN: FRIENDS CONVERSATION LIST */}
-          <div
-            style={{
-              borderRight: "1px solid var(--border-default)",
-              backgroundColor: "var(--bg-card)",
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-            }}
-          >
+          <div className={`chat-conversations-panel ${selectedFriendId ? "hidden-on-mobile" : ""}`}>
             <div
               style={{
                 padding: "14px 16px",
@@ -990,7 +974,7 @@ function CommunityChatContent() {
           </div>
 
           {/* RIGHT COLUMN: ACTIVE 1-ON-1 CHAT */}
-          <div style={{ display: "flex", flexDirection: "column", backgroundColor: "var(--bg-surface)", overflow: "hidden" }}>
+          <div className={`chat-active-panel ${!selectedFriendId ? "hidden-on-mobile" : ""}`}>
             {!selectedFriendId || !activeFriend ? (
               <div style={{ margin: "auto", textAlign: "center", padding: "40px" }}>
                 <div style={{ fontSize: "2.2rem", marginBottom: "10px" }}>🔒</div>
@@ -1004,15 +988,32 @@ function CommunityChatContent() {
                 {/* Active Chat Header */}
                 <div
                   style={{
-                    padding: "12px 20px",
+                    padding: "12px 16px",
                     borderBottom: "1px solid var(--border-default)",
                     backgroundColor: "var(--bg-card)",
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
+                    gap: "8px",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+                    {/* Mobile Back Button to return to friends conversation list */}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedFriendId(null)}
+                      className="btn btn-ghost btn-sm mobile-back-btn"
+                      title="Back to conversation list"
+                      style={{
+                        padding: "6px 10px",
+                        fontSize: "0.8rem",
+                        border: "1px solid var(--border-default)",
+                        borderRadius: "8px",
+                        flexShrink: 0,
+                      }}
+                    >
+                      &larr; Friends
+                    </button>
                     {activeFriend.avatarUrl ? (
                       <img
                         src={activeFriend.avatarUrl}
@@ -1024,6 +1025,7 @@ function CommunityChatContent() {
                           borderRadius: "50%",
                           objectFit: "cover",
                           border: "2px solid var(--accent-primary)",
+                          flexShrink: 0,
                         }}
                       />
                     ) : (
@@ -1040,23 +1042,24 @@ function CommunityChatContent() {
                           fontSize: "0.9rem",
                           fontWeight: 800,
                           border: "2px solid var(--accent-primary)",
+                          flexShrink: 0,
                         }}
                       >
                         {activeFriend.fullName.slice(0, 1).toUpperCase()}
                       </div>
                     )}
-                    <div>
-                      <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 800, color: "var(--text-primary)" }}>
+                    <div style={{ minWidth: 0 }}>
+                      <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 800, color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {activeFriend.fullName}
                       </h4>
-                      <span style={{ fontSize: "0.78rem", color: "var(--text-muted)", fontFamily: "monospace" }}>
+                      <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontFamily: "monospace", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>
                         @{activeFriend.username} &bull; {activeFriend.auramindId}
                       </span>
                     </div>
                   </div>
 
-                  <Link href={`/friends/${activeFriend.username}`} className="btn btn-secondary btn-sm" style={{ fontSize: "0.78rem" }}>
-                    View Profile &rarr;
+                  <Link href={`/friends/${activeFriend.username}`} className="btn btn-secondary btn-sm" style={{ fontSize: "0.78rem", flexShrink: 0, padding: "6px 12px" }}>
+                    Profile &rarr;
                   </Link>
                 </div>
 

@@ -107,22 +107,8 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
   return (
     <div className="container" style={{ paddingTop: "40px", paddingBottom: "72px" }}>
       {/* 1. USER PROFILE HEADER CARD */}
-      <div
-        className="card"
-        style={{
-          padding: "28px 32px",
-          marginBottom: "28px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "24px",
-          backgroundColor: "var(--bg-surface)",
-          border: "1px solid var(--border-default)",
-          borderRadius: "16px",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+      <div className="card dashboard-profile-card">
+        <div className="dashboard-profile-user">
           {/* Avatar Picture or Initials */}
           {profile.avatar_url ? (
             <img
@@ -202,7 +188,7 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
         </div>
 
         {/* Action Controls */}
-        <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+        <div className="dashboard-profile-actions">
           <Link href="/#create-goal" className="btn btn-primary">
             + New Goal
           </Link>
@@ -269,7 +255,7 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
       </div>
 
       {/* 2. STATS ROW */}
-      <div className="grid-4" style={{ gap: "16px", marginBottom: "36px" }}>
+      <div className="dashboard-stats-grid">
         <div className="card" style={{ padding: "20px" }}>
           <div className="text-xs text-muted" style={{ textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 700 }}>
             Active Goals
