@@ -62,9 +62,9 @@ function FriendsContent() {
   const [copiedId, setCopiedId] = useState(false);
 
   // 1. Load Friends Dashboard Data
-  const loadDashboardData = useCallback(async () => {
+  const loadDashboardData = useCallback(async (isInitial = false) => {
     try {
-      setIsLoading(true);
+      if (isInitial) setIsLoading(true);
       const res = await fetch("/api/friends/data");
       if (res.status === 401) {
         router.push("/login?next=/friends");
@@ -78,7 +78,7 @@ function FriendsContent() {
     } catch (err: any) {
       setErrorMessage(err.message || "An error occurred loading your friends data.");
     } finally {
-      setIsLoading(false);
+      if (isInitial) setIsLoading(false);
     }
   }, [router]);
 
@@ -104,7 +104,7 @@ function FriendsContent() {
   }, []);
 
   useEffect(() => {
-    loadDashboardData();
+    loadDashboardData(true);
     loadUserSettings();
   }, [loadDashboardData, loadUserSettings]);
 
@@ -132,12 +132,125 @@ function FriendsContent() {
     }
   };
 
-  // 4. Friend Request Action (Accept, Reject, Cancel, Remove, Block, Unblock)
+  // 4. Friend Request Action (Accept, Reject, Cancel, Remove, Block, Unblock) with INSTANT Optimistic UI
   const handleRelationshipAction = async (action: string, targetUserId: string, targetName?: string) => {
     const busyKey = `${action}_${targetUserId}`;
     setActionBusyMap((prev) => ({ ...prev, [busyKey]: true }));
     setErrorMessage("");
     setSuccessMessage("");
+
+    // Optimistically update local data immediately (0ms delay)
+    if (data) {
+      if (action === "accept") {
+        const incoming = data.incomingRequests.find((r) => r.targetUserId === targetUserId || r.user.id === targetUserId);
+        if (incoming) {
+          setData((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  incomingRequests: prev.incomingRequests.filter((r) => r.id !== incoming.id),
+                  friends: [
+                    {
+                      id: incoming.user.id,
+                      fullName: incoming.user.fullName,
+                      username: incoming.user.username,
+                      auramindId: incoming.user.auramindId,
+                      avatarUrl: incoming.user.avatarUrl,
+                      bio: incoming.user.bio,
+                      friendshipId: incoming.id,
+                      friendsSince: new Date().toISOString(),
+                      stats: { totalFocusMin: 0, totalXp: 50, activeGoals: 0 },
+                      sharedGoalsCount: 0,
+                    },
+                    ...prev.friends,
+                  ],
+                }
+              : null
+          );
+        }
+      } else if (action === "reject") {
+        setData((prev) =>
+          prev
+            ? {
+                ...prev,
+                incomingRequests: prev.incomingRequests.filter((r) => r.targetUserId !== targetUserId && r.user.id !== targetUserId),
+              }
+            : null
+        );
+      } else if (action === "cancel") {
+        setData((prev) =>
+          prev
+            ? {
+                ...prev,
+                outgoingRequests: prev.outgoingRequests.filter((r) => r.targetUserId !== targetUserId && r.user.id !== targetUserId),
+              }
+            : null
+        );
+      } else if (action === "remove") {
+        setData((prev) =>
+          prev
+            ? {
+                ...prev,
+                friends: prev.friends.filter((f) => f.id !== targetUserId),
+              }
+            : null
+        );
+      } else if (action === "block") {
+        const friendObj = data.friends.find((f) => f.id === targetUserId);
+        setData((prev) =>
+          prev
+            ? {
+                ...prev,
+                friends: prev.friends.filter((f) => f.id !== targetUserId),
+                incomingRequests: prev.incomingRequests.filter((r) => r.targetUserId !== targetUserId && r.user.id !== targetUserId),
+                outgoingRequests: prev.outgoingRequests.filter((r) => r.targetUserId !== targetUserId && r.user.id !== targetUserId),
+                blockedUsers: friendObj
+                  ? [
+                      {
+                        id: friendObj.id,
+                        fullName: friendObj.fullName,
+                        username: friendObj.username,
+                        auramindId: friendObj.auramindId,
+                        avatarUrl: friendObj.avatarUrl,
+                        bio: friendObj.bio,
+                        privacyDiscoverable: true,
+                        privacyShareGoals: false,
+                        privacyShareStats: true,
+                        privacyAllowRequests: "everyone",
+                        createdAt: friendObj.friendsSince,
+                      },
+                      ...prev.blockedUsers,
+                    ]
+                  : prev.blockedUsers,
+              }
+            : null
+        );
+      } else if (action === "unblock") {
+        setData((prev) =>
+          prev
+            ? {
+                ...prev,
+                blockedUsers: prev.blockedUsers.filter((b) => b.id !== targetUserId),
+              }
+            : null
+        );
+      }
+    }
+
+    // Immediately update search item if visible
+    setSearchResults((prev) =>
+      prev.map((item) => {
+        if (item.profile.id === targetUserId) {
+          let nextStatus: FriendshipStatus = item.status;
+          if (action === "accept") nextStatus = "accepted";
+          if (action === "reject" || action === "cancel" || action === "remove") nextStatus = "none";
+          if (action === "block") nextStatus = "blocked";
+          if (action === "unblock") nextStatus = "none";
+          return { ...item, status: nextStatus };
+        }
+        return item;
+      })
+    );
 
     try {
       const res = await fetch("/api/friends/respond", {
@@ -152,38 +265,57 @@ function FriendsContent() {
       }
 
       setSuccessMessage(json.message || `Action completed.`);
-
-      // Optimistically refresh data
-      await loadDashboardData();
-
-      // If search results are showing, update that user's status
-      setSearchResults((prev) =>
-        prev.map((item) => {
-          if (item.profile.id === targetUserId) {
-            let nextStatus: FriendshipStatus = item.status;
-            if (action === "accept") nextStatus = "accepted";
-            if (action === "reject" || action === "cancel" || action === "remove") nextStatus = "none";
-            if (action === "block") nextStatus = "blocked";
-            if (action === "unblock") nextStatus = "none";
-            return { ...item, status: nextStatus };
-          }
-          return item;
-        })
-      );
+      // Sync fresh data quietly in background
+      loadDashboardData(false);
     } catch (err: any) {
       setErrorMessage(err.message || `Failed to ${action}. Please try again.`);
+      loadDashboardData(false);
     } finally {
       setActionBusyMap((prev) => ({ ...prev, [busyKey]: false }));
       setConfirmModal(null);
     }
   };
 
-  // 5. Send Friend Request
+  // 5. Send Friend Request with INSTANT Optimistic UI
   const handleSendRequest = async (targetIdentifier: string) => {
     const busyKey = `send_${targetIdentifier}`;
     setActionBusyMap((prev) => ({ ...prev, [busyKey]: true }));
     setErrorMessage("");
     setSuccessMessage("");
+
+    // Optimistically mark as pending sent immediately!
+    setSearchResults((prev) =>
+      prev.map((item) => {
+        if (item.profile.id === targetIdentifier || item.profile.username === targetIdentifier) {
+          return { ...item, status: "pending_sent" };
+        }
+        return item;
+      })
+    );
+
+    const targetProfile = searchResults.find(
+      (r) => r.profile.id === targetIdentifier || r.profile.username === targetIdentifier
+    )?.profile;
+
+    if (targetProfile) {
+      setData((prev) =>
+        prev
+          ? {
+              ...prev,
+              outgoingRequests: [
+                {
+                  id: `temp_req_${Date.now()}`,
+                  targetUserId: targetProfile.id,
+                  user: targetProfile,
+                  direction: "outgoing" as const,
+                  createdAt: new Date().toISOString(),
+                },
+                ...prev.outgoingRequests,
+              ],
+            }
+          : null
+      );
+    }
 
     try {
       const res = await fetch("/api/friends/request", {
@@ -198,19 +330,20 @@ function FriendsContent() {
       }
 
       setSuccessMessage(json.message || "Friend request sent!");
-      await loadDashboardData();
-
-      // Update search results item
+      // Quiet background sync
+      loadDashboardData(false);
+    } catch (err: any) {
+      setErrorMessage(err.message || "Failed to send friend request.");
+      // Revert optimistic update
       setSearchResults((prev) =>
         prev.map((item) => {
           if (item.profile.id === targetIdentifier || item.profile.username === targetIdentifier) {
-            return { ...item, status: "pending_sent" };
+            return { ...item, status: "none" };
           }
           return item;
         })
       );
-    } catch (err: any) {
-      setErrorMessage(err.message || "Failed to send friend request.");
+      loadDashboardData(false);
     } finally {
       setActionBusyMap((prev) => ({ ...prev, [busyKey]: false }));
     }

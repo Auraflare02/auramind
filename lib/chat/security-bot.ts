@@ -158,29 +158,46 @@ export function evaluateSecurityDeterministic(text: string): SecurityEvaluation 
   };
 }
 
+// ---------------------------------------------------------------------------
+// In-Memory Fast Cache for Ultra-Fast Sub-Millisecond Classification
+// ---------------------------------------------------------------------------
+const securityCache = new Map<string, { result: SecurityEvaluation; timestamp: number }>();
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+
 /**
  * Semantic AI Security Check via Gemini (Layer 2)
- * Evaluates context when message is long or ambiguous, with automatic 2.5s fallback.
+ * Evaluates context when message is long or ambiguous, with automatic fast fallback.
  */
 export async function evaluateSecurityAi(text: string, isDirect = false): Promise<SecurityEvaluation> {
-  if (!isGeminiConfigured()) {
-    return evaluateSecurityDeterministic(text);
-  }
-
-  // First run fast deterministic scan
+  // 1. Fast deterministic scan (0.1ms) - always enforced
   const deterministicResult = evaluateSecurityDeterministic(text);
   if (!deterministicResult.allowed) {
     return deterministicResult;
   }
 
-  // If very short friendly message (e.g. "Good morning!", "Nice job!"), allow directly
+  // 2. Check in-memory cache for previously vetted phrases
+  const cacheKey = text.trim().toLowerCase();
+  const cached = securityCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.result;
+  }
+
+  if (!isGeminiConfigured()) {
+    return deterministicResult;
+  }
+
+  // 3. Fast-path authorization:
+  // If the message contains no external web links or url schemas,
+  // and is under 50 words or contains goal-relevant focus words, approve instantly!
+  const hasUrlPattern = /https?:\/\/|[a-z0-9_\-]+\.(?:com|org|net|io|me|gg|app|co|dev|xyz|link|site)/i.test(text);
   const words = text.trim().split(/\s+/);
-  if (words.length <= 6) {
-    const lower = text.toLowerCase();
-    const hasGoalTerm = GOAL_RELEVANT_INDICATORS.some((term) => lower.includes(term));
-    if (hasGoalTerm || lower.length < 25) {
-      return { allowed: true, category: "clean" };
-    }
+  const lower = text.toLowerCase();
+  const hasGoalTerm = GOAL_RELEVANT_INDICATORS.some((term) => lower.includes(term));
+
+  if (!hasUrlPattern && (words.length <= 50 || hasGoalTerm)) {
+    const cleanResult: SecurityEvaluation = { allowed: true, category: "clean" };
+    securityCache.set(cacheKey, { result: cleanResult, timestamp: Date.now() });
+    return cleanResult;
   }
 
   try {
@@ -210,9 +227,9 @@ Respond with a JSON object ONLY:
   "botMessage": "polite, firm notice starting with '🛡️ AuraSentinel AI: ' explaining the violation"
 }`;
 
-    // 2500ms safety timeout
+    // Fast 1200ms safety timeout to prevent chat stalling
     const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("AuraSentinel AI timeout")), 2500)
+      setTimeout(() => reject(new Error("AuraSentinel AI timeout")), 1200)
     );
 
     const requestPromise = client.models.generateContent({
@@ -232,17 +249,21 @@ Respond with a JSON object ONLY:
       const parsed = JSON.parse(cleanJson);
       if (typeof parsed.allowed === "boolean") {
         if (!parsed.allowed) {
-          return {
+          const blockedResult: SecurityEvaluation = {
             allowed: false,
             category: parsed.category || "off_topic",
             reason: parsed.reason || "Content policy violation.",
             botMessage: parsed.botMessage || "🛡️ AuraSentinel AI: Message blocked. Please keep conversations on-topic and refrain from sharing external social media handles.",
           };
+          securityCache.set(cacheKey, { result: blockedResult, timestamp: Date.now() });
+          return blockedResult;
         }
       }
     }
 
-    return { allowed: true, category: "clean" };
+    const approvedResult: SecurityEvaluation = { allowed: true, category: "clean" };
+    securityCache.set(cacheKey, { result: approvedResult, timestamp: Date.now() });
+    return approvedResult;
   } catch (err: any) {
     console.warn("[AuraSentinel AI] Fast fallback activated:", err.message || err);
     return evaluateSecurityDeterministic(text);

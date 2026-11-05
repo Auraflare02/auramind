@@ -62,9 +62,11 @@ export async function getWorldMessages(
         .in("id", userIds);
 
       if (profiles) {
-        for (const p of profiles) {
-          profileMap.set(p.id, await ensureProfileIdentity(p));
-        }
+        await Promise.all(
+          profiles.map(async (p) => {
+            profileMap.set(p.id, await ensureProfileIdentity(p));
+          })
+        );
       }
     } catch {
       // Profile lookup non-blocking

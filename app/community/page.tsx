@@ -15,8 +15,14 @@ function CommunityChatContent() {
   const initialTab = searchParams.get("tab") === "private" ? "private" : "world";
   const [activeTab, setActiveTab] = useState<"world" | "private">(initialTab);
 
-  // Current Auth User ID
+  // Current Auth User ID & Profile for instant optimistic renders
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserProfile, setCurrentUserProfile] = useState<{
+    id: string;
+    fullName: string;
+    username: string;
+    avatarUrl: string | null;
+  } | null>(null);
 
   // ------------------ WORLD CHAT STATE ------------------
   const [worldMessages, setWorldMessages] = useState<WorldMessage[]>([]);
@@ -42,7 +48,7 @@ function CommunityChatContent() {
   const [alertMsg, setAlertMsg] = useState<{ type: "error" | "success" | "security"; text: string; category?: string } | null>(null);
   const [showGuidelines, setShowGuidelines] = useState(false);
 
-  // 1. Check Authenticated User
+  // 1. Check Authenticated User & Cache Profile
   useEffect(() => {
     async function loadAuth() {
       try {
@@ -54,6 +60,12 @@ function CommunityChatContent() {
         const data = await res.json();
         if (data?.user?.id) {
           setCurrentUserId(data.user.id);
+          setCurrentUserProfile({
+            id: data.user.id,
+            fullName: data.profile?.full_name || data.user.user_metadata?.full_name || "You",
+            username: data.profile?.username || "you",
+            avatarUrl: data.profile?.avatar_url || data.user.user_metadata?.avatar_url || null,
+          });
         } else {
           router.push("/login?next=/community");
         }
@@ -67,7 +79,7 @@ function CommunityChatContent() {
   // ------------------ 2. WORLD CHAT ENGINE ------------------
   const loadWorldMessages = useCallback(async (isInitial = false) => {
     try {
-      if (isInitial) setIsWorldLoading(true);
+      if (isInitial && worldMessages.length === 0) setIsWorldLoading(true);
       const res = await fetch("/api/chat/world?limit=80");
       if (res.ok) {
         const data = await res.json();
@@ -80,16 +92,21 @@ function CommunityChatContent() {
     } finally {
       if (isInitial) setIsWorldLoading(false);
     }
-  }, []);
+  }, [worldMessages.length]);
 
+  // High-performance polling: Only poll when World room is active & tab is visible
   useEffect(() => {
-    loadWorldMessages(true);
-    // Real-time live polling every 3 seconds for world room
-    const interval = setInterval(() => {
-      loadWorldMessages(false);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [loadWorldMessages]);
+    let timer: any = null;
+    if (activeTab === "world") {
+      loadWorldMessages(worldMessages.length === 0);
+      timer = setInterval(() => {
+        if (typeof document !== "undefined" && !document.hidden) {
+          loadWorldMessages(false);
+        }
+      }, 2000);
+    }
+    return () => clearInterval(timer);
+  }, [activeTab, loadWorldMessages, worldMessages.length]);
 
   useEffect(() => {
     if (autoScrollWorld && activeTab === "world") {
@@ -97,13 +114,39 @@ function CommunityChatContent() {
     }
   }, [worldMessages, autoScrollWorld, activeTab]);
 
+  // Instant Optimistic Send in World Room (0ms UI Latency)
   const handleSendWorld = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const text = worldInput.trim();
     if (!text || isSendingWorld) return;
 
-    setIsSendingWorld(true);
+    const tempId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const optimisticMsg: WorldMessage = {
+      id: tempId,
+      userId: currentUserId || "me",
+      message: text,
+      reactions: {},
+      createdAt: new Date().toISOString(),
+      user: {
+        id: currentUserId || "me",
+        fullName: currentUserProfile?.fullName || "You",
+        username: currentUserProfile?.username || "you",
+        auramindId: "YOU",
+        avatarUrl: currentUserProfile?.avatarUrl || null,
+        bio: null,
+        privacyDiscoverable: true,
+        privacyShareGoals: false,
+        privacyShareStats: true,
+        privacyAllowRequests: "everyone",
+        createdAt: new Date().toISOString(),
+      },
+    };
+
+    // 1. Instantly display message on screen
+    setWorldMessages((prev) => [...prev, optimisticMsg]);
     setWorldInput("");
+    setIsSendingWorld(true);
+    setTimeout(() => worldChatBottomRef.current?.scrollIntoView({ behavior: "smooth" }), 20);
 
     try {
       const res = await fetch("/api/chat/world", {
@@ -114,26 +157,34 @@ function CommunityChatContent() {
 
       if (!res.ok) {
         const err = await res.json();
+        // Remove optimistic message on security rejection or failure
+        setWorldMessages((prev) => prev.filter((m) => m.id !== tempId));
+        setWorldInput(text); // restore user's input
         const isSecurity = Boolean(err.blocked || err.botMessage || err.error?.includes("AuraSentinel") || err.error?.includes("blocked"));
         setAlertMsg({
           type: isSecurity ? "security" : "error",
           text: err.botMessage || err.error || "Failed to post message.",
           category: err.category,
         });
-        setWorldInput(text); // restore
         setTimeout(() => setAlertMsg(null), 8000);
         return;
       }
 
-      await loadWorldMessages(false);
-      worldChatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      const json = await res.json();
+      if (json.message) {
+        // Swap optimistic placeholder with real confirmed database row
+        setWorldMessages((prev) =>
+          prev.map((m) => (m.id === tempId ? json.message : m))
+        );
+      }
     } catch (err: any) {
+      setWorldMessages((prev) => prev.filter((m) => m.id !== tempId));
+      setWorldInput(text);
       const isSecurity = err.message?.includes("AuraSentinel") || err.message?.includes("blocked");
       setAlertMsg({
         type: isSecurity ? "security" : "error",
         text: err.message || "Failed to send message.",
       });
-      setWorldInput(text); // restore
       setTimeout(() => setAlertMsg(null), 8000);
     } finally {
       setIsSendingWorld(false);
@@ -170,7 +221,7 @@ function CommunityChatContent() {
   // ------------------ 3. DIRECT CHAT ENGINE ------------------
   const loadConversations = useCallback(async (isInitial = false) => {
     try {
-      if (isInitial) setIsConversationsLoading(true);
+      if (isInitial && conversations.length === 0) setIsConversationsLoading(true);
       const res = await fetch("/api/chat/direct/conversations");
       if (res.ok) {
         const data = await res.json();
@@ -189,19 +240,11 @@ function CommunityChatContent() {
     } finally {
       if (isInitial) setIsConversationsLoading(false);
     }
-  }, [selectedFriendId]);
-
-  useEffect(() => {
-    loadConversations(true);
-    const interval = setInterval(() => {
-      loadConversations(false);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [loadConversations]);
+  }, [selectedFriendId, conversations.length]);
 
   const loadDirectMessages = useCallback(async (friendId: string, isInitial = false) => {
     try {
-      if (isInitial) setIsDirectLoading(true);
+      if (isInitial && directMessages.length === 0) setIsDirectLoading(true);
       const res = await fetch(`/api/chat/direct?friendId=${friendId}&limit=100`);
       if (res.ok) {
         const data = await res.json();
@@ -214,17 +257,36 @@ function CommunityChatContent() {
     } finally {
       if (isInitial) setIsDirectLoading(false);
     }
-  }, []);
+  }, [directMessages.length]);
 
+  // High-performance polling for Private Friends Room: only when tab is active and visible
   useEffect(() => {
-    if (selectedFriendId) {
-      loadDirectMessages(selectedFriendId, true);
-      const interval = setInterval(() => {
-        loadDirectMessages(selectedFriendId, false);
-      }, 3000);
-      return () => clearInterval(interval);
+    let convTimer: any = null;
+    let msgTimer: any = null;
+
+    if (activeTab === "private") {
+      loadConversations(conversations.length === 0);
+      convTimer = setInterval(() => {
+        if (typeof document !== "undefined" && !document.hidden) {
+          loadConversations(false);
+        }
+      }, 4000);
+
+      if (selectedFriendId) {
+        loadDirectMessages(selectedFriendId, directMessages.length === 0);
+        msgTimer = setInterval(() => {
+          if (typeof document !== "undefined" && !document.hidden) {
+            loadDirectMessages(selectedFriendId, false);
+          }
+        }, 2000);
+      }
     }
-  }, [selectedFriendId, loadDirectMessages]);
+
+    return () => {
+      clearInterval(convTimer);
+      clearInterval(msgTimer);
+    };
+  }, [activeTab, selectedFriendId, loadConversations, loadDirectMessages, conversations.length, directMessages.length]);
 
   useEffect(() => {
     if (activeTab === "private") {
@@ -232,13 +294,36 @@ function CommunityChatContent() {
     }
   }, [directMessages, activeTab]);
 
+  // Instant Optimistic Send in Direct Chat (0ms UI Latency)
   const handleSendDirect = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const text = directInput.trim();
     if (!text || !selectedFriendId || isSendingDirect) return;
 
-    setIsSendingDirect(true);
+    const tempId = `temp_dm_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const optimisticDm: DirectMessage = {
+      id: tempId,
+      senderId: currentUserId || "me",
+      recipientId: selectedFriendId,
+      message: text,
+      isRead: false,
+      readAt: null,
+      createdAt: new Date().toISOString(),
+    };
+
+    // 1. Instantly render message in chat feed
+    setDirectMessages((prev) => [...prev, optimisticDm]);
+    // 2. Instantly update lastMessage preview in left conversations list
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.friend.id === selectedFriendId
+          ? { ...c, lastMessage: optimisticDm }
+          : c
+      )
+    );
     setDirectInput("");
+    setIsSendingDirect(true);
+    setTimeout(() => directChatBottomRef.current?.scrollIntoView({ behavior: "smooth" }), 20);
 
     try {
       const res = await fetch("/api/chat/direct", {
@@ -249,27 +334,41 @@ function CommunityChatContent() {
 
       if (!res.ok) {
         const err = await res.json();
+        // Remove optimistic message on security rejection or error
+        setDirectMessages((prev) => prev.filter((m) => m.id !== tempId));
+        setDirectInput(text); // restore
         const isSecurity = Boolean(err.blocked || err.botMessage || err.error?.includes("AuraSentinel") || err.error?.includes("blocked"));
         setAlertMsg({
           type: isSecurity ? "security" : "error",
           text: err.botMessage || err.error || "Failed to send private message.",
           category: err.category,
         });
-        setDirectInput(text); // restore
         setTimeout(() => setAlertMsg(null), 8000);
         return;
       }
 
-      await loadDirectMessages(selectedFriendId, false);
-      await loadConversations(false);
-      directChatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      const json = await res.json();
+      if (json.message) {
+        // Swap temp id with real database message
+        setDirectMessages((prev) =>
+          prev.map((m) => (m.id === tempId ? json.message : m))
+        );
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.friend.id === selectedFriendId
+              ? { ...c, lastMessage: json.message }
+              : c
+          )
+        );
+      }
     } catch (err: any) {
+      setDirectMessages((prev) => prev.filter((m) => m.id !== tempId));
+      setDirectInput(text);
       const isSecurity = err.message?.includes("AuraSentinel") || err.message?.includes("blocked");
       setAlertMsg({
         type: isSecurity ? "security" : "error",
         text: err.message || "Failed to send message.",
       });
-      setDirectInput(text); // restore
       setTimeout(() => setAlertMsg(null), 8000);
     } finally {
       setIsSendingDirect(false);
