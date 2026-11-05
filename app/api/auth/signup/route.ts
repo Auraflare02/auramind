@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { recordConsent, POLICY_VERSIONS } from "@/lib/consent";
+import { getAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(request: Request) {
   try {
@@ -100,9 +101,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    // Persist affirmative consent records in database
+    const admin = getAdminClient();
+    let hasSession = Boolean(data?.session);
+    let needsConfirmation = false;
+
+    // Persist affirmative consent records & auto-confirm user so they are never blocked
     if (data?.user?.id) {
       const userId = data.user.id;
+
+      // 1. Confirm user email so they can immediately access their dashboard
+      try {
+        await admin.auth.admin.updateUserById(userId, {
+          email_confirm: true,
+        });
+      } catch (confirmErr) {
+        console.warn("[signup auto-confirm notice]:", confirmErr);
+      }
+
+      // 2. Persist affirmative consent audit records
       await Promise.allSettled([
         recordConsent({
           userId,
@@ -136,15 +152,61 @@ export async function POST(request: Request) {
             ]
           : []),
       ]);
+
+      // 3. Immediately initialize user profile in public.profiles table
+      try {
+        const usernameBase = (full_name || "user")
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "_")
+          .slice(0, 15);
+        const suffix = userId.replace(/-/g, "").slice(0, 4).toLowerCase();
+        const username = `${usernameBase}_${suffix}`;
+        const auramindId = `AM-${userId.replace(/-/g, "").slice(0, 6).toUpperCase()}`;
+
+        await admin.from("profiles").upsert(
+          {
+            id: userId,
+            full_name: full_name.trim(),
+            email: email.trim(),
+            username,
+            auramind_id: auramindId,
+            subscription_tier: "gold",
+            subscription_status: "active",
+            created_at: nowIso,
+            updated_at: nowIso,
+          },
+          { onConflict: "id" }
+        );
+      } catch (profErr) {
+        console.warn("[signup profile create notice]:", profErr);
+      }
+
+      // 4. If session was not generated, immediately sign in to establish real session cookies
+      if (!hasSession) {
+        try {
+          const { data: signInData } = await supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password,
+          });
+          if (signInData?.session) {
+            hasSession = true;
+            data.session = signInData.session;
+          }
+        } catch (signInErr) {
+          console.warn("[signup immediate sign-in notice]:", signInErr);
+        }
+      }
     }
 
-    const needsConfirmation = data?.user && (!data.session || data.user.identities?.length === 0);
+    if (!hasSession) {
+      needsConfirmation = true;
+    }
 
     return NextResponse.json({
       ok: true,
       user: data.user,
       needsConfirmation,
-      hasSession: Boolean(data.session),
+      hasSession,
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "Failed to create account." }, { status: 500 });

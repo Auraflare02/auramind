@@ -85,6 +85,19 @@ export default async function DashboardPage() {
     console.warn("[dashboard profile warning]", err);
   }
 
+  // Guarantee username and auramind_id are populated so profile header never fails to render
+  if (!profile.username) {
+    const base = (profile.full_name || "user")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "_")
+      .slice(0, 15);
+    const suffix = profile.id.replace(/-/g, "").slice(0, 4).toLowerCase();
+    profile.username = `${base}_${suffix}`;
+  }
+  if (!profile.auramind_id) {
+    profile.auramind_id = `AM-${profile.id.replace(/-/g, "").slice(0, 6).toUpperCase()}`;
+  }
+
   // Retrieve user's goals from requests table
   let userGoals: any[] = [];
   let totalFocusMin = 0;

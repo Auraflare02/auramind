@@ -174,8 +174,7 @@ function SignupForm() {
       }
 
       const safeDestination = data.destination || (nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/dashboard");
-      router.push(safeDestination);
-      router.refresh();
+      window.location.href = safeDestination;
     } catch (err: any) {
       setErrorMessage(err.message || "Failed to verify code.");
     } finally {
@@ -242,12 +241,11 @@ function SignupForm() {
         throw new Error(data.error || "Failed to create an account.");
       }
 
-      if (data.needsConfirmation) {
+      if (data.needsConfirmation && !data.hasSession) {
         setConfirmationNotice(true);
       } else {
         const safeDestination = nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/dashboard";
-        router.push(safeDestination);
-        router.refresh();
+        window.location.href = safeDestination;
       }
     } catch (err: any) {
       setErrorMessage(err.message || "Failed to create an account. Please try again.");

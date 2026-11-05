@@ -239,7 +239,7 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
                       : "🥇 Gold Plan"}
                   </span>
                   <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                    ({goals.length}/{subData.plan.maxGoals} Goals)
+                    ({goals.length}/{subData?.plan?.maxGoals ?? 1} Goals)
                   </span>
                 </Link>
               )}

@@ -143,8 +143,7 @@ function LoginForm() {
       }
 
       const safeDestination = data.destination || (nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/dashboard");
-      router.push(safeDestination);
-      router.refresh();
+      window.location.href = safeDestination;
     } catch (err: any) {
       setErrorMessage(err.message || "Failed to verify code.");
     } finally {
@@ -180,8 +179,7 @@ function LoginForm() {
       }
 
       const safeDestination = nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/dashboard";
-      router.push(safeDestination);
-      router.refresh();
+      window.location.href = safeDestination;
     } catch (err: any) {
       setErrorMessage(err.message || "An unexpected error occurred during login.");
     } finally {

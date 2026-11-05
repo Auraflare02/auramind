@@ -43,6 +43,18 @@ export function getAdminClient(): SupabaseClient {
         admin: {
           listUsers: async () => ({ data: { users: [] }, error: null }),
           getUserById: async (id: string) => ({ data: { user: null }, error: null }),
+          updateUserById: async (id: string, attributes: any) => ({ data: { user: { id, ...attributes } }, error: null }),
+          createUser: async (attributes: any) => ({
+            data: {
+              user: {
+                id: `mock-user-${Date.now()}`,
+                email: attributes.email,
+                user_metadata: attributes.user_metadata || {},
+                created_at: new Date().toISOString(),
+              },
+            },
+            error: null,
+          }),
         },
       },
     } as any;

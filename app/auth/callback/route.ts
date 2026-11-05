@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { recordConsent, POLICY_VERSIONS } from "@/lib/consent";
@@ -106,7 +107,13 @@ export async function GET(request: Request) {
         }
       }
 
-      return NextResponse.redirect(new URL(next, requestUrl.origin));
+      const cookieStore = cookies();
+      const allCookies = cookieStore.getAll();
+      const response = NextResponse.redirect(new URL(next, requestUrl.origin));
+      for (const c of allCookies) {
+        response.cookies.set(c.name, c.value);
+      }
+      return response;
     } catch (e: any) {
       console.error("[auth callback unexpected exception]", e);
       return NextResponse.redirect(
