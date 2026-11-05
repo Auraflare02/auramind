@@ -265,6 +265,27 @@ async function runTests() {
   const cryptoBlocked = evaluateSecurityDeterministic("Buy my token pump guaranteed 10x profit!");
   assert(!cryptoBlocked.allowed && cryptoBlocked.category === "off_topic", "AuraSentinel blocks crypto and financial shilling");
 
+  const abuseBlocked1 = evaluateSecurityDeterministic("You are a stupid idiot and a fucking loser");
+  assert(!abuseBlocked1.allowed && abuseBlocked1.category === "harmful", "AuraSentinel blocks abusive insults and profanity");
+
+  const abuseBlocked2 = evaluateSecurityDeterministic("Shut the fuck up bitch get a life");
+  assert(!abuseBlocked2.allowed && abuseBlocked2.category === "harmful", "AuraSentinel blocks vulgar harassment");
+
+  const selfHarmBlocked = evaluateSecurityDeterministic("Go kys nobody likes you");
+  assert(!selfHarmBlocked.allowed && selfHarmBlocked.category === "harmful", "AuraSentinel blocks self-harm incitement");
+
+  const adultBlocked1 = evaluateSecurityDeterministic("Send me nudes and show me your body");
+  assert(!adultBlocked1.allowed && adultBlocked1.category === "harmful", "AuraSentinel blocks adult & sexually explicit content");
+
+  const adultBlocked2 = evaluateSecurityDeterministic("Check my onlyfans.com/model page for xxx pics");
+  assert(!adultBlocked2.allowed, "AuraSentinel blocks adult website and pornography promotion");
+
+  const flirtingBlocked = evaluateSecurityDeterministic("You are so hot and sexy be my girlfriend");
+  assert(!flirtingBlocked.allowed, "AuraSentinel blocks romantic advances, flirting, and sexual compliments");
+
+  const obfuscatedBlocked = evaluateSecurityDeterministic("Hit me up on i n s t a g r a m or s n a p c h a t");
+  assert(!obfuscatedBlocked.allowed && obfuscatedBlocked.category === "social_media", "AuraSentinel blocks obfuscated social media handles");
+
   const onTopicAllowed = evaluateSecurityDeterministic("Completed Day 7 of my Python 30-day goal! 2 hours of focus done.");
   assert(onTopicAllowed.allowed === true, "AuraSentinel permits on-topic goal milestones and study progress");
 
