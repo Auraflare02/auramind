@@ -1,14 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { constructMetadata, getBreadcrumbSchema } from "@/lib/seo/config";
+import JsonLd from "@/components/seo/JsonLd";
 
-export const metadata: Metadata = {
-  title: "Terms & Conditions — AuraMind",
-  description: "Terms and conditions governing the use of the AuraMind AI goal execution and accountability platform.",
-};
+export const metadata: Metadata = constructMetadata({
+  title: "Terms & Conditions – AuraMind AI Accountability Platform",
+  description:
+    "Review the terms, acceptable use policies, subscription rules, and platform agreements for AuraMind's AI productivity and accountability services.",
+  path: "/terms",
+});
 
 export default function TermsPage() {
+  const breadcrumbs = getBreadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "Terms & Conditions", path: "/terms" },
+  ]);
+
   return (
     <div style={{ backgroundColor: "var(--bg-primary)", minHeight: "100vh", padding: "48px 0 80px" }}>
+      <JsonLd data={breadcrumbs} />
       <div className="container" style={{ maxWidth: "860px" }}>
         {/* HEADER BREADCRUMB */}
         <div style={{ marginBottom: "24px", display: "flex", alignItems: "center", gap: "8px", fontSize: "0.85rem" }}>

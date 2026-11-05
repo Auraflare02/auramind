@@ -4,11 +4,33 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import { AuraMindLogo } from "@/components/AuraMindBrand";
+import JsonLd from "@/components/seo/JsonLd";
+import {
+  SITE_URL,
+  getOrganizationSchema,
+  getWebSiteSchema,
+  getSoftwareApplicationSchema,
+} from "@/lib/seo/config";
 
 export const metadata: Metadata = {
-  title: "AuraMind — AI Accountability & Goal Execution Platform",
-  description: "Don't plan a perfect day. Build a system that learns your real one. Turn ambitious goals into consistent, measurable action.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "AuraMind AI – Your Personal AI Accountability & Productivity Assistant",
+    template: "%s | AuraMind AI",
+  },
+  description:
+    "Discover AuraMind, an AI-powered productivity and accountability platform that helps you set goals, create personalised schedules, track progress and stay consistent.",
   applicationName: "AuraMind",
+  keywords: [
+    "AuraMind",
+    "AuraMind AI",
+    "AI Accountability Assistant",
+    "AI Productivity App",
+    "AI Goal Planner",
+    "30-day timetable",
+    "WhatsApp accountability",
+    "AI Calling Assistant",
+  ],
   manifest: "/manifest.json",
   icons: {
     icon: [
@@ -32,6 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#0A0A0A" />
         <meta name="google-site-verification" content="google8a203efe90ab4162" />
+        <JsonLd data={[getOrganizationSchema(), getWebSiteSchema(), getSoftwareApplicationSchema()]} />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var s=localStorage.getItem('auramind_theme')||'dark';document.documentElement.setAttribute('data-theme',s);document.documentElement.classList.add(s);var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',s==='light'?'#FAFAFA':'#0A0A0A');}catch(e){}})();`,
@@ -81,29 +104,58 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div style={{ display: "flex", gap: "36px", flexWrap: "wrap" }}>
                 <div>
                   <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-primary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "10px" }}>
-                    Workspace
+                    Platform
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    <Link href="/#create-goal" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
-                      New 30-Day Goal
+                    <Link href="/features" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
+                      Features
                     </Link>
-                    <Link href="/#lookup" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
-                      Open Existing Request
+                    <Link href="/ai-goal-planner" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
+                      AI Goal Planner
                     </Link>
-                    <Link href="/chat" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
-                      AI Assistant
+                    <Link href="/ai-accountability" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
+                      AI Accountability
                     </Link>
-                    <Link href="/admin" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
-                      Research Console
+                    <Link href="/pricing" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
+                      Subscription Pricing
                     </Link>
                   </div>
                 </div>
 
                 <div>
                   <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-primary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "10px" }}>
-                    Account
+                    Company &amp; Guides
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <Link href="/about" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
+                      About AuraMind
+                    </Link>
+                    <Link href="/blog" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
+                      Productivity Blog
+                    </Link>
+                    <Link href="/contact" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
+                      Contact Support
+                    </Link>
+                    <Link href="/privacy-policy" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
+                      Privacy Policy
+                    </Link>
+                    <Link href="/terms" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
+                      Terms &amp; Conditions
+                    </Link>
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-primary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "10px" }}>
+                    Workspace
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <Link href="/#create-goal" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
+                      Start 30-Day Goal
+                    </Link>
+                    <Link href="/chat" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
+                      AI Assistant
+                    </Link>
                     <Link href="/login" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
                       Login
                     </Link>
@@ -112,23 +164,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     </Link>
                     <Link href="/dashboard" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
                       Dashboard
-                    </Link>
-                    <Link href="/settings" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
-                      Settings
-                    </Link>
-                  </div>
-                </div>
-
-                <div>
-                  <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-primary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "10px" }}>
-                    Legal &amp; Privacy
-                  </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    <Link href="/privacy-policy" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
-                      Privacy Policy
-                    </Link>
-                    <Link href="/terms" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
-                      Terms &amp; Conditions
                     </Link>
                   </div>
                 </div>

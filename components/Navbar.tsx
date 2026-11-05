@@ -120,19 +120,7 @@ export default function Navbar() {
           {/* DESKTOP NAVIGATION (Hidden on mobile via CSS) */}
           <nav className="desktop-nav" style={{ display: "flex", alignItems: "center", gap: "16px" }}>
             <Link
-              href="/chat"
-              style={{
-                color: "var(--accent-primary)",
-                textDecoration: "none",
-                fontSize: "0.875rem",
-                fontWeight: 700,
-                transition: "color var(--transition-fast)",
-              }}
-            >
-              AI Assistant
-            </Link>
-            <Link
-              href="/friends"
+              href="/features"
               style={{
                 color: "var(--text-primary)",
                 textDecoration: "none",
@@ -141,7 +129,7 @@ export default function Navbar() {
                 transition: "color var(--transition-fast)",
               }}
             >
-              Friends
+              Features
             </Link>
             <Link
               href="/pricing"
@@ -168,8 +156,44 @@ export default function Navbar() {
                   padding: "1px 6px",
                 }}
               >
-                ₹199
+                ₹249
               </span>
+            </Link>
+            <Link
+              href="/blog"
+              style={{
+                color: "var(--text-primary)",
+                textDecoration: "none",
+                fontSize: "0.875rem",
+                fontWeight: 600,
+                transition: "color var(--transition-fast)",
+              }}
+            >
+              Blog
+            </Link>
+            <Link
+              href="/chat"
+              style={{
+                color: "var(--accent-primary)",
+                textDecoration: "none",
+                fontSize: "0.875rem",
+                fontWeight: 700,
+                transition: "color var(--transition-fast)",
+              }}
+            >
+              AI Assistant
+            </Link>
+            <Link
+              href="/friends"
+              style={{
+                color: "var(--text-primary)",
+                textDecoration: "none",
+                fontSize: "0.875rem",
+                fontWeight: 600,
+                transition: "color var(--transition-fast)",
+              }}
+            >
+              Friends
             </Link>
             <Link
               href="/community"
@@ -514,8 +538,133 @@ export default function Navbar() {
                 <span>Subscription Plans</span>
               </div>
               <span className="badge badge-yellow" style={{ fontSize: "0.7rem", fontWeight: 800 }}>
-                From ₹199/mo
+                From ₹249/mo
               </span>
+            </Link>
+
+            <Link
+              href="/features"
+              onClick={() => setMobileMenuOpen(false)}
+              className="mobile-nav-link"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "14px 16px",
+                borderRadius: "10px",
+                backgroundColor: "var(--bg-surface)",
+                border: "1px solid var(--border-default)",
+                color: "var(--text-primary)",
+                textDecoration: "none",
+                fontWeight: 600,
+                fontSize: "0.95rem",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <span style={{ fontSize: "1.2rem" }}>✨</span>
+                <span>Platform Features</span>
+              </div>
+              <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>&rarr;</span>
+            </Link>
+
+            <Link
+              href="/ai-goal-planner"
+              onClick={() => setMobileMenuOpen(false)}
+              className="mobile-nav-link"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "14px 16px",
+                borderRadius: "10px",
+                backgroundColor: "var(--bg-surface)",
+                border: "1px solid var(--border-default)",
+                color: "var(--text-primary)",
+                textDecoration: "none",
+                fontWeight: 600,
+                fontSize: "0.95rem",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <span style={{ fontSize: "1.2rem" }}>🎯</span>
+                <span>AI Goal Planner</span>
+              </div>
+              <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>&rarr;</span>
+            </Link>
+
+            <Link
+              href="/ai-accountability"
+              onClick={() => setMobileMenuOpen(false)}
+              className="mobile-nav-link"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "14px 16px",
+                borderRadius: "10px",
+                backgroundColor: "var(--bg-surface)",
+                border: "1px solid var(--border-default)",
+                color: "var(--text-primary)",
+                textDecoration: "none",
+                fontWeight: 600,
+                fontSize: "0.95rem",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <span style={{ fontSize: "1.2rem" }}>📞</span>
+                <span>AI Accountability</span>
+              </div>
+              <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>&rarr;</span>
+            </Link>
+
+            <Link
+              href="/blog"
+              onClick={() => setMobileMenuOpen(false)}
+              className="mobile-nav-link"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "14px 16px",
+                borderRadius: "10px",
+                backgroundColor: "var(--bg-surface)",
+                border: "1px solid var(--border-default)",
+                color: "var(--text-primary)",
+                textDecoration: "none",
+                fontWeight: 600,
+                fontSize: "0.95rem",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <span style={{ fontSize: "1.2rem" }}>📚</span>
+                <span>Productivity Blog</span>
+              </div>
+              <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>&rarr;</span>
+            </Link>
+
+            <Link
+              href="/about"
+              onClick={() => setMobileMenuOpen(false)}
+              className="mobile-nav-link"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "14px 16px",
+                borderRadius: "10px",
+                backgroundColor: "var(--bg-surface)",
+                border: "1px solid var(--border-default)",
+                color: "var(--text-primary)",
+                textDecoration: "none",
+                fontWeight: 600,
+                fontSize: "0.95rem",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <span style={{ fontSize: "1.2rem" }}>💡</span>
+                <span>About AuraMind</span>
+              </div>
+              <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>&rarr;</span>
             </Link>
 
             <Link

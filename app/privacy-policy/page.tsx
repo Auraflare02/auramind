@@ -1,14 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { constructMetadata, getBreadcrumbSchema } from "@/lib/seo/config";
+import JsonLd from "@/components/seo/JsonLd";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy — AuraMind",
-  description: "Learn how AuraMind processes, protects, and respects your personal information, AI prompts, and goal data.",
-};
+export const metadata: Metadata = constructMetadata({
+  title: "Privacy Policy – AuraMind AI Accountability & Data Protection",
+  description:
+    "Learn how AuraMind collects, stores, encrypts, and processes your personal data, AI prompts, and goal schedules under the DPDP Act and international privacy standards.",
+  path: "/privacy-policy",
+});
 
 export default function PrivacyPolicyPage() {
+  const breadcrumbs = getBreadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "Privacy Policy", path: "/privacy-policy" },
+  ]);
+
   return (
     <div style={{ backgroundColor: "var(--bg-primary)", minHeight: "100vh", padding: "48px 0 80px" }}>
+      <JsonLd data={breadcrumbs} />
       <div className="container" style={{ maxWidth: "860px" }}>
         {/* HEADER BREADCRUMB */}
         <div style={{ marginBottom: "24px", display: "flex", alignItems: "center", gap: "8px", fontSize: "0.85rem" }}>

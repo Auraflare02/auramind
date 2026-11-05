@@ -1,0 +1,54 @@
+import { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/seo/config";
+
+export default function robots(): MetadataRoute.Robots {
+  return {
+    rules: [
+      {
+        userAgent: "*",
+        allow: [
+          "/",
+          "/features",
+          "/pricing",
+          "/ai-goal-planner",
+          "/ai-accountability",
+          "/about",
+          "/contact",
+          "/blog",
+          "/blog/*",
+          "/privacy-policy",
+          "/terms",
+          "/google8a203efe90ab4162.html",
+          "/brand/*",
+          "/manifest.json",
+          "/favicon.ico",
+        ],
+        disallow: [
+          "/api/",
+          "/api/*",
+          "/dashboard",
+          "/dashboard/*",
+          "/settings",
+          "/settings/*",
+          "/admin",
+          "/admin/*",
+          "/friends/",
+          "/friends/*",
+          "/chat",
+          "/chat/*",
+          "/community",
+          "/community/*",
+          "/goal/",
+          "/goal/*",
+          "/login",
+          "/signup",
+          "/forgot-password",
+          "/auth/",
+          "/auth/*",
+        ],
+      },
+    ],
+    sitemap: `${SITE_URL}/sitemap.xml`,
+    host: SITE_URL,
+  };
+}
