@@ -78,11 +78,18 @@ export async function POST(request: Request) {
     const ipAddress = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || undefined;
     const userAgent = request.headers.get("user-agent") || undefined;
 
-    const { data, error } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-      options: {
-        data: {
+    const admin = getAdminClient();
+    let authUser: any = null;
+    let authSession: any = null;
+
+    // 1. First attempt admin.auth.admin.createUser with email_confirm: true
+    // This is 100% immune to Supabase public email rate limits and prevents user from being blocked
+    try {
+      const { data: adminCreated, error: adminErr } = await admin.auth.admin.createUser({
+        email: email.trim(),
+        password,
+        email_confirm: true,
+        user_metadata: {
           full_name: full_name.trim(),
           terms_accepted: true,
           terms_accepted_at: nowIso,
@@ -93,23 +100,92 @@ export async function POST(request: Request) {
           optional_updates_consented: Boolean(optional_updates),
           optional_updates_consented_at: optional_updates ? nowIso : null,
         },
-        emailRedirectTo,
-      },
-    });
+      });
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      if (adminCreated?.user) {
+        authUser = adminCreated.user;
+      } else if (adminErr) {
+        if (
+          adminErr.message.toLowerCase().includes("already registered") ||
+          adminErr.message.toLowerCase().includes("unique constraint") ||
+          adminErr.message.toLowerCase().includes("already exists")
+        ) {
+          return NextResponse.json({ error: "An account with this email already exists. Please log in." }, { status: 400 });
+        }
+        console.warn("[signup] admin.createUser notice, attempting standard signUp:", adminErr.message);
+      }
+    } catch (createErr) {
+      console.warn("[signup] admin.createUser exception:", createErr);
     }
 
-    const admin = getAdminClient();
-    let hasSession = Boolean(data?.session);
+    // 2. If admin creation did not return a user, fallback to standard client signUp
+    if (!authUser) {
+      const { data: clientData, error: clientErr } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          data: {
+            full_name: full_name.trim(),
+            terms_accepted: true,
+            terms_accepted_at: nowIso,
+            terms_version: POLICY_VERSIONS.terms,
+            privacy_consented: true,
+            privacy_consented_at: nowIso,
+            privacy_version: POLICY_VERSIONS.privacy,
+            optional_updates_consented: Boolean(optional_updates),
+            optional_updates_consented_at: optional_updates ? nowIso : null,
+          },
+          emailRedirectTo,
+        },
+      });
+
+      if (clientErr) {
+        if (clientErr.message.toLowerCase().includes("already registered")) {
+          return NextResponse.json({ error: "An account with this email already exists. Please log in." }, { status: 400 });
+        }
+        // If email rate limit was encountered, try updating user confirmation status if account was partially registered
+        if (clientErr.message.toLowerCase().includes("rate limit")) {
+          return NextResponse.json(
+            { error: "Too many signups from this IP. Please wait a moment or sign up with Google." },
+            { status: 429 }
+          );
+        }
+        return NextResponse.json({ error: clientErr.message }, { status: 400 });
+      }
+
+      authUser = clientData?.user;
+      authSession = clientData?.session;
+    }
+
+    if (!authUser) {
+      return NextResponse.json({ error: "Failed to establish user account. Please try again." }, { status: 500 });
+    }
+
+    const userId = authUser.id;
+
+    // 3. Immediately sign in with password to establish session cookies in the browser!
+    if (!authSession) {
+      try {
+        const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
+        if (signInData?.session) {
+          authSession = signInData.session;
+        } else if (signInErr) {
+          console.warn("[signup] signInWithPassword notice:", signInErr.message);
+        }
+      } catch (signInErr) {
+        console.warn("[signup] immediate sign-in exception:", signInErr);
+      }
+    }
+
+    let hasSession = Boolean(authSession);
     let needsConfirmation = false;
 
-    // Persist affirmative consent records & auto-confirm user so they are never blocked
-    if (data?.user?.id) {
-      const userId = data.user.id;
-
-      // 1. Confirm user email so they can immediately access their dashboard
+    // Persist affirmative consent records & auto-confirm user
+    if (userId) {
+      // Auto-confirm user email in Supabase
       try {
         await admin.auth.admin.updateUserById(userId, {
           email_confirm: true,
@@ -118,7 +194,7 @@ export async function POST(request: Request) {
         console.warn("[signup auto-confirm notice]:", confirmErr);
       }
 
-      // 2. Persist affirmative consent audit records
+      // Persist affirmative consent audit records
       await Promise.allSettled([
         recordConsent({
           userId,
@@ -153,7 +229,7 @@ export async function POST(request: Request) {
           : []),
       ]);
 
-      // 3. Immediately initialize user profile in public.profiles table
+      // Immediately initialize user profile in public.profiles table
       try {
         const usernameBase = (full_name || "user")
           .toLowerCase()
@@ -180,22 +256,6 @@ export async function POST(request: Request) {
       } catch (profErr) {
         console.warn("[signup profile create notice]:", profErr);
       }
-
-      // 4. If session was not generated, immediately sign in to establish real session cookies
-      if (!hasSession) {
-        try {
-          const { data: signInData } = await supabase.auth.signInWithPassword({
-            email: email.trim(),
-            password,
-          });
-          if (signInData?.session) {
-            hasSession = true;
-            data.session = signInData.session;
-          }
-        } catch (signInErr) {
-          console.warn("[signup immediate sign-in notice]:", signInErr);
-        }
-      }
     }
 
     if (!hasSession) {
@@ -204,7 +264,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      user: data.user,
+      user: authUser,
       needsConfirmation,
       hasSession,
     });
