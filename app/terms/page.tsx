@@ -266,7 +266,21 @@ export default function TermsPage() {
               11. Fees, Subscriptions, and Payments
             </h2>
             <p>
-              AuraMind currently offers its core personalized planning and accountability features free of charge. If premium tiers or specialized AI features are introduced in the future, all pricing, billing cycles, cancellation terms, and refund guidelines will be clearly presented for affirmative review before any payment is collected.
+              AuraMind offers subscription tiers designed for structured goal execution and social accountability:
+            </p>
+            <ul style={{ paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "8px", margin: "12px 0" }}>
+              <li>
+                <strong>🥇 Gold Plan (₹199/month intro / ₹249 regular):</strong> Includes up to 1 goal, 5 accountability friends, focus timer, XP progression, daily/weekly productivity reports, and hourly in-app notification check-ins.
+              </li>
+              <li>
+                <strong>🥈 Platinum Plan (₹499/month intro / ₹699 regular):</strong> Includes up to 3 goals, 15 friends, WhatsApp check-in messages, conversational Hindi AI calling agent (2 to 60 calls/month), and Google Calendar integration.
+              </li>
+              <li>
+                <strong>💎 Diamond Plan (₹999/month intro / ₹1299 regular):</strong> Includes up to 25 goals, 50 friends, WhatsApp check-ins for every milestone, Premium AI calling agent (15 to 450 calls/month), full 2-way Google Calendar synchronization, and monthly comparative reports.
+              </li>
+            </ul>
+            <p>
+              Subscription fees are billed on a recurring monthly or discounted annual cycle. You may upgrade, downgrade, or cancel your subscription at any time without cancellation fees. WhatsApp messaging and AI phone calling require affirmative user consent and provision of a verified telephone number.
             </p>
           </section>
 

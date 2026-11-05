@@ -1,4 +1,5 @@
 import { getAdminClient } from "@/lib/supabase/admin";
+import { checkFriendLimit } from "@/lib/subscription/client";
 import {
   FriendshipStatus,
   PublicProfile,
@@ -664,6 +665,19 @@ export async function sendFriendRequest(
         return { success: true, message: "You both connected! Friendship accepted.", status: "accepted" };
       }
     }
+  }
+
+  // Check subscription limit on friends (Gold: 5, Platinum: 15, Diamond: 50)
+  try {
+    const friendLimit = await checkFriendLimit(currentUserId);
+    if (!friendLimit.allowed) {
+      throw new Error(`Friend limit reached. Your ${friendLimit.planName} allows up to ${friendLimit.maxAllowed} friends. Upgrade your subscription to connect with more accountability partners!`);
+    }
+  } catch (limErr: any) {
+    if (limErr?.message?.includes("Friend limit reached")) {
+      throw limErr;
+    }
+    console.warn("[friends] Friend limit check warning:", limErr);
   }
 
   // 3. Insert or update to pending

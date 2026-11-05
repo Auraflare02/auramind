@@ -6,6 +6,7 @@ import { synthesizePersonalizedPlan } from "@/lib/ai/planner";
 import { fallbackPlan } from "@/lib/fallback";
 import { searchTavily } from "@/lib/tavily";
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import { checkGoalLimit } from "@/lib/subscription/client";
 
 export const maxDuration = 60;
 
@@ -168,6 +169,24 @@ export const POST = guard(async (req) => {
       { error: "Authentication required. Please log in or create an account before creating a goal plan." },
       401
     );
+  }
+
+  // Check goal allowance for user's subscription tier (Gold: 1, Platinum: 3, Diamond: 25)
+  try {
+    const limitCheck = await checkGoalLimit(userId);
+    if (!limitCheck.allowed) {
+      return J(
+        {
+          error: `Goal limit reached. Your ${limitCheck.planName} allows up to ${limitCheck.maxAllowed} active goal(s). Please complete or archive an existing goal, or upgrade your plan to unlock more concurrent goals!`,
+          upgradeRequired: true,
+          currentCount: limitCheck.currentCount,
+          maxAllowed: limitCheck.maxAllowed,
+        },
+        403
+      );
+    }
+  } catch (limitErr) {
+    console.warn("[requests-api] Goal limit check warning:", limitErr);
   }
 
   // Instant AI Synthesis in front of user

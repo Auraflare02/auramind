@@ -52,6 +52,7 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
   const [pendingFriendsCount, setPendingFriendsCount] = useState<number>(0);
   const [friendsCount, setFriendsCount] = useState<number>(0);
+  const [subData, setSubData] = useState<any>(null);
   const [copiedId, setCopiedId] = useState(false);
 
   useEffect(() => {
@@ -67,7 +68,19 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
         // Silently ignore
       }
     }
+    async function loadSubMeta() {
+      try {
+        const res = await fetch("/api/subscription");
+        if (res.ok) {
+          const data = await res.json();
+          setSubData(data.userSubscription);
+        }
+      } catch {
+        // Silently ignore
+      }
+    }
     loadFriendsMeta();
+    loadSubMeta();
   }, []);
 
   const handleLogout = async () => {
@@ -180,6 +193,56 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
               <span className="badge badge-yellow" style={{ fontSize: "0.72rem" }}>
                 Member since {new Date(profile.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}
               </span>
+
+              {subData && (
+                <Link
+                  href="/pricing"
+                  style={{
+                    textDecoration: "none",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                  title="Click to view or upgrade your subscription plan"
+                >
+                  <span
+                    style={{
+                      fontSize: "0.74rem",
+                      fontWeight: 800,
+                      padding: "2px 8px",
+                      borderRadius: "9999px",
+                      backgroundColor:
+                        subData.tier === "diamond"
+                          ? "rgba(56, 189, 248, 0.15)"
+                          : subData.tier === "platinum"
+                          ? "rgba(255, 214, 0, 0.15)"
+                          : "rgba(234, 179, 8, 0.15)",
+                      color:
+                        subData.tier === "diamond"
+                          ? "#38BDF8"
+                          : subData.tier === "platinum"
+                          ? "var(--accent-primary)"
+                          : "#EAB308",
+                      border: `1px solid ${
+                        subData.tier === "diamond"
+                          ? "rgba(56, 189, 248, 0.4)"
+                          : subData.tier === "platinum"
+                          ? "rgba(255, 214, 0, 0.4)"
+                          : "rgba(234, 179, 8, 0.4)"
+                      }`,
+                    }}
+                  >
+                    {subData.tier === "diamond"
+                      ? "💎 Diamond Plan"
+                      : subData.tier === "platinum"
+                      ? "🥈 Platinum Plan"
+                      : "🥇 Gold Plan"}
+                  </span>
+                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                    ({goals.length}/{subData.plan.maxGoals} Goals)
+                  </span>
+                </Link>
+              )}
             </div>
             <p style={{ margin: "4px 0 0", fontSize: "0.875rem", color: "var(--text-secondary)" }}>
               {profile.email}
@@ -189,6 +252,9 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
 
         {/* Action Controls */}
         <div className="dashboard-profile-actions">
+          <Link href="/pricing" className="btn btn-secondary" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+            <span>⚡ Plans</span>
+          </Link>
           <Link href="/#create-goal" className="btn btn-primary">
             + New Goal
           </Link>

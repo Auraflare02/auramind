@@ -144,6 +144,34 @@ export default function Navbar() {
               Friends
             </Link>
             <Link
+              href="/pricing"
+              style={{
+                color: "var(--text-primary)",
+                textDecoration: "none",
+                fontSize: "0.875rem",
+                fontWeight: 600,
+                transition: "color var(--transition-fast)",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px",
+              }}
+            >
+              <span>Plans</span>
+              <span
+                style={{
+                  fontSize: "0.68rem",
+                  fontWeight: 800,
+                  backgroundColor: "rgba(255, 214, 0, 0.15)",
+                  color: "var(--accent-primary)",
+                  border: "1px solid rgba(255, 214, 0, 0.3)",
+                  borderRadius: "9999px",
+                  padding: "1px 6px",
+                }}
+              >
+                ₹199
+              </span>
+            </Link>
+            <Link
               href="/community"
               style={{
                 color: "var(--text-primary)",
@@ -461,6 +489,33 @@ export default function Navbar() {
                 <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#10B981" }} />
                 <span className="badge badge-success" style={{ fontSize: "0.68rem" }}>Live</span>
               </div>
+            </Link>
+
+            <Link
+              href="/pricing"
+              onClick={() => setMobileMenuOpen(false)}
+              className="mobile-nav-link"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "14px 16px",
+                borderRadius: "10px",
+                backgroundColor: "var(--bg-surface)",
+                border: "1px solid rgba(255, 214, 0, 0.35)",
+                color: "var(--text-primary)",
+                textDecoration: "none",
+                fontWeight: 700,
+                fontSize: "0.95rem",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <span style={{ fontSize: "1.2rem" }}>🥇</span>
+                <span>Subscription Plans</span>
+              </div>
+              <span className="badge badge-yellow" style={{ fontSize: "0.7rem", fontWeight: 800 }}>
+                From ₹199/mo
+              </span>
             </Link>
 
             <Link

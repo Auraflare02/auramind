@@ -1417,6 +1417,146 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* 5. SUBSCRIPTION PLANS CALLOUT SECTION */}
+      <section style={{ padding: "64px 0", borderTop: "1px solid var(--border-default)", backgroundColor: "#0C0C0C" }}>
+        <div className="container" style={{ maxWidth: "1080px", textAlign: "center" }}>
+          <span className="badge badge-yellow" style={{ marginBottom: "12px" }}>
+            Accountability Subscriptions
+          </span>
+          <h2 style={{ fontSize: "2rem", fontWeight: 800, margin: "0 0 12px" }}>
+            Gold, Platinum, and Diamond Plans
+          </h2>
+          <p style={{ color: "var(--text-secondary)", fontSize: "1rem", maxWidth: "600px", margin: "0 auto 32px" }}>
+            Tailored for individuals and high-achievers. Unlock WhatsApp check-in messages, Hindi conversational AI calls, and up to 25 goals.
+          </p>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: "20px",
+              marginBottom: "36px",
+              textAlign: "left",
+            }}
+          >
+            {/* Gold Preview */}
+            <div
+              style={{
+                backgroundColor: "#141414",
+                border: "1px solid var(--border-default)",
+                borderRadius: "16px",
+                padding: "24px",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "#EAB308", marginBottom: "4px" }}>
+                  🥇 GOLD PLAN
+                </div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#FFFFFF", marginBottom: "6px" }}>
+                  Essential Productivity
+                </div>
+                <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "var(--accent-primary)", marginBottom: "14px" }}>
+                  ₹199<span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>/month</span>
+                </div>
+                <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: 1.5, margin: "0 0 16px" }}>
+                  Up to 1 goal, 5 friends, focus timer, XP levels, daily/weekly reports, and hourly in-app check-ins.
+                </p>
+              </div>
+              <Link href="/pricing" className="btn btn-secondary btn-sm" style={{ width: "100%", justifyContent: "center" }}>
+                View Gold &rarr;
+              </Link>
+            </div>
+
+            {/* Platinum Preview */}
+            <div
+              style={{
+                backgroundColor: "#161616",
+                border: "2px solid var(--accent-primary)",
+                borderRadius: "16px",
+                padding: "24px",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                boxShadow: "0 0 25px rgba(255, 214, 0, 0.12)",
+                position: "relative",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  top: "-11px",
+                  right: "20px",
+                  backgroundColor: "var(--accent-primary)",
+                  color: "#000",
+                  fontSize: "0.68rem",
+                  fontWeight: 900,
+                  padding: "2px 10px",
+                  borderRadius: "9999px",
+                }}
+              >
+                POPULAR
+              </div>
+              <div>
+                <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "var(--accent-primary)", marginBottom: "4px" }}>
+                  🥈 PLATINUM PLAN
+                </div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#FFFFFF", marginBottom: "6px" }}>
+                  Smart Accountability
+                </div>
+                <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "var(--accent-primary)", marginBottom: "14px" }}>
+                  ₹499<span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>/month</span>
+                </div>
+                <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: 1.5, margin: "0 0 16px" }}>
+                  Up to 3 goals, 15 friends, WhatsApp check-ins, conversational Hindi AI calling agent, and Google Calendar.
+                </p>
+              </div>
+              <Link href="/pricing" className="btn btn-primary btn-sm" style={{ width: "100%", justifyContent: "center" }}>
+                View Platinum &rarr;
+              </Link>
+            </div>
+
+            {/* Diamond Preview */}
+            <div
+              style={{
+                backgroundColor: "#141414",
+                border: "1px solid #38BDF8",
+                borderRadius: "16px",
+                padding: "24px",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                boxShadow: "0 0 25px rgba(56, 189, 248, 0.12)",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "#38BDF8", marginBottom: "4px" }}>
+                  💎 DIAMOND PLAN
+                </div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#FFFFFF", marginBottom: "6px" }}>
+                  Complete AI Accountability
+                </div>
+                <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "#38BDF8", marginBottom: "14px" }}>
+                  ₹999<span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>/month</span>
+                </div>
+                <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: 1.5, margin: "0 0 16px" }}>
+                  Up to 25 goals, 50 friends, WhatsApp milestone check-ins, 15+ AI phone calls, and 2-way Google Calendar sync.
+                </p>
+              </div>
+              <Link href="/pricing" className="btn btn-secondary btn-sm" style={{ width: "100%", justifyContent: "center" }}>
+                View Diamond &rarr;
+              </Link>
+            </div>
+          </div>
+
+          <Link href="/pricing" className="btn btn-primary btn-lg" style={{ padding: "12px 32px", fontWeight: 800 }}>
+            Compare All Plans &amp; Features &rarr;
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }
