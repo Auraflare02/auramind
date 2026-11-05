@@ -230,16 +230,45 @@ export async function searchUsers(
 export async function getDashboardFriendsData(currentUserId: string): Promise<FriendsDashboardData> {
   const admin = getAdminClient();
 
-  // 1. Fetch all friendships involving current user
-  const { data: friendships, error: friendErr } = await admin
-    .from("friendships")
-    .select("*")
-    .or(`user_id.eq.${currentUserId},friend_id.eq.${currentUserId}`)
-    .order("updated_at", { ascending: false });
+  // 1. Fetch all friendships involving current user from database via concurrent queries
+  let dbFriendships: any[] = [];
+  try {
+    const [byUserRes, byFriendRes] = await Promise.all([
+      admin
+        .from("friendships")
+        .select("*")
+        .eq("user_id", currentUserId)
+        .order("updated_at", { ascending: false }),
+      admin
+        .from("friendships")
+        .select("*")
+        .eq("friend_id", currentUserId)
+        .order("updated_at", { ascending: false }),
+    ]);
 
-  if (friendErr) {
-    console.error("[friends] Error fetching friendships:", friendErr);
+    if (byUserRes.data) dbFriendships.push(...byUserRes.data);
+    if (byFriendRes.data) dbFriendships.push(...byFriendRes.data);
+  } catch (dbErr) {
+    console.warn("[friends] DB query notice (falling back):", dbErr);
   }
+
+  // Deduplicate and merge with in-memory store
+  const recordMap = new Map<string, any>();
+  for (const r of dbFriendships) {
+    const key = r.id || `${r.user_id}:${r.friend_id}`;
+    recordMap.set(key, r);
+  }
+
+  for (const f of inMemoryFriendships.values()) {
+    if (f.user_id === currentUserId || f.friend_id === currentUserId) {
+      const key = f.id || `${f.user_id}:${f.friend_id}`;
+      if (!recordMap.has(key)) {
+        recordMap.set(key, f);
+      }
+    }
+  }
+
+  const friendshipRecords = Array.from(recordMap.values());
 
   const acceptedList: FriendSummary[] = [];
   const incomingList: FriendRequest[] = [];
@@ -247,41 +276,70 @@ export async function getDashboardFriendsData(currentUserId: string): Promise<Fr
   const blockedList: PublicProfile[] = [];
 
   const otherUserIds: string[] = [];
-  const friendshipRecords = friendships && friendships.length > 0 ? friendships : [];
-
-  if (friendshipRecords.length === 0) {
-    for (const f of inMemoryFriendships.values()) {
-      if (f.user_id === currentUserId || f.friend_id === currentUserId) {
-        friendshipRecords.push(f);
-      }
-    }
-  }
-
   for (const f of friendshipRecords) {
     const otherId = f.user_id === currentUserId ? f.friend_id : f.user_id;
-    otherUserIds.push(otherId);
+    if (otherId && !otherUserIds.includes(otherId)) {
+      otherUserIds.push(otherId);
+    }
   }
 
   // 2. Batch fetch profiles for all related users concurrently
   const profileMap = new Map<string, PublicProfile>();
   if (otherUserIds.length > 0) {
-    const { data: profiles } = await admin
-      .from("profiles")
-      .select("*")
-      .in("id", otherUserIds);
+    try {
+      const { data: profiles } = await admin
+        .from("profiles")
+        .select("*")
+        .in("id", otherUserIds);
 
-    if (profiles) {
-      await Promise.all(
-        profiles.map(async (p) => {
-          profileMap.set(p.id, await ensureProfileIdentity(p));
-        })
-      );
+      if (profiles) {
+        await Promise.all(
+          profiles.map(async (p) => {
+            profileMap.set(p.id, await ensureProfileIdentity(p));
+          })
+        );
+      }
+    } catch (pErr) {
+      console.warn("[friends] Error fetching profiles:", pErr);
     }
 
-    // In-memory profiles fallback
-    for (const id of otherUserIds) {
-      if (!profileMap.has(id) && inMemoryProfiles.has(id)) {
-        profileMap.set(id, await ensureProfileIdentity(inMemoryProfiles.get(id)));
+    // For any ID still missing, try in-memory, then auth.users, and auto-heal
+    for (const otherId of otherUserIds) {
+      if (!profileMap.has(otherId)) {
+        if (inMemoryProfiles.has(otherId)) {
+          profileMap.set(otherId, await ensureProfileIdentity(inMemoryProfiles.get(otherId)));
+        } else {
+          try {
+            const { data: authUser } = await admin.auth.admin.getUserById(otherId);
+            if (authUser?.user) {
+              const u = authUser.user;
+              const name = u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split("@")[0] || "AuraMind Member";
+              const username = `user_${u.id.replace(/-/g, "").slice(0, 6).toLowerCase()}`;
+              const auramindId = `AM-${u.id.replace(/-/g, "").slice(0, 6).toUpperCase()}`;
+              const avatar = u.user_metadata?.avatar_url || u.user_metadata?.picture || null;
+              
+              const newP = {
+                id: u.id,
+                full_name: name,
+                username,
+                auramind_id: auramindId,
+                email: u.email || "",
+                avatar_url: avatar,
+                bio: null,
+                privacy_discoverable: true,
+                privacy_share_goals: false,
+                privacy_share_stats: true,
+                privacy_allow_requests: "everyone",
+                created_at: u.created_at || new Date().toISOString(),
+              };
+
+              await admin.from("profiles").upsert(newP, { onConflict: "id" });
+              profileMap.set(otherId, await ensureProfileIdentity(newP));
+            }
+          } catch (authErr) {
+            console.warn("[friends] Fallback auth fetch notice:", authErr);
+          }
+        }
       }
     }
   }
@@ -339,8 +397,25 @@ export async function getDashboardFriendsData(currentUserId: string): Promise<Fr
   // 4. Organize into Accepted, Incoming, and Outgoing lists
   for (const f of friendshipRecords) {
     const otherId = f.user_id === currentUserId ? f.friend_id : f.user_id;
-    const profile = profileMap.get(otherId);
-    if (!profile) continue;
+    let profile = profileMap.get(otherId);
+
+    // GUARANTEE: Never drop a friendship or incoming request if profile row is missing
+    if (!profile) {
+      profile = {
+        id: otherId,
+        fullName: "AuraMind Member",
+        username: `user_${otherId.replace(/-/g, "").slice(0, 6).toLowerCase()}`,
+        auramindId: `AM-${otherId.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
+        avatarUrl: null,
+        bio: null,
+        privacyDiscoverable: true,
+        privacyShareGoals: false,
+        privacyShareStats: true,
+        privacyAllowRequests: "everyone",
+        createdAt: f.created_at,
+      };
+      profileMap.set(otherId, profile);
+    }
 
     if (f.status === "accepted") {
       const stats = profile.privacyShareStats !== false ? statsMap.get(otherId) : undefined;
@@ -445,6 +520,32 @@ export async function sendFriendRequest(
   if (isUuid) {
     const { data } = await admin.from("profiles").select("*").eq("id", targetUserIdOrUsername.trim()).maybeSingle();
     targetProfile = data;
+
+    if (!targetProfile) {
+      try {
+        const { data: authUser } = await admin.auth.admin.getUserById(targetUserIdOrUsername.trim());
+        if (authUser?.user) {
+          const u = authUser.user;
+          const newP = {
+            id: u.id,
+            full_name: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split("@")[0] || "AuraMind Member",
+            email: u.email || "",
+            avatar_url: u.user_metadata?.avatar_url || null,
+            username: `user_${u.id.replace(/-/g, "").slice(0, 6).toLowerCase()}`,
+            auramind_id: `AM-${u.id.replace(/-/g, "").slice(0, 6).toUpperCase()}`,
+            privacy_discoverable: true,
+            privacy_share_goals: false,
+            privacy_share_stats: true,
+            privacy_allow_requests: "everyone",
+            created_at: u.created_at || new Date().toISOString(),
+          };
+          await admin.from("profiles").upsert(newP, { onConflict: "id" });
+          targetProfile = newP;
+        }
+      } catch (authErr) {
+        console.warn("[sendFriendRequest] auth getUserById:", authErr);
+      }
+    }
   }
 
   if (!targetProfile) {
@@ -568,6 +669,7 @@ export async function sendFriendRequest(
   // 3. Insert or update to pending
   const now = new Date().toISOString();
   inMemoryFriendships.set(`${userId}:${friendId}`, {
+    id: existing?.id,
     user_id: userId,
     friend_id: friendId,
     status: "pending",
@@ -577,17 +679,44 @@ export async function sendFriendRequest(
   });
 
   try {
-    await admin.from("friendships").upsert(
-      {
+    if (existing?.id) {
+      const { error: updateErr } = await admin
+        .from("friendships")
+        .update({
+          status: "pending",
+          action_user_id: currentUserId,
+          updated_at: now,
+        })
+        .eq("id", existing.id);
+
+      if (updateErr) {
+        console.warn("[friends] sendFriendRequest DB update fallback notice:", updateErr);
+      }
+    } else {
+      const { error: insertErr } = await admin.from("friendships").insert({
         user_id: userId,
         friend_id: friendId,
         status: "pending",
         action_user_id: currentUserId,
-        created_at: existing?.created_at || now,
+        created_at: now,
         updated_at: now,
-      },
-      { onConflict: "user_id,friend_id" }
-    );
+      });
+
+      if (insertErr) {
+        console.warn("[friends] sendFriendRequest DB insert notice, trying upsert:", insertErr);
+        await admin.from("friendships").upsert(
+          {
+            user_id: userId,
+            friend_id: friendId,
+            status: "pending",
+            action_user_id: currentUserId,
+            created_at: now,
+            updated_at: now,
+          },
+          { onConflict: "user_id,friend_id" }
+        );
+      }
+    }
   } catch (upsertErr) {
     console.warn("[friends] sendFriendRequest DB notice (using memory fallback):", upsertErr);
   }
@@ -725,10 +854,13 @@ export async function rejectFriendRequest(
   }
 
   // Deleting the record cleanly clears the request and permits future requests
-  const { error } = await admin.from("friendships").delete().eq("id", existing.id);
-  if (error) {
-    console.error("[friends] rejectFriendRequest error:", error);
-    throw new Error("Failed to decline friend request.");
+  inMemoryFriendships.delete(`${userId}:${friendId}`);
+  if (existing?.id) {
+    const { error } = await admin.from("friendships").delete().eq("id", existing.id);
+    if (error) {
+      console.error("[friends] rejectFriendRequest error:", error);
+      throw new Error("Failed to decline friend request.");
+    }
   }
 
   return { success: true, message: "Friend request declined." };
@@ -759,10 +891,13 @@ export async function cancelFriendRequest(
     throw new Error("You can only cancel requests you sent.");
   }
 
-  const { error } = await admin.from("friendships").delete().eq("id", existing.id);
-  if (error) {
-    console.error("[friends] cancelFriendRequest error:", error);
-    throw new Error("Failed to cancel friend request.");
+  inMemoryFriendships.delete(`${userId}:${friendId}`);
+  if (existing?.id) {
+    const { error } = await admin.from("friendships").delete().eq("id", existing.id);
+    if (error) {
+      console.error("[friends] cancelFriendRequest error:", error);
+      throw new Error("Failed to cancel friend request.");
+    }
   }
 
   return { success: true, message: "Friend request cancelled." };

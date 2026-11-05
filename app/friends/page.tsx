@@ -579,43 +579,199 @@ function FriendsContent() {
       ) : activeTab === "friends" ? (
         /* ================= SECTION A: MY FRIENDS ================= */
         <div>
-          {!data || data.friends.length === 0 ? (
+          {/* Prominent Incoming Requests Alert Banner */}
+          {data && data.incomingRequests.length > 0 && (
             <div
-              className="surface"
               style={{
-                padding: "60px 24px",
-                textAlign: "center",
-                borderRadius: "16px",
-                border: "1px solid var(--border-default)",
+                marginBottom: "24px",
+                padding: "16px 20px",
+                borderRadius: "14px",
+                background: "linear-gradient(135deg, rgba(255, 214, 0, 0.12) 0%, rgba(255, 214, 0, 0.04) 100%)",
+                border: "1px solid rgba(255, 214, 0, 0.4)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: "14px",
+                boxShadow: "0 0 20px rgba(255, 214, 0, 0.08)",
               }}
             >
+              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                <div
+                  style={{
+                    width: "42px",
+                    height: "42px",
+                    borderRadius: "50%",
+                    backgroundColor: "var(--accent-primary)",
+                    color: "#000",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "1.2rem",
+                    fontWeight: 800,
+                  }}
+                >
+                  👋
+                </div>
+                <div>
+                  <div style={{ fontWeight: 800, color: "#FFFFFF", fontSize: "1rem", letterSpacing: "-0.01em" }}>
+                    You have {data.incomingRequests.length} pending friend request{data.incomingRequests.length > 1 ? "s" : ""}!
+                  </div>
+                  <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "2px" }}>
+                    <strong style={{ color: "var(--accent-primary)" }}>{data.incomingRequests[0].user.fullName}</strong> (@{data.incomingRequests[0].user.username}) wants to connect for mutual accountability.
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab("requests");
+                    setRequestSubTab("incoming");
+                  }}
+                  className="btn btn-primary"
+                  style={{ padding: "8px 18px", fontSize: "0.875rem", fontWeight: 700 }}
+                >
+                  Review Requests ({data.incomingRequests.length}) &rarr;
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!data || data.friends.length === 0 ? (
+            <div>
+              {data && data.incomingRequests.length > 0 ? (
+                <div style={{ marginBottom: "32px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+                    <h3 style={{ fontSize: "1.1rem", fontWeight: 700, margin: 0 }}>
+                      Pending Requests Waiting for You
+                    </h3>
+                    <span className="badge badge-yellow">{data.incomingRequests.length} Waiting</span>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {data.incomingRequests.map((req) => (
+                      <div
+                        key={req.id}
+                        className="card"
+                        style={{
+                          padding: "16px 20px",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          flexWrap: "wrap",
+                          gap: "14px",
+                          borderRadius: "12px",
+                          border: "1px solid rgba(255, 214, 0, 0.3)",
+                          backgroundColor: "var(--bg-card)",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                          {req.user.avatarUrl ? (
+                            <img
+                              src={req.user.avatarUrl}
+                              alt={req.user.fullName}
+                              referrerPolicy="no-referrer"
+                              style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover" }}
+                            />
+                          ) : (
+                            <div
+                              style={{
+                                width: "44px",
+                                height: "44px",
+                                borderRadius: "50%",
+                                backgroundColor: "var(--bg-elevated)",
+                                color: "var(--accent-primary)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontWeight: 800,
+                              }}
+                            >
+                              {req.user.fullName.slice(0, 1).toUpperCase()}
+                            </div>
+                          )}
+                          <div>
+                            <Link
+                              href={`/friends/${req.user.username}`}
+                              style={{
+                                fontWeight: 700,
+                                color: "var(--text-primary)",
+                                textDecoration: "none",
+                                fontSize: "1rem",
+                              }}
+                            >
+                              {req.user.fullName}
+                            </Link>
+                            <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                              @{req.user.username} &bull; {req.user.auramindId}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                          <button
+                            type="button"
+                            onClick={() => handleRelationshipAction("accept", req.targetUserId, req.user.fullName)}
+                            disabled={actionBusyMap[`accept_${req.targetUserId}`]}
+                            className="btn btn-primary btn-sm"
+                          >
+                            {actionBusyMap[`accept_${req.targetUserId}`] ? "Accepting..." : "Accept"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRelationshipAction("reject", req.targetUserId, req.user.fullName)}
+                            disabled={actionBusyMap[`reject_${req.targetUserId}`]}
+                            className="btn btn-ghost btn-sm"
+                            style={{ color: "var(--text-muted)" }}
+                          >
+                            Decline
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
               <div
+                className="surface"
                 style={{
-                  width: "56px",
-                  height: "56px",
-                  borderRadius: "50%",
-                  backgroundColor: "var(--bg-secondary)",
-                  color: "var(--accent-primary)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  margin: "0 auto 16px",
-                  fontSize: "1.5rem",
+                  padding: "50px 24px",
+                  textAlign: "center",
+                  borderRadius: "16px",
+                  border: "1px solid var(--border-default)",
                 }}
               >
-                👥
+                <div
+                  style={{
+                    width: "56px",
+                    height: "56px",
+                    borderRadius: "50%",
+                    backgroundColor: "var(--bg-secondary)",
+                    color: "var(--accent-primary)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    margin: "0 auto 16px",
+                    fontSize: "1.5rem",
+                  }}
+                >
+                  👥
+                </div>
+                <h2 style={{ fontSize: "1.35rem", fontWeight: 700, margin: "0 0 8px" }}>
+                  {data && data.incomingRequests.length > 0 ? "Accept incoming requests or find more friends" : "No friends added yet"}
+                </h2>
+                <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", maxWidth: "440px", margin: "0 auto 24px" }}>
+                  Find your peers on AuraMind and build your private accountability circle to support each other&rsquo;s 30-day goals.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("search")}
+                  className="btn btn-primary"
+                >
+                  Find Friends &rarr;
+                </button>
               </div>
-              <h2 style={{ fontSize: "1.35rem", fontWeight: 700, margin: "0 0 8px" }}>No friends added yet</h2>
-              <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", maxWidth: "440px", margin: "0 auto 24px" }}>
-                Find your peers on AuraMind and build your private accountability circle to support each other&rsquo;s 30-day goals.
-              </p>
-              <button
-                type="button"
-                onClick={() => setActiveTab("search")}
-                className="btn btn-primary"
-              >
-                Find Friends &rarr;
-              </button>
             </div>
           ) : (
             <div className="friends-responsive-grid">

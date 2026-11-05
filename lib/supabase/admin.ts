@@ -42,6 +42,7 @@ export function getAdminClient(): SupabaseClient {
       auth: {
         admin: {
           listUsers: async () => ({ data: { users: [] }, error: null }),
+          getUserById: async (id: string) => ({ data: { user: null }, error: null }),
         },
       },
     } as any;
