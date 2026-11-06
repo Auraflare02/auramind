@@ -142,7 +142,7 @@ export default function PrivacyPolicyPage() {
                 Platform Operator Information
               </div>
               <div>Entity / Application: <strong>AuraMind</strong></div>
-              <div>Official Website: <strong>https://auramind-vert.vercel.app</strong></div>
+              <div>Official Website: <strong>https://theauramind.dpdns.org</strong></div>
               <div>User Support &amp; Developer Contact: <strong>ridhx02@gmail.com</strong></div>
               <div>Privacy Officer: <strong>ridhx02@gmail.com</strong></div>
             </div>
@@ -517,7 +517,7 @@ export default function PrivacyPolicyPage() {
               <div style={{ fontWeight: 700, color: "var(--text-primary)", marginBottom: "8px" }}>
                 AuraMind Privacy &amp; Grievance Redressal
               </div>
-              <div>Platform: <strong>AuraMind</strong> (https://auramind-vert.vercel.app)</div>
+              <div>Platform: <strong>AuraMind</strong> (https://theauramind.dpdns.org)</div>
               <div>Privacy &amp; Support Contact: <strong>ridhx02@gmail.com</strong></div>
               <div>Inquiries Desk: <strong>ridhx02@gmail.com</strong></div>
               <div style={{ marginTop: "8px", fontSize: "0.85rem", color: "var(--text-muted)" }}>

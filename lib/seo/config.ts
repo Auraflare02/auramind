@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 
-export const SITE_URL =
+const rawSiteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||
   process.env.NEXT_PUBLIC_APP_URL ||
-  "https://auramind-vert.vercel.app";
+  "https://theauramind.dpdns.org";
+
+export const SITE_URL = rawSiteUrl.replace(/\/+$/, "");
 
 export const SITE_NAME = "AuraMind";
 export const BRAND_TAGLINE = "Your Personal AI Accountability & Productivity Assistant";

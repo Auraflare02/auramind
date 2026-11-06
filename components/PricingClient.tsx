@@ -557,27 +557,33 @@ export default function PricingClient() {
       {/* 6. COMPLIANCE & IMPORTANT NOTES */}
       <section
         style={{
-          padding: "40px 0",
+          padding: "48px 0",
           backgroundColor: "#0F0F0F",
           borderTop: "1px solid var(--border-default)",
           borderBottom: "1px solid var(--border-default)",
         }}
       >
         <div className="container" style={{ maxWidth: "900px", textAlign: "center" }}>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: 700, margin: "0 0 10px", color: "var(--text-primary)" }}>
-            Important Compliance & Accountability Information
+          <h3 style={{ fontSize: "1.2rem", fontWeight: 700, margin: "0 0 10px", color: "var(--text-primary)" }}>
+            Consumer Protections &amp; Transparent Terms
           </h3>
-          <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: 1.6, margin: "0 0 12px" }}>
-            Prices and allowances reflect subscription limits. WhatsApp messaging and AI phone calling require explicit
-            user consent, an active phone number, and depend on available carrier network connectivity and operating costs.
-            Gold plan users receive in-app notification check-ins only, with zero phone or WhatsApp intrusion.
+          <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: 1.6, margin: "0 0 16px" }}>
+            Prices reflect monthly usage allowances. WhatsApp messaging and AI phone calling require explicit
+            user consent and an active phone number. Gold plan users receive in-app notification check-ins only, with zero phone intrusion.
+            Subscriptions are billed in INR and can be canceled anytime in your account settings.
           </p>
-          <div style={{ display: "flex", justifyContent: "center", gap: "16px", fontSize: "0.8rem" }}>
-            <Link href="/terms" style={{ color: "var(--accent-primary)", textDecoration: "none" }}>
+          <div style={{ display: "flex", justifyContent: "center", gap: "18px", fontSize: "0.85rem", flexWrap: "wrap" }}>
+            <Link href="/faq" style={{ color: "var(--accent-primary)", textDecoration: "none", fontWeight: 600 }}>
+              Pricing &amp; Feature FAQ &rarr;
+            </Link>
+            <Link href="/refund-policy" style={{ color: "var(--accent-primary)", textDecoration: "none", fontWeight: 600 }}>
+              Cancellation &amp; Refund Policy &rarr;
+            </Link>
+            <Link href="/terms" style={{ color: "var(--text-muted)", textDecoration: "none" }}>
               Terms of Service &rarr;
             </Link>
-            <Link href="/privacy-policy" style={{ color: "var(--accent-primary)", textDecoration: "none" }}>
-              Privacy & Consent Policy &rarr;
+            <Link href="/privacy-policy" style={{ color: "var(--text-muted)", textDecoration: "none" }}>
+              Privacy Policy &rarr;
             </Link>
           </div>
         </div>
@@ -897,6 +903,20 @@ export default function PricingClient() {
                     >
                       Cancel
                     </button>
+                  </div>
+
+                  <div style={{ textAlign: "center", marginTop: "14px" }}>
+                    <Link
+                      href={`/checkout?plan=${planConfig.id}&cycle=${billingCycle}`}
+                      style={{
+                        fontSize: "0.82rem",
+                        color: "var(--accent-primary)",
+                        textDecoration: "none",
+                        fontWeight: 600,
+                      }}
+                    >
+                      Prefer a full order review? Open Dedicated Checkout Page &rarr;
+                    </Link>
                   </div>
                 </form>
               </div>

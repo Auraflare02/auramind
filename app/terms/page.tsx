@@ -134,7 +134,7 @@ export default function TermsPage() {
             </p>
             <div style={{ backgroundColor: "var(--bg-elevated)", border: "1px solid var(--border-default)", padding: "14px 18px", borderRadius: "8px", fontSize: "0.875rem" }}>
               <div>Operating Entity: <strong>AuraMind</strong></div>
-              <div>Official Website: <strong>https://auramind-vert.vercel.app</strong></div>
+              <div>Official Website: <strong>https://theauramind.dpdns.org</strong></div>
               <div>Official Contact: <strong>ridhx02@gmail.com</strong></div>
             </div>
           </section>
@@ -398,7 +398,7 @@ export default function TermsPage() {
             </p>
             <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "10px", padding: "18px 22px", fontSize: "0.9rem" }}>
               <div>AuraMind Legal Department</div>
-              <div>Platform: <strong>AuraMind</strong> (https://auramind-vert.vercel.app)</div>
+              <div>Platform: <strong>AuraMind</strong> (https://theauramind.dpdns.org)</div>
               <div>Inquiries &amp; Support: <strong>ridhx02@gmail.com</strong></div>
             </div>
           </section>

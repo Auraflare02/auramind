@@ -1,7 +1,29 @@
-import { type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
+const NEW_OFFICIAL_HOST = "theauramind.dpdns.org";
+const OLD_HOST = "auramind-vert.vercel.app";
+
 export async function middleware(request: NextRequest) {
+  const host = request.headers.get("host") || "";
+  const pathname = request.nextUrl.pathname;
+
+  // 301 Permanent Redirect from old domain to new official canonical domain
+  if (host.includes(OLD_HOST)) {
+    // Preserve auth callback routes in case OAuth provider redirects there
+    const isAuthCallback =
+      pathname.startsWith("/auth/callback") ||
+      pathname.startsWith("/api/auth/google") ||
+      pathname.startsWith("/api/auth/callback");
+
+    if (!isAuthCallback) {
+      const targetUrl = new URL(request.url);
+      targetUrl.protocol = "https:";
+      targetUrl.host = NEW_OFFICIAL_HOST;
+      return NextResponse.redirect(targetUrl, 301);
+    }
+  }
+
   return await updateSession(request);
 }
 

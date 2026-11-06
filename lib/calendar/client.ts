@@ -84,7 +84,7 @@ export function getRedirectUri(origin?: string): string {
   const baseUrl =
     origin ||
     process.env.NEXT_PUBLIC_APP_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://auramind-vert.vercel.app");
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://theauramind.dpdns.org");
 
   return `${baseUrl.replace(/\/+$/, "")}/api/calendar/callback`;
 }
@@ -433,7 +433,7 @@ export async function syncPlanToGoogleCalendar(
   const errors: string[] = [];
 
   const goalSummary = request.context?.goal || plan.goal_summary || "Deliberate Practice";
-  const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://auramind-vert.vercel.app";
+  const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://theauramind.dpdns.org";
   const goalUrl = `${appBaseUrl}/goal/${request.request_code || request.id}`;
 
   // 4. Process each scheduled day and block

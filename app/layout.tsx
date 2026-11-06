@@ -133,8 +133,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     <Link href="/blog" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
                       Productivity Blog
                     </Link>
+                    <Link href="/faq" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
+                      FAQ &amp; Help
+                    </Link>
                     <Link href="/contact" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
                       Contact Support
+                    </Link>
+                    <Link href="/refund-policy" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
+                      Refund Policy
                     </Link>
                     <Link href="/privacy-policy" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
                       Privacy Policy
