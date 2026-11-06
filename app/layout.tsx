@@ -11,6 +11,7 @@ import {
   getWebSiteSchema,
   getSoftwareApplicationSchema,
 } from "@/lib/seo/config";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -212,6 +213,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </div>
         </footer>
+        <SpeedInsights />
       </body>
     </html>
   );
