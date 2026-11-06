@@ -12,6 +12,14 @@ export default function AdminPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
+  // Tab & Payments State
+  const [activeTab, setActiveTab] = useState<"payments" | "requests">("payments");
+  const [payments, setPayments] = useState<any[]>([]);
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>("all");
+  const [paymentSearch, setPaymentSearch] = useState<string>("");
+  const [copiedTxId, setCopiedTxId] = useState<string | null>(null);
+  const [processingPaymentId, setProcessingPaymentId] = useState<string | null>(null);
+
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
@@ -23,14 +31,33 @@ export default function AdminPage() {
   const [bottlenecks, setBottlenecks] = useState<string[]>([]);
   const [strategy, setStrategy] = useState("");
 
+  const loadPayments = useCallback(async (keyToUse = adminKey) => {
+    if (!keyToUse) return;
+    try {
+      const res = await fetch("/api/admin/payments?status=all", {
+        headers: {
+          "content-type": "application/json",
+          "x-admin-key": keyToUse,
+        },
+      });
+      const data = await res.json();
+      if (res.ok && data.requests) {
+        setPayments(data.requests);
+      }
+    } catch (e) {
+      console.warn("Failed to load payments:", e);
+    }
+  }, [adminKey]);
+
   // Attempt to restore adminKey from sessionStorage
   useEffect(() => {
     const saved = sessionStorage.getItem("auramind_admin_key");
     if (saved) {
       setAdminKey(saved);
       loadRequests(saved);
+      loadPayments(saved);
     }
-  }, []);
+  }, [loadPayments]);
 
   const syncSelectedRequestState = (req: any) => {
     const rd = req.research_data;
@@ -61,6 +88,7 @@ export default function AdminPage() {
       setRequests(data.requests || []);
       setIsAuthenticated(true);
       sessionStorage.setItem("auramind_admin_key", keyToUse);
+      loadPayments(keyToUse);
 
       // Keep selected request in sync
       if (selectedId) {
@@ -131,6 +159,75 @@ export default function AdminPage() {
   const selectedRequest = requests.find((r) => r.id === selectedId);
   const filteredRequests = requests.filter((r) => (statusFilter === "all" ? true : r.status === statusFilter));
 
+  const handleApprovePayment = async (id: string) => {
+    setProcessingPaymentId(id);
+    setErrorMsg("");
+    setSuccessMsg("");
+    try {
+      const res = await fetch("/api/admin/payments", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-admin-key": adminKey,
+        },
+        body: JSON.stringify({ id, action: "approve" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Approval failed.");
+      setSuccessMsg(data.message || "Payment verified and plan activated!");
+      await loadPayments(adminKey);
+    } catch (err: any) {
+      setErrorMsg(err.message || "Error approving payment.");
+    } finally {
+      setProcessingPaymentId(null);
+    }
+  };
+
+  const handleRejectPayment = async (id: string) => {
+    const reason = prompt("Enter rejection reason (optional):", "Invalid UTR / Payment not received");
+    if (reason === null) return;
+    setProcessingPaymentId(id);
+    setErrorMsg("");
+    setSuccessMsg("");
+    try {
+      const res = await fetch("/api/admin/payments", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-admin-key": adminKey,
+        },
+        body: JSON.stringify({ id, action: "reject", notes: reason }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Rejection failed.");
+      setSuccessMsg("Payment marked as rejected.");
+      await loadPayments(adminKey);
+    } catch (err: any) {
+      setErrorMsg(err.message || "Error rejecting payment.");
+    } finally {
+      setProcessingPaymentId(null);
+    }
+  };
+
+  const pendingPaymentsCount = payments.filter((p) => p.status === "pending").length;
+  const approvedPaymentsCount = payments.filter((p) => p.status === "approved").length;
+  const totalRevenue = payments
+    .filter((p) => p.status === "approved")
+    .reduce((acc, p) => acc + (p.amount || 0), 0);
+
+  const filteredPayments = payments.filter((p) => {
+    const matchesStatus = paymentStatusFilter === "all" ? true : p.status === paymentStatusFilter;
+    if (!matchesStatus) return false;
+    if (!paymentSearch.trim()) return true;
+    const q = paymentSearch.toLowerCase().trim();
+    return (
+      (p.transactionId || "").toLowerCase().includes(q) ||
+      (p.userEmail || "").toLowerCase().includes(q) ||
+      (p.userName || "").toLowerCase().includes(q) ||
+      (p.auramindId || "").toLowerCase().includes(q)
+    );
+  });
+
   // LOGIN SCREEN
   if (!isAuthenticated) {
     return (
@@ -151,6 +248,7 @@ export default function AdminPage() {
             onSubmit={(e) => {
               e.preventDefault();
               loadRequests(adminKey);
+              loadPayments(adminKey);
             }}
           >
             <div className="form-group" style={{ marginBottom: "20px" }}>
@@ -212,10 +310,13 @@ export default function AdminPage() {
           <button
             type="button"
             className="btn btn-secondary btn-sm"
-            onClick={() => loadRequests()}
-            disabled={Boolean(busyAction)}
+            onClick={() => {
+              loadRequests();
+              loadPayments();
+            }}
+            disabled={Boolean(busyAction) || Boolean(processingPaymentId)}
           >
-            &#x21bb; Refresh Queue
+            &#x21bb; Refresh Data
           </button>
           <button
             type="button"
@@ -230,13 +331,385 @@ export default function AdminPage() {
         </div>
       </div>
 
+      {/* OPERATIONS TABS NAVIGATION */}
+      <div style={{ display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap" }}>
+        <button
+          type="button"
+          onClick={() => setActiveTab("payments")}
+          className={activeTab === "payments" ? "btn btn-primary" : "btn btn-secondary"}
+          style={{ padding: "10px 20px", fontWeight: 700, fontSize: "0.9rem" }}
+        >
+          💳 UPI Payments &amp; Plan Activations
+          {pendingPaymentsCount > 0 && (
+            <span
+              style={{
+                marginLeft: "8px",
+                padding: "2px 8px",
+                borderRadius: "9999px",
+                backgroundColor: "#EF4444",
+                color: "#FFFFFF",
+                fontSize: "0.75rem",
+                fontWeight: 800,
+              }}
+            >
+              {pendingPaymentsCount} PENDING
+            </span>
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("requests")}
+          className={activeTab === "requests" ? "btn btn-primary" : "btn btn-secondary"}
+          style={{ padding: "10px 20px", fontWeight: 700, fontSize: "0.9rem" }}
+        >
+          🎯 Curriculum Research &amp; Timetables ({requests.length})
+        </button>
+      </div>
+
       {errorMsg && <div className="alert alert-error" style={{ marginBottom: "16px" }}>{errorMsg}</div>}
       {successMsg && <div className="alert alert-success" style={{ marginBottom: "16px" }}>{successMsg}</div>}
 
-      {/* TWO PANEL WORKSPACE */}
-      <div className="workspace-layout">
-        {/* LEFT COLUMN: REQUEST QUEUE */}
-        <aside className="workspace-sidebar" style={{ maxHeight: "calc(100vh - 120px)", overflowY: "auto" }}>
+      {/* TAB 1: PAYMENTS & PLAN ACTIVATION VIEW */}
+      {activeTab === "payments" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+          {/* METRICS ROW */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: "16px",
+            }}
+          >
+            <div
+              className="card"
+              style={{
+                padding: "18px 20px",
+                backgroundColor: pendingPaymentsCount > 0 ? "rgba(239, 68, 68, 0.08)" : "var(--bg-card)",
+                border: pendingPaymentsCount > 0 ? "1px solid rgba(239, 68, 68, 0.4)" : "1px solid var(--border-default)",
+              }}
+            >
+              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
+                Pending Verifications
+              </div>
+              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: pendingPaymentsCount > 0 ? "#EF4444" : "var(--accent-primary)", marginTop: "4px" }}>
+                {pendingPaymentsCount}
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "2px" }}>
+                SLA: Must activate within 6 hours
+              </div>
+            </div>
+
+            <div className="card" style={{ padding: "18px 20px" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
+                Activated Plans
+              </div>
+              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "#10B981", marginTop: "4px" }}>
+                {approvedPaymentsCount}
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "2px" }}>
+                Total user upgrades approved
+              </div>
+            </div>
+
+            <div className="card" style={{ padding: "18px 20px" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
+                Total Revenue Collected
+              </div>
+              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "var(--accent-primary)", marginTop: "4px" }}>
+                ₹{totalRevenue}
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "2px" }}>
+                Direct bank settlement via UPI
+              </div>
+            </div>
+
+            <div className="card" style={{ padding: "18px 20px" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
+                Verification Protocol
+              </div>
+              <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "#FFFFFF", marginTop: "8px" }}>
+                UPI Bank Reconciliation
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "4px" }}>
+                Match 12-digit UTR with bank statement
+              </div>
+            </div>
+          </div>
+
+          {/* FILTER & SEARCH BAR */}
+          <div
+            className="card"
+            style={{
+              padding: "14px 18px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "12px",
+            }}
+          >
+            <div style={{ display: "flex", gap: "10px", alignItems: "center", flex: 1, minWidth: "260px" }}>
+              <input
+                type="text"
+                placeholder="Search by UTR number, email, name, or AM-ID..."
+                value={paymentSearch}
+                onChange={(e) => setPaymentSearch(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "8px 14px",
+                  borderRadius: "8px",
+                  backgroundColor: "var(--bg-surface)",
+                  border: "1px solid var(--border-default)",
+                  color: "#FFFFFF",
+                  fontSize: "0.85rem",
+                }}
+              />
+            </div>
+
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Status:</span>
+              <select
+                value={paymentStatusFilter}
+                onChange={(e) => setPaymentStatusFilter(e.target.value)}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: "8px",
+                  backgroundColor: "var(--bg-surface)",
+                  border: "1px solid var(--border-default)",
+                  color: "#FFFFFF",
+                  fontSize: "0.82rem",
+                }}
+              >
+                <option value="all">All ({payments.length})</option>
+                <option value="pending">Pending ({pendingPaymentsCount})</option>
+                <option value="approved">Approved ({approvedPaymentsCount})</option>
+                <option value="rejected">Rejected ({payments.filter((p) => p.status === "rejected").length})</option>
+              </select>
+            </div>
+          </div>
+
+          {/* PAYMENTS QUEUE LIST */}
+          {filteredPayments.length === 0 ? (
+            <div className="card" style={{ padding: "60px 20px", textAlign: "center" }}>
+              <div style={{ fontSize: "2rem", marginBottom: "8px" }}>💳</div>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, margin: "0 0 6px" }}>No Payment Requests Found</h3>
+              <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", margin: 0 }}>
+                {payments.length === 0
+                  ? "When users submit UPI transactions on the pricing page, their requests will appear here for 6-hour approval."
+                  : "No payment requests match your current search/filter."}
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              {filteredPayments.map((p: any) => {
+                const isPending = p.status === "pending";
+                const isApproved = p.status === "approved";
+                const elapsedMs = Date.now() - new Date(p.createdAt).getTime();
+                const remMs = 6 * 60 * 60 * 1000 - elapsedMs;
+                const remHours = Math.floor(remMs / (60 * 60 * 1000));
+                const remMins = Math.floor((remMs % (60 * 60 * 1000)) / (60 * 1000));
+
+                return (
+                  <div
+                    key={p.id}
+                    className="card"
+                    style={{
+                      padding: "20px 24px",
+                      backgroundColor: isPending ? "#181818" : "var(--bg-card)",
+                      border: isPending ? "1px solid rgba(255, 214, 0, 0.4)" : "1px solid var(--border-default)",
+                      borderRadius: "14px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        flexWrap: "wrap",
+                        gap: "12px",
+                        marginBottom: "14px",
+                      }}
+                    >
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "4px" }}>
+                          <span style={{ fontWeight: 800, fontSize: "1.1rem", color: "#FFFFFF" }}>
+                            {p.userName || p.userEmail.split("@")[0]}
+                          </span>
+                          <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontFamily: "monospace" }}>
+                            {p.userEmail}
+                          </span>
+                          {p.auramindId && (
+                            <span className="badge badge-neutral" style={{ fontSize: "0.7rem", padding: "1px 6px" }}>
+                              {p.auramindId}
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
+                          User ID: <code>{p.userId}</code>
+                        </div>
+                      </div>
+
+                      {/* BADGES */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span
+                          style={{
+                            fontSize: "0.78rem",
+                            fontWeight: 800,
+                            padding: "4px 10px",
+                            borderRadius: "6px",
+                            backgroundColor:
+                              p.tier === "diamond"
+                                ? "rgba(168, 85, 247, 0.15)"
+                                : p.tier === "platinum"
+                                ? "rgba(59, 130, 246, 0.15)"
+                                : "rgba(255, 214, 0, 0.15)",
+                            color:
+                              p.tier === "diamond"
+                                ? "#C084FC"
+                                : p.tier === "platinum"
+                                ? "#60A5FA"
+                                : "var(--accent-primary)",
+                            border: "1px solid currentColor",
+                          }}
+                        >
+                          {p.tier.toUpperCase()} PLAN &bull; ₹{p.amount}
+                        </span>
+
+                        <span
+                          style={{
+                            fontSize: "0.75rem",
+                            fontWeight: 800,
+                            padding: "4px 10px",
+                            borderRadius: "6px",
+                            backgroundColor: isPending ? "rgba(255, 214, 0, 0.15)" : isApproved ? "rgba(16, 185, 129, 0.15)" : "rgba(239, 68, 68, 0.15)",
+                            color: isPending ? "var(--accent-primary)" : isApproved ? "#10B981" : "#EF4444",
+                            border: `1px solid ${isPending ? "rgba(255, 214, 0, 0.3)" : isApproved ? "rgba(16, 185, 129, 0.3)" : "rgba(239, 68, 68, 0.3)"}`,
+                          }}
+                        >
+                          {isPending ? "⏳ PENDING VERIFICATION" : isApproved ? "✓ PLAN ACTIVE" : "✕ REJECTED"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* TRANSACTION ID & TIMESTAMPS */}
+                    <div
+                      style={{
+                        backgroundColor: "#111111",
+                        padding: "14px 18px",
+                        borderRadius: "10px",
+                        border: "1px solid var(--border-subtle)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        flexWrap: "wrap",
+                        gap: "12px",
+                        marginBottom: "14px",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
+                          Submitted UPI UTR / Transaction ID
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "2px" }}>
+                          <span style={{ fontSize: "1.1rem", fontWeight: 900, color: "#FFFFFF", fontFamily: "monospace", letterSpacing: "0.05em" }}>
+                            {p.transactionId}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(p.transactionId);
+                              setCopiedTxId(p.transactionId);
+                              setTimeout(() => setCopiedTxId(null), 2000);
+                            }}
+                            className="btn btn-secondary btn-sm"
+                            style={{ padding: "2px 8px", fontSize: "0.72rem" }}
+                          >
+                            {copiedTxId === p.transactionId ? "Copied ✓" : "Copy UTR"}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                          Submitted: {new Date(p.createdAt).toLocaleDateString()} {new Date(p.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </div>
+                        {isPending && (
+                          <div style={{ fontSize: "0.78rem", fontWeight: 700, color: remMs <= 0 ? "#EF4444" : remHours < 2 ? "#F59E0B" : "var(--accent-primary)", marginTop: "2px" }}>
+                            {remMs <= 0 ? "⚠ 6h SLA Exceeded" : `⏳ ${remHours}h ${remMins}m remaining in 6h SLA`}
+                          </div>
+                        )}
+                        {isApproved && (
+                          <div style={{ fontSize: "0.75rem", color: "#10B981", marginTop: "2px" }}>
+                            Approved by {p.reviewedBy || "Admin"}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {p.notes && (
+                      <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginBottom: "14px", fontStyle: "italic" }}>
+                        Note: {p.notes}
+                      </div>
+                    )}
+
+                    {/* ACTION BUTTONS */}
+                    {isPending && (
+                      <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+                        <button
+                          type="button"
+                          onClick={() => handleApprovePayment(p.id)}
+                          disabled={processingPaymentId === p.id}
+                          className="btn btn-primary"
+                          style={{
+                            backgroundColor: "#10B981",
+                            borderColor: "#10B981",
+                            color: "#000000",
+                            fontWeight: 800,
+                            padding: "8px 18px",
+                            fontSize: "0.85rem",
+                          }}
+                        >
+                          {processingPaymentId === p.id
+                            ? "Activating Plan..."
+                            : `✓ Approve & Activate ${p.tier.toUpperCase()} Plan`}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRejectPayment(p.id)}
+                          disabled={processingPaymentId === p.id}
+                          className="btn btn-secondary"
+                          style={{
+                            color: "#EF4444",
+                            borderColor: "rgba(239, 68, 68, 0.4)",
+                            padding: "8px 14px",
+                            fontSize: "0.85rem",
+                          }}
+                        >
+                          ✕ Reject
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB 2: CURRICULUM RESEARCH & DISPATCH QUEUE */}
+      {activeTab === "requests" && (
+        <div
+          className="admin-layout"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "340px 1fr",
+            gap: "20px",
+            alignItems: "start",
+          }}
+        >
+          {/* LEFT COLUMN: REQUEST QUEUE */}
+          <aside className="workspace-sidebar" style={{ maxHeight: "calc(100vh - 120px)", overflowY: "auto" }}>
           <div className="flex-between" style={{ paddingBottom: "10px", borderBottom: "1px solid var(--border-subtle)", marginBottom: "8px" }}>
             <span className="text-xs text-muted" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>
               Queue ({filteredRequests.length})
@@ -628,6 +1101,7 @@ export default function AdminPage() {
           )}
         </main>
       </div>
+      )}
     </div>
   );
 }

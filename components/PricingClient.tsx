@@ -14,7 +14,27 @@ export default function PricingClient() {
   const [isProcessingUpgrade, setIsProcessingUpgrade] = useState<boolean>(false);
   const [feedbackMessage, setFeedbackMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  // UPI Payment states
+  const [transactionId, setTransactionId] = useState<string>("");
+  const [payerNote, setPayerNote] = useState<string>("");
+  const [submittedSuccess, setSubmittedSuccess] = useState<boolean>(false);
+  const [userPaymentRequests, setUserPaymentRequests] = useState<any[]>([]);
+
   // Load user subscription and authentication state
+  const loadPaymentStatus = async () => {
+    try {
+      const res = await fetch("/api/payments/status");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.requests && Array.isArray(data.requests)) {
+          setUserPaymentRequests(data.requests);
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to load payment requests:", err);
+    }
+  };
+
   useEffect(() => {
     async function loadData() {
       try {
@@ -24,6 +44,7 @@ export default function PricingClient() {
           setIsAuthenticated(data.isAuthenticated);
           setUserSubscription(data.userSubscription);
         }
+        await loadPaymentStatus();
       } catch (err) {
         console.error("Failed to load subscription data:", err);
       } finally {
@@ -35,13 +56,33 @@ export default function PricingClient() {
 
   const handleSelectPlan = (tier: SubscriptionTier) => {
     setSelectedPlanModal(tier);
+    setTransactionId("");
+    setPayerNote("");
+    setSubmittedSuccess(false);
     setFeedbackMessage(null);
   };
 
-  const handleConfirmPlan = async () => {
+  const planConfig = selectedPlanModal ? SUBSCRIPTION_PLANS[selectedPlanModal] : null;
+  const payableAmount = planConfig
+    ? billingCycle === "annual"
+      ? planConfig.annualPriceMonthly * 12
+      : planConfig.monthlyPriceIntro || planConfig.monthlyPriceRegular
+    : 0;
+
+  const handlePaySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!selectedPlanModal) return;
+
+    if (!transactionId.trim()) {
+      setFeedbackMessage({
+        type: "error",
+        text: "Please enter your 12-digit UPI Transaction ID / UTR reference number.",
+      });
+      return;
+    }
+
     if (!isAuthenticated) {
-      window.location.href = `/signup?plan=${selectedPlanModal}&cycle=${billingCycle}`;
+      window.location.href = `/login?next=/pricing?plan=${selectedPlanModal}`;
       return;
     }
 
@@ -49,31 +90,29 @@ export default function PricingClient() {
     setFeedbackMessage(null);
 
     try {
-      const res = await fetch("/api/subscription", {
+      const res = await fetch("/api/payments/submit", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ tier: selectedPlanModal, cycle: billingCycle }),
+        body: JSON.stringify({
+          tier: selectedPlanModal,
+          cycle: billingCycle,
+          amount: payableAmount,
+          transactionId: transactionId.trim(),
+          notes: payerNote.trim() || undefined,
+        }),
       });
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Failed to update subscription.");
+        throw new Error(data.error || "Failed to submit payment.");
       }
 
-      setUserSubscription(data.subscription);
-      setFeedbackMessage({
-        type: "success",
-        text: data.message || `Successfully switched to ${SUBSCRIPTION_PLANS[selectedPlanModal].name}!`,
-      });
-
-      setTimeout(() => {
-        setSelectedPlanModal(null);
-        setFeedbackMessage(null);
-      }, 2200);
+      setSubmittedSuccess(true);
+      await loadPaymentStatus();
     } catch (err: any) {
       setFeedbackMessage({
         type: "error",
-        text: err.message || "An error occurred while activating your plan.",
+        text: err.message || "An error occurred while submitting your transaction.",
       });
     } finally {
       setIsProcessingUpgrade(false);
@@ -81,6 +120,7 @@ export default function PricingClient() {
   };
 
   const activeTier = userSubscription?.tier || "gold";
+  const pendingRequest = userPaymentRequests.find((r) => r.status === "pending");
 
   return (
     <div style={{ backgroundColor: "#080808", color: "#FFFFFF", minHeight: "100vh" }}>
@@ -95,6 +135,40 @@ export default function PricingClient() {
         }}
       >
         <div className="container" style={{ maxWidth: "880px" }}>
+          {/* Active Pending Payment Request Banner */}
+          {pendingRequest && (
+            <div
+              style={{
+                marginBottom: "24px",
+                padding: "16px 20px",
+                borderRadius: "12px",
+                backgroundColor: "rgba(255, 214, 0, 0.12)",
+                border: "1px solid rgba(255, 214, 0, 0.4)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: "12px",
+                textAlign: "left",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <span style={{ fontSize: "1.4rem" }}>⏳</span>
+                <div>
+                  <div style={{ fontWeight: 800, color: "var(--accent-primary)", fontSize: "0.95rem" }}>
+                    Payment Verification Pending ({SUBSCRIPTION_PLANS[pendingRequest.tier as SubscriptionTier]?.name || pendingRequest.tier})
+                  </div>
+                  <div style={{ fontSize: "0.825rem", color: "var(--text-secondary)" }}>
+                    Transaction ID: <strong style={{ color: "#FFFFFF", fontFamily: "monospace" }}>#{pendingRequest.transactionId}</strong> &bull; Amount: ₹{pendingRequest.amount} &bull; Admin turnaround: within 6 hours.
+                  </div>
+                </div>
+              </div>
+              <span className="badge badge-yellow" style={{ fontSize: "0.75rem", padding: "4px 10px" }}>
+                Under Review
+              </span>
+            </div>
+          )}
+
           <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
             <span className="badge badge-yellow" style={{ fontSize: "0.8rem", padding: "4px 12px" }}>
               AuraMind Subscriptions
@@ -509,19 +583,20 @@ export default function PricingClient() {
         </div>
       </section>
 
-      {/* 7. PLAN ACTIVATION MODAL */}
-      {selectedPlanModal && (
+      {/* 7. UPI QR CODE PAYMENT & ACTIVATION MODAL */}
+      {selectedPlanModal && planConfig && (
         <div
           style={{
             position: "fixed",
             inset: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.8)",
-            backdropFilter: "blur(8px)",
+            backgroundColor: "rgba(0, 0, 0, 0.85)",
+            backdropFilter: "blur(10px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             zIndex: 1000,
             padding: "20px",
+            overflowY: "auto",
           }}
         >
           <div
@@ -529,102 +604,303 @@ export default function PricingClient() {
             style={{
               maxWidth: "520px",
               width: "100%",
-              backgroundColor: "#141414",
+              backgroundColor: "#121212",
               border: "1px solid var(--border-default)",
-              borderRadius: "18px",
-              padding: "32px",
-              boxShadow: "0 20px 50px rgba(0, 0, 0, 0.6)",
+              borderRadius: "20px",
+              padding: "28px 24px",
+              boxShadow: "0 24px 60px rgba(0, 0, 0, 0.8)",
               position: "relative",
+              maxHeight: "90vh",
+              overflowY: "auto",
             }}
           >
             <button
               type="button"
               onClick={() => setSelectedPlanModal(null)}
+              aria-label="Close Payment Modal"
               style={{
                 position: "absolute",
-                top: "18px",
-                right: "18px",
+                top: "16px",
+                right: "16px",
                 background: "transparent",
                 border: "none",
                 color: "var(--text-muted)",
-                fontSize: "1.2rem",
+                fontSize: "1.3rem",
                 cursor: "pointer",
+                padding: "4px 8px",
               }}
             >
               ✕
             </button>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-              <span className="badge badge-yellow">
-                {SUBSCRIPTION_PLANS[selectedPlanModal].badge}
-              </span>
-            </div>
+            {submittedSuccess ? (
+              /* SUCCESS CONFIRMATION STATE */
+              <div style={{ textAlign: "center", padding: "16px 8px" }}>
+                <div
+                  style={{
+                    width: "64px",
+                    height: "64px",
+                    borderRadius: "50%",
+                    backgroundColor: "rgba(16, 185, 129, 0.15)",
+                    border: "2px solid #10B981",
+                    color: "#10B981",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "2rem",
+                    margin: "0 auto 16px",
+                  }}
+                >
+                  ✓
+                </div>
 
-            <h2 style={{ fontSize: "1.6rem", fontWeight: 800, margin: "0 0 6px" }}>
-              Activate {SUBSCRIPTION_PLANS[selectedPlanModal].name}
-            </h2>
-            <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", margin: "0 0 20px" }}>
-              {SUBSCRIPTION_PLANS[selectedPlanModal].tagline} &bull; {SUBSCRIPTION_PLANS[selectedPlanModal].coreLevelPhilosophy}
-            </p>
-
-            <div
-              style={{
-                backgroundColor: "#1A1A1A",
-                padding: "16px 20px",
-                borderRadius: "12px",
-                marginBottom: "20px",
-                border: "1px solid var(--border-default)",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "8px" }}>
-                <span style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>Billing Amount:</span>
-                <div>
-                  <span style={{ fontSize: "1.6rem", fontWeight: 900, color: "var(--accent-primary)" }}>
-                    ₹
-                    {billingCycle === "annual"
-                      ? SUBSCRIPTION_PLANS[selectedPlanModal].annualPriceMonthly
-                      : SUBSCRIPTION_PLANS[selectedPlanModal].monthlyPriceIntro}
+                <div style={{ display: "inline-block", marginBottom: "8px" }}>
+                  <span className="badge badge-success" style={{ fontSize: "0.75rem", padding: "3px 10px" }}>
+                    Transaction Submitted
                   </span>
-                  <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>/month</span>
+                </div>
+
+                <h2 style={{ fontSize: "1.6rem", fontWeight: 800, margin: "0 0 8px", color: "#FFFFFF" }}>
+                  Payment Under Review!
+                </h2>
+
+                <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.6, marginBottom: "20px" }}>
+                  Your UPI transaction has been queued for admin verification. The admin will verify your payment and activate your <strong>{planConfig.name}</strong> plan within <strong>6 hours</strong>.
+                </p>
+
+                <div
+                  style={{
+                    backgroundColor: "#1A1A1A",
+                    padding: "16px",
+                    borderRadius: "12px",
+                    border: "1px solid var(--border-subtle)",
+                    textAlign: "left",
+                    marginBottom: "24px",
+                    fontSize: "0.85rem",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                    <span style={{ color: "var(--text-muted)" }}>Plan Requested:</span>
+                    <strong style={{ color: planConfig.accentColor }}>{planConfig.name}</strong>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                    <span style={{ color: "var(--text-muted)" }}>Amount Paid:</span>
+                    <strong style={{ color: "var(--accent-primary)" }}>₹{payableAmount} INR</strong>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                    <span style={{ color: "var(--text-muted)" }}>Transaction ID / UTR:</span>
+                    <strong style={{ color: "#FFFFFF", fontFamily: "monospace" }}>#{transactionId}</strong>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "var(--text-muted)" }}>Turnaround SLA:</span>
+                    <span style={{ color: "#10B981", fontWeight: 700 }}>Within 6 hours</span>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: "12px" }}>
+                  <Link
+                    href="/dashboard"
+                    className="btn btn-primary"
+                    style={{ flex: 1, padding: "10px", justifyContent: "center" }}
+                  >
+                    View Dashboard
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPlanModal(null)}
+                    className="btn btn-secondary"
+                    style={{ padding: "10px 18px" }}
+                  >
+                    Close
+                  </button>
                 </div>
               </div>
+            ) : (
+              /* PAYMENT & QR SCAN STATE */
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                  <span className="badge badge-yellow">
+                    {planConfig.badge}
+                  </span>
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                    UPI Payment Gateway
+                  </span>
+                </div>
 
-              <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", borderTop: "1px solid var(--border-subtle)", paddingTop: "8px" }}>
-                Includes {SUBSCRIPTION_PLANS[selectedPlanModal].maxGoals} concurrent goal(s), {SUBSCRIPTION_PLANS[selectedPlanModal].maxFriends} accountability friends, and {SUBSCRIPTION_PLANS[selectedPlanModal].whatsAppCheckins ? "WhatsApp check-ins" : "hourly app reminders"}.
-              </div>
-            </div>
+                <h2 style={{ fontSize: "1.5rem", fontWeight: 800, margin: "0 0 4px", color: "#FFFFFF" }}>
+                  Get {planConfig.name} &bull; ₹{payableAmount}
+                </h2>
+                <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", margin: "0 0 16px" }}>
+                  Scan the Google Pay QR code below with any UPI app, then submit your transaction ID for admin activation.
+                </p>
 
-            {feedbackMessage && (
-              <div
-                className={`alert ${feedbackMessage.type === "success" ? "alert-success" : "alert-error"}`}
-                style={{ marginBottom: "20px" }}
-              >
-                {feedbackMessage.text}
+                {/* QR CODE CARD */}
+                <div
+                  style={{
+                    backgroundColor: "#181818",
+                    padding: "20px 16px",
+                    borderRadius: "16px",
+                    border: "1px solid var(--border-default)",
+                    textAlign: "center",
+                    marginBottom: "20px",
+                  }}
+                >
+                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "12px", fontWeight: 700 }}>
+                    Scan with GPay, PhonePe, Paytm, or Any UPI App
+                  </div>
+
+                  {/* QR Image with crisp white padding */}
+                  <div
+                    style={{
+                      display: "inline-block",
+                      backgroundColor: "#FFFFFF",
+                      padding: "10px",
+                      borderRadius: "14px",
+                      boxShadow: "0 8px 24px rgba(0, 0, 0, 0.4)",
+                      marginBottom: "12px",
+                    }}
+                  >
+                    <img
+                      src="/payments/auramind-upi-qr.jpg"
+                      alt="AuraMind Google Pay UPI QR Code"
+                      style={{
+                        width: "190px",
+                        height: "190px",
+                        display: "block",
+                        borderRadius: "8px",
+                        objectFit: "contain",
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", marginBottom: "8px" }}>
+                    <span style={{ fontSize: "1.3rem", fontWeight: 900, color: "var(--accent-primary)" }}>
+                      ₹{payableAmount}
+                    </span>
+                    <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                      ({billingCycle === "annual" ? "Annual Plan" : "1 Month"})
+                    </span>
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "center", gap: "6px", flexWrap: "wrap", fontSize: "0.7rem", color: "var(--text-secondary)" }}>
+                    <span style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "#222222" }}>Google Pay</span>
+                    <span style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "#222222" }}>PhonePe</span>
+                    <span style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "#222222" }}>Paytm</span>
+                    <span style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "#222222" }}>BHIM UPI</span>
+                    <span style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "#222222" }}>Cred</span>
+                  </div>
+                </div>
+
+                {/* TRANSACTION SUBMISSION FORM */}
+                <form onSubmit={handlePaySubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "6px" }}>
+                      UPI Transaction ID / UTR Number <span style={{ color: "var(--accent-primary)" }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. 431289456721 (12-digit UTR)"
+                      value={transactionId}
+                      onChange={(e) => setTransactionId(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "10px 14px",
+                        borderRadius: "8px",
+                        backgroundColor: "#1A1A1A",
+                        border: "1px solid var(--border-default)",
+                        color: "#FFFFFF",
+                        fontFamily: "monospace",
+                        fontSize: "0.95rem",
+                      }}
+                    />
+                    <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "4px" }}>
+                      Copy the 12-digit UTR from your UPI payment success screen.
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>
+                      Payer Name or Mobile (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Ridham / 9876543210"
+                      value={payerNote}
+                      onChange={(e) => setPayerNote(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "10px 14px",
+                        borderRadius: "8px",
+                        backgroundColor: "#1A1A1A",
+                        border: "1px solid var(--border-default)",
+                        color: "#FFFFFF",
+                        fontSize: "0.85rem",
+                      }}
+                    />
+                  </div>
+
+                  {/* 6-HOUR APPROVAL NOTICE */}
+                  <div
+                    style={{
+                      padding: "10px 12px",
+                      borderRadius: "8px",
+                      backgroundColor: "rgba(255, 214, 0, 0.08)",
+                      border: "1px solid rgba(255, 214, 0, 0.25)",
+                      fontSize: "0.78rem",
+                      color: "var(--text-secondary)",
+                      lineHeight: 1.5,
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: "8px",
+                    }}
+                  >
+                    <span style={{ fontSize: "1rem", flexShrink: 0 }}>🛡️</span>
+                    <div>
+                      <strong>6-Hour Activation SLA:</strong> Admin reviews each payment and activates your plan within <strong>6 hours</strong>. Your dashboard limits will update automatically once verified.
+                    </div>
+                  </div>
+
+                  {feedbackMessage && (
+                    <div
+                      className={`alert ${feedbackMessage.type === "success" ? "alert-success" : "alert-error"}`}
+                      style={{ padding: "8px 12px", fontSize: "0.82rem", margin: 0 }}
+                    >
+                      {feedbackMessage.text}
+                    </div>
+                  )}
+
+                  <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
+                    {!isAuthenticated ? (
+                      <Link
+                        href={`/login?redirect=/pricing?plan=${selectedPlanModal}`}
+                        className="btn btn-primary"
+                        style={{ flex: 1, padding: "12px", fontWeight: 800, justifyContent: "center" }}
+                      >
+                        Log In to Submit Payment &rarr;
+                      </Link>
+                    ) : (
+                      <button
+                        type="submit"
+                        disabled={isProcessingUpgrade}
+                        className="btn btn-primary"
+                        style={{ flex: 1, padding: "12px", fontWeight: 800, justifyContent: "center" }}
+                      >
+                        {isProcessingUpgrade ? "Submitting..." : "Submit Transaction ID &rarr;"}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPlanModal(null)}
+                      className="btn btn-secondary"
+                      style={{ padding: "12px 16px" }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
               </div>
             )}
-
-            <div style={{ display: "flex", gap: "12px" }}>
-              <button
-                type="button"
-                onClick={handleConfirmPlan}
-                disabled={isProcessingUpgrade}
-                className="btn btn-primary"
-                style={{ flex: 1, padding: "12px 24px", fontWeight: 800 }}
-              >
-                {isProcessingUpgrade
-                  ? "Activating Plan..."
-                  : isAuthenticated
-                  ? "Confirm & Activate Plan"
-                  : "Sign Up to Activate Plan"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedPlanModal(null)}
-                className="btn btn-secondary"
-              >
-                Cancel
-              </button>
-            </div>
           </div>
         </div>
       )}
