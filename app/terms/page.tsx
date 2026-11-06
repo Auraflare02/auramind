@@ -63,7 +63,7 @@ export default function TermsPage() {
               margin: 0,
             }}
           >
-            These Terms &amp; Conditions constitute a legally binding agreement between you and AuraMind (Aura Builds). They govern your access to and use of the AuraMind goal planning, focus tracking, and accountability platform.
+            These Terms &amp; Conditions constitute a legally binding agreement between you and AuraMind. They govern your access to and use of the AuraMind goal planning, focus tracking, and accountability platform.
           </p>
         </div>
 
@@ -130,13 +130,12 @@ export default function TermsPage() {
               1. Introduction &amp; Operator Identification
             </h2>
             <p>
-              Welcome to AuraMind, a web platform created to facilitate deliberate practice, execution planning, and productivity accountability. AuraMind is operated by <strong>Aura Builds</strong> (&ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;).
+              Welcome to AuraMind, a web platform created to facilitate deliberate practice, execution planning, and productivity accountability. AuraMind is operated by <strong>AuraMind</strong> (&ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;).
             </p>
             <div style={{ backgroundColor: "var(--bg-elevated)", border: "1px solid var(--border-default)", padding: "14px 18px", borderRadius: "8px", fontSize: "0.875rem" }}>
-              <div>Operating Entity: <strong>Aura Builds (AuraMind)</strong></div>
-              <div>Entity Status: <strong>[OPERATOR_LEGAL_ENTITY_NAME — Configuration Placeholder]</strong></div>
-              <div>Registered Office: <strong>[OPERATOR_REGISTERED_ADDRESS — Configuration Placeholder]</strong></div>
-              <div>Official Inquiries: <strong>[OPERATOR_SUPPORT_EMAIL — placeholder: legal@auramind.ai]</strong></div>
+              <div>Operating Entity: <strong>AuraMind</strong></div>
+              <div>Official Website: <strong>https://auramind-vert.vercel.app</strong></div>
+              <div>Official Contact: <strong>ridhx02@gmail.com</strong></div>
             </div>
           </section>
 
@@ -310,7 +309,7 @@ export default function TermsPage() {
               13. Intellectual Property Rights
             </h2>
             <p>
-              All trademarks, software source code, design systems, visual styling, UX flows, animations, documentation, and original branding associated with AuraMind and Aura Builds are the exclusive intellectual property of the operator or its licensors. You may not copy, reproduce, or distribute any part of AuraMind without prior written permission.
+              All trademarks, software source code, design systems, visual styling, UX flows, animations, documentation, and original branding associated with AuraMind are the exclusive intellectual property of the operator or its licensors. You may not copy, reproduce, or distribute any part of AuraMind without prior written permission.
             </p>
           </section>
 
@@ -333,7 +332,7 @@ export default function TermsPage() {
               15. Disclaimers of Warranties
             </h2>
             <p style={{ textTransform: "uppercase", fontSize: "0.85rem", letterSpacing: "0.02em" }}>
-              TO THE MAXIMUM EXTENT PERMITTED UNDER APPLICABLE LAW, AURAMIND AND AURA BUILDS EXPRESSLY DISCLAIM ALL WARRANTIES OF ANY KIND, WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT.
+              TO THE MAXIMUM EXTENT PERMITTED UNDER APPLICABLE LAW, AURAMIND EXPRESSLY DISCLAIMS ALL WARRANTIES OF ANY KIND, WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT.
             </p>
           </section>
 
@@ -343,7 +342,7 @@ export default function TermsPage() {
               16. Limitation of Liability
             </h2>
             <p>
-              To the maximum extent permitted by applicable law, in no event shall AuraMind, Aura Builds, or its developers be liable for any indirect, incidental, special, consequential, or punitive damages (including loss of profits, data, goodwill, or personal time) arising out of or related to your use of or inability to use the platform, even if advised of the possibility of such damages.
+              To the maximum extent permitted by applicable law, in no event shall AuraMind or its developers be liable for any indirect, incidental, special, consequential, or punitive damages (including loss of profits, data, goodwill, or personal time) arising out of or related to your use of or inability to use the platform, even if advised of the possibility of such damages.
             </p>
           </section>
 
@@ -385,7 +384,7 @@ export default function TermsPage() {
               19. Governing Law and Dispute Resolution
             </h2>
             <p>
-              These Terms shall be governed by and construed in accordance with the substantive laws of <strong>[GOVERNING_JURISDICTION_CITY_COUNTRY — Configuration Placeholder]</strong>, without regard to conflict of law principles. Any legal suit, action, or proceeding arising out of or related to these Terms shall be instituted exclusively in the competent courts located within <strong>[COMPETENT_COURT_LOCATION — Configuration Placeholder]</strong>.
+              These Terms shall be governed by and construed in accordance with applicable laws, without regard to conflict of law principles. Any legal inquiry, action, or proceeding arising out of or related to these Terms shall be instituted in competent courts of jurisdiction.
             </p>
           </section>
 
@@ -398,10 +397,9 @@ export default function TermsPage() {
               For legal inquiries, terms clarification, or formal notifications, please contact:
             </p>
             <div style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", borderRadius: "10px", padding: "18px 22px", fontSize: "0.9rem" }}>
-              <div>AuraMind Legal Department (Aura Builds)</div>
-              <div>Email: <strong>[OPERATOR_LEGAL_EMAIL — placeholder: legal@auramind.ai]</strong></div>
-              <div>Address: <strong>[OPERATOR_LEGAL_ADDRESS — Configuration Placeholder]</strong></div>
-              <div>Phone: <strong>[OPERATOR_PHONE_NUMBER — Optional Configuration Placeholder]</strong></div>
+              <div>AuraMind Legal Department</div>
+              <div>Platform: <strong>AuraMind</strong> (https://auramind-vert.vercel.app)</div>
+              <div>Inquiries &amp; Support: <strong>ridhx02@gmail.com</strong></div>
             </div>
           </section>
 

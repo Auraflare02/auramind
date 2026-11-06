@@ -201,7 +201,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               }}
             >
               <div>
-                &copy; {new Date().getFullYear()} AuraMind (Aura Builds). Core Principle: <em>&ldquo;Don&rsquo;t plan a perfect day. Build a system that learns your real one.&rdquo;</em>
+                &copy; {new Date().getFullYear()} AuraMind. Core Principle: <em>&ldquo;Don&rsquo;t plan a perfect day. Build a system that learns your real one.&rdquo;</em>
               </div>
               <div style={{ display: "flex", gap: "18px" }}>
                 <Link href="/privacy-policy" style={{ color: "var(--text-muted)", textDecoration: "none" }}>Privacy Policy</Link>

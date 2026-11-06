@@ -126,7 +126,7 @@ export default function PrivacyPolicyPage() {
               1. About AuraMind
             </h2>
             <p>
-              AuraMind is an intelligent goal achievement and accountability platform operating under <strong>Aura Builds</strong>. The platform empowers individuals to transform abstract ambitions into structured 30-day deliberate practice schedules, monitor focused execution windows, log distraction patterns, and adapt routines dynamically.
+              AuraMind is an intelligent goal achievement and accountability platform. The platform empowers individuals to transform abstract ambitions into structured 30-day deliberate practice schedules, monitor focused execution windows, log distraction patterns, and adapt routines dynamically.
             </p>
             <div
               style={{
@@ -141,10 +141,10 @@ export default function PrivacyPolicyPage() {
               <div style={{ fontWeight: 600, color: "var(--text-primary)", marginBottom: "6px" }}>
                 Platform Operator Information
               </div>
-              <div>Entity / Brand: <strong>Aura Builds (AuraMind)</strong></div>
-              <div>Operating Jurisdiction: <strong>[OPERATOR_LEGAL_ENTITY_NAME — Configuration Placeholder]</strong></div>
-              <div>Registered Address: <strong>[OPERATOR_REGISTERED_ADDRESS — Configuration Placeholder]</strong></div>
-              <div>Primary Contact: <strong>[OPERATOR_CONTACT_EMAIL — placeholder: contact@auramind.ai]</strong></div>
+              <div>Entity / Application: <strong>AuraMind</strong></div>
+              <div>Official Website: <strong>https://auramind-vert.vercel.app</strong></div>
+              <div>User Support &amp; Developer Contact: <strong>ridhx02@gmail.com</strong></div>
+              <div>Privacy Officer: <strong>ridhx02@gmail.com</strong></div>
             </div>
           </section>
 
@@ -245,72 +245,119 @@ export default function PrivacyPolicyPage() {
           </section>
 
           {/* SECTION 6 */}
-          <section id="google-calendar">
+          <section id="google-user-data">
             <h2 style={{ fontSize: "1.45rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "12px", letterSpacing: "-0.02em" }}>
-              6. Google Calendar Integration &amp; Limited Use Disclosure
+              6. Google User Data Policy (Google Sign-In &amp; Google Calendar API)
             </h2>
             <p>
-              AuraMind offers an optional, voluntary integration with <strong>Google Calendar</strong> that allows users to synchronize their AI-synthesized 30-day curriculum, daily focus sessions, and timetable changes directly into their primary Google Calendar.
+              AuraMind integrates with Google services to provide secure authentication via Google Sign-In and optional schedule synchronization via the <strong>Google Calendar API</strong>. We are committed to absolute transparency regarding how Google user data is requested, accessed, handled, stored, shared, and deleted.
             </p>
+
             <div
               style={{
                 backgroundColor: "var(--bg-elevated)",
-                border: "1px solid var(--border-default)",
+                border: "1px solid var(--accent-primary)",
                 borderRadius: "8px",
                 padding: "18px 20px",
-                marginBottom: "16px",
+                marginBottom: "20px",
                 fontSize: "0.9rem",
               }}
             >
-              <div style={{ fontWeight: 700, color: "var(--accent-primary)", marginBottom: "8px" }}>
-                Compliance with Google API Services User Data Policy
+              <div style={{ fontWeight: 700, color: "var(--accent-primary)", marginBottom: "8px", fontSize: "1rem" }}>
+                Google API Services User Data Policy Compliance Statement
               </div>
-              <p style={{ margin: "0 0 10px", lineHeight: 1.55 }}>
-                AuraMind&rsquo;s use and transfer to any other app of information received from Google APIs will strictly adhere to the{" "}
+              <p style={{ margin: "0 0 10px", lineHeight: 1.6, color: "#FFFFFF" }}>
+                AuraMind&rsquo;s use and transfer to any other app of information received from Google APIs will adhere to the{" "}
                 <a
                   href="https://developers.google.com/terms/api-services-user-data-policy"
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ color: "var(--accent-primary)", textDecoration: "underline" }}
+                  style={{ color: "var(--accent-primary)", textDecoration: "underline", fontWeight: 600 }}
                 >
                   Google API Services User Data Policy
                 </a>
                 , including the <strong>Limited Use</strong> requirements.
               </p>
               <ul style={{ paddingLeft: "20px", margin: 0, display: "flex", flexDirection: "column", gap: "6px" }}>
-                <li><strong>No Advertising:</strong> We never use or transfer Google Calendar user data for serving advertisements, retargeting, or interest-based profiling.</li>
-                <li><strong>No Model Training:</strong> Google Calendar event data is never used to train or fine-tune general AI foundation models.</li>
-                <li><strong>No Human Inspection:</strong> No human employees or contractors inspect your calendar events unless explicitly requested by you for technical troubleshooting or legally mandated.</li>
+                <li><strong>No Advertising:</strong> We never use or transfer Google user data for serving advertisements, retargeting, personalized marketing, or interest-based profiling.</li>
+                <li><strong>No AI Model Training:</strong> Google user data (including profile identity, email, and calendar events) is <strong>never</strong> used to train, fine-tune, or improve generalized artificial intelligence or machine learning foundation models.</li>
+                <li><strong>No Human Inspection:</strong> No human employees or contractors inspect your Google user data or private calendar entries unless you grant explicit affirmative agreement for specific technical troubleshooting, or when required by applicable law or security investigations.</li>
+                <li><strong>No Sale or Transfer:</strong> Google user data is never sold, leased, rented, or transferred to third-party data brokers under any circumstances.</li>
               </ul>
             </div>
 
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "var(--text-primary)", marginTop: "16px", marginBottom: "8px" }}>
-              Information Accessed and Operational Scope
+            <h3 style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--text-primary)", marginTop: "20px", marginBottom: "10px" }}>
+              A. Google Scopes Requested and Purpose
             </h3>
-            <ul style={{ paddingLeft: "24px", display: "flex", flexDirection: "column", gap: "8px" }}>
+            <ul style={{ paddingLeft: "24px", display: "flex", flexDirection: "column", gap: "10px" }}>
               <li>
-                <strong style={{ color: "var(--text-primary)" }}>Event Creation &amp; Synchronization:</strong> AuraMind creates and updates only calendar events specifically associated with your deliberate practice schedules. All events created by AuraMind are clearly designated with the <code>[AuraMind]</code> title prefix and include private application identifiers.
+                <strong style={{ color: "var(--text-primary)" }}>Google Sign-In Scopes (<code>openid</code>, <code>email</code>, <code>profile</code>):</strong>
+                <div style={{ marginTop: "2px" }}>
+                  Used solely to authenticate you, verify your email address, securely identify your account without requiring separate passwords, and display your name and profile picture on your dashboard and private profile.
+                </div>
               </li>
               <li>
-                <strong style={{ color: "var(--text-primary)" }}>Schedule Conflict Checking:</strong> When requested, AuraMind reads event start and end times to identify potential overlaps with your personal commitments. AuraMind does not read, index, or store unrelated private event notes, attachments, or attendee lists.
-              </li>
-              <li>
-                <strong style={{ color: "var(--text-primary)" }}>Safe Deletion Boundaries:</strong> AuraMind only deletes calendar events that it positively created and manages. AuraMind will never modify or delete your external, unrelated personal or work calendar entries.
+                <strong style={{ color: "var(--text-primary)" }}>Google Calendar Events Scope (<code>https://www.googleapis.com/auth/calendar.events</code>):</strong>
+                <div style={{ marginTop: "2px" }}>
+                  Used solely to synchronize your AI-generated 30-day deliberate practice schedules and focus sessions into your primary Google Calendar, and check start/end times of existing events to alert you of potential scheduling conflicts.
+                </div>
               </li>
             </ul>
 
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "var(--text-primary)", marginTop: "16px", marginBottom: "8px" }}>
-              Token Security, Revocation &amp; Disconnection
+            <h3 style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--text-primary)", marginTop: "20px", marginBottom: "10px" }}>
+              B. Boundaries of Calendar Access
             </h3>
             <ul style={{ paddingLeft: "24px", display: "flex", flexDirection: "column", gap: "8px" }}>
               <li>
-                <strong style={{ color: "var(--text-primary)" }}>AES-256-GCM Encryption at Rest:</strong> Google OAuth refresh tokens are cryptographically encrypted at rest using industry-standard AES-256-GCM with distinct initialization vectors on secure server backends. Plaintext tokens are never stored or exposed to the client.
+                <strong style={{ color: "var(--text-primary)" }}>Dedicated Event Identification:</strong> All events created by AuraMind are prefixed with <code>[AuraMind]</code> and tagged with private internal metadata.
               </li>
               <li>
-                <strong style={{ color: "var(--text-primary)" }}>Instant Disconnection:</strong> You can disconnect Google Calendar at any time via <em>Settings &rarr; Google Calendar Integration &rarr; Disconnect</em>. Disconnection immediately deletes your stored token and revokes access at Google&rsquo;s OAuth server.
+                <strong style={{ color: "var(--text-primary)" }}>Strict Deletion Boundaries:</strong> AuraMind only modifies or deletes events created directly by AuraMind. AuraMind will never edit, overwrite, or delete your external personal, work, or family calendar entries.
               </li>
               <li>
-                <strong style={{ color: "var(--text-primary)" }}>Right to Erasure:</strong> When you delete your AuraMind account, all calendar connection records, access tokens, and event tracking IDs are permanently and irreversibly purged from our database.
+                <strong style={{ color: "var(--text-primary)" }}>Minimal Conflict Inspection:</strong> When checking for schedule overlaps, AuraMind queries only the start and end timestamps of existing calendar blocks. We do not read, log, or store unrelated private notes, attachments, or attendee lists.
+              </li>
+            </ul>
+
+            <h3 style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--text-primary)", marginTop: "20px", marginBottom: "10px" }}>
+              C. Storage, Encryption &amp; Security
+            </h3>
+            <ul style={{ paddingLeft: "24px", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <li>
+                <strong style={{ color: "var(--text-primary)" }}>AES-256-GCM Encryption at Rest:</strong> All Google OAuth tokens and refresh credentials are encrypted at rest using industry-standard AES-256-GCM encryption with unique initialization vectors on secure backend databases. Plaintext tokens are never stored or exposed to client browsers.
+              </li>
+              <li>
+                <strong style={{ color: "var(--text-primary)" }}>TLS 1.3 in Transit:</strong> All communications between your browser, our servers, and Google APIs are strictly encrypted using TLS 1.3 / HTTPS.
+              </li>
+              <li>
+                <strong style={{ color: "var(--text-primary)" }}>Row-Level Security:</strong> Only your authenticated user account has access to view or trigger synchronization for your calendar data.
+              </li>
+            </ul>
+
+            <h3 style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--text-primary)", marginTop: "20px", marginBottom: "10px" }}>
+              D. User Control, Revocation &amp; Complete Data Deletion
+            </h3>
+            <p>You have full autonomous control over your Google connection and data at all times:</p>
+            <ul style={{ paddingLeft: "24px", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <li>
+                <strong style={{ color: "var(--text-primary)" }}>In-App Disconnect:</strong> You can disconnect Google Calendar at any time by navigating to <em>Settings &rarr; Google Calendar Integration &rarr; Disconnect</em>. Disconnection immediately deletes your stored access and refresh tokens from our database.
+              </li>
+              <li>
+                <strong style={{ color: "var(--text-primary)" }}>Revoke via Google Account:</strong> You can revoke AuraMind&rsquo;s access to your Google Account at any time directly through the{" "}
+                <a
+                  href="https://myaccount.google.com/permissions"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "var(--accent-primary)", textDecoration: "underline" }}
+                >
+                  Google Third-Party Apps &amp; Permissions Manager
+                </a>.
+              </li>
+              <li>
+                <strong style={{ color: "var(--text-primary)" }}>Complete Account Deletion:</strong> You can permanently delete your entire AuraMind account under <em>Settings &rarr; Danger Zone &rarr; Delete Account</em>. This permanently and irreversibly purges your identity, Google OAuth tokens, and all synchronization metadata from our systems.
+              </li>
+              <li>
+                <strong style={{ color: "var(--text-primary)" }}>Direct Data Erasure Request:</strong> You may also email our developer support team at <strong>ridhx02@gmail.com</strong> at any time to request immediate manual erasure of any Google user data associated with your email.
               </li>
             </ul>
           </section>
@@ -470,12 +517,11 @@ export default function PrivacyPolicyPage() {
               <div style={{ fontWeight: 700, color: "var(--text-primary)", marginBottom: "8px" }}>
                 AuraMind Privacy &amp; Grievance Redressal
               </div>
-              <div>Grievance Officer: <strong>[GRIEVANCE_OFFICER_NAME — Configuration Placeholder]</strong></div>
-              <div>Designation: <strong>Data Protection &amp; Grievance Officer</strong></div>
-              <div>Email: <strong>[GRIEVANCE_OFFICER_EMAIL — placeholder: privacy@auramind.ai]</strong></div>
-              <div>Address: <strong>[GRIEVANCE_OFFICER_ADDRESS — Configuration Placeholder]</strong></div>
+              <div>Platform: <strong>AuraMind</strong> (https://auramind-vert.vercel.app)</div>
+              <div>Privacy &amp; Support Contact: <strong>ridhx02@gmail.com</strong></div>
+              <div>Inquiries Desk: <strong>ridhx02@gmail.com</strong></div>
               <div style={{ marginTop: "8px", fontSize: "0.85rem", color: "var(--text-muted)" }}>
-                We acknowledge grievances within 48 hours and strive to resolve formal privacy requests within 30 days in accordance with statutory guidelines.
+                We acknowledge privacy inquiries and data requests within 24 to 48 hours and strive to resolve formal privacy requests promptly in accordance with statutory guidelines.
               </div>
             </div>
           </section>

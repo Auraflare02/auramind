@@ -509,6 +509,317 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
           </div>
         )}
       </div>
+
+      {/* 4. ABOUT AURAMIND SECTION */}
+      <section
+        style={{
+          marginTop: "48px",
+          paddingTop: "36px",
+          borderTop: "1px solid var(--border-default)",
+        }}
+        aria-label="About AuraMind"
+      >
+        <div className="flex-between" style={{ marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
+          <div>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+              <span
+                style={{
+                  fontSize: "0.72rem",
+                  fontWeight: 800,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: "var(--accent-primary)",
+                  backgroundColor: "rgba(255, 214, 0, 0.12)",
+                  padding: "3px 10px",
+                  borderRadius: "9999px",
+                  border: "1px solid rgba(255, 214, 0, 0.25)",
+                }}
+              >
+                Philosophy &bull; Platform Intelligence
+              </span>
+            </div>
+            <h2 style={{ fontSize: "1.45rem", fontWeight: 800, margin: 0, color: "var(--text-primary)" }}>
+              About AuraMind
+            </h2>
+            <p style={{ margin: "4px 0 0", fontSize: "0.875rem", color: "var(--text-secondary)", maxWidth: "700px" }}>
+              Your personal AI accountability operating system designed for deliberate practice, focus calibration, and sustained execution.
+            </p>
+          </div>
+
+          <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+            <Link href="/about" className="btn btn-secondary btn-sm" style={{ fontWeight: 600 }}>
+              Read Full Story &rarr;
+            </Link>
+            <Link href="/features" className="btn btn-secondary btn-sm" style={{ fontWeight: 600 }}>
+              Feature Index &rarr;
+            </Link>
+          </div>
+        </div>
+
+        {/* CORE PILLARS GRID */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+            gap: "16px",
+            marginBottom: "24px",
+          }}
+        >
+          {/* Pillar 1 */}
+          <div
+            className="card"
+            style={{
+              padding: "20px 22px",
+              backgroundColor: "var(--bg-card)",
+              border: "1px solid var(--border-default)",
+              borderRadius: "14px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: "10px",
+                  backgroundColor: "rgba(255, 214, 0, 0.12)",
+                  color: "var(--accent-primary)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "1.1rem",
+                  marginBottom: "12px",
+                }}
+              >
+                🎯
+              </div>
+              <h3 style={{ fontSize: "1.05rem", fontWeight: 700, margin: "0 0 6px", color: "var(--text-primary)" }}>
+                30-Day Adaptive Timetables
+              </h3>
+              <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: 1.6, margin: 0 }}>
+                Synthesized by Gemini AI from your current proficiency, target outcome, and daily hour budget. Automatically adapts to reality when disruptions happen.
+              </p>
+            </div>
+            <div style={{ marginTop: "14px", paddingTop: "12px", borderTop: "1px solid var(--border-subtle)" }}>
+              <Link href="/#create-goal" style={{ fontSize: "0.78rem", color: "var(--accent-primary)", textDecoration: "none", fontWeight: 700 }}>
+                + Enrol New Trajectory &rarr;
+              </Link>
+            </div>
+          </div>
+
+          {/* Pillar 2 */}
+          <div
+            className="card"
+            style={{
+              padding: "20px 22px",
+              backgroundColor: "var(--bg-card)",
+              border: "1px solid var(--border-default)",
+              borderRadius: "14px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: "10px",
+                  backgroundColor: "rgba(16, 185, 129, 0.12)",
+                  color: "#10B981",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "1.1rem",
+                  marginBottom: "12px",
+                }}
+              >
+                ⏱️
+              </div>
+              <h3 style={{ fontSize: "1.05rem", fontWeight: 700, margin: "0 0 6px", color: "var(--text-primary)" }}>
+                Focus Telemetry &amp; Check-ins
+              </h3>
+              <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: 1.6, margin: 0 }}>
+                Built-in focus timer, hourly progress prompts, distraction logging, and mastery XP system to turn invisible work into quantifiable momentum.
+              </p>
+            </div>
+            <div style={{ marginTop: "14px", paddingTop: "12px", borderTop: "1px solid var(--border-subtle)" }}>
+              <Link href="/chat" style={{ fontSize: "0.78rem", color: "var(--accent-primary)", textDecoration: "none", fontWeight: 700 }}>
+                Chat with AI Assistant &rarr;
+              </Link>
+            </div>
+          </div>
+
+          {/* Pillar 3 */}
+          <div
+            className="card"
+            style={{
+              padding: "20px 22px",
+              backgroundColor: "var(--bg-card)",
+              border: "1px solid var(--border-default)",
+              borderRadius: "14px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: "10px",
+                  backgroundColor: "rgba(56, 189, 248, 0.12)",
+                  color: "#38BDF8",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "1.1rem",
+                  marginBottom: "12px",
+                }}
+              >
+                📞
+              </div>
+              <h3 style={{ fontSize: "1.05rem", fontWeight: 700, margin: "0 0 6px", color: "var(--text-primary)" }}>
+                Multi-Channel Accountability
+              </h3>
+              <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: 1.6, margin: 0 }}>
+                Hourly in-app prompts on Gold, WhatsApp notifications on Platinum, and Hindi AI voice calls on Diamond to keep you unshakeable.
+              </p>
+            </div>
+            <div style={{ marginTop: "14px", paddingTop: "12px", borderTop: "1px solid var(--border-subtle)" }}>
+              <Link href="/pricing" style={{ fontSize: "0.78rem", color: "var(--accent-primary)", textDecoration: "none", fontWeight: 700 }}>
+                Compare Plans &rarr;
+              </Link>
+            </div>
+          </div>
+
+          {/* Pillar 4 */}
+          <div
+            className="card"
+            style={{
+              padding: "20px 22px",
+              backgroundColor: "var(--bg-card)",
+              border: "1px solid var(--border-default)",
+              borderRadius: "14px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: "10px",
+                  backgroundColor: "rgba(168, 85, 247, 0.12)",
+                  color: "#A855F7",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "1.1rem",
+                  marginBottom: "12px",
+                }}
+              >
+                🛡️
+              </div>
+              <h3 style={{ fontSize: "1.05rem", fontWeight: 700, margin: "0 0 6px", color: "var(--text-primary)" }}>
+                Social Circles &amp; AuraSentinel
+              </h3>
+              <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: 1.6, margin: 0 }}>
+                Accountability circle of up to 50 friends and World Chat, kept respectful, productive, and spam-free 24/7 by AuraSentinel AI.
+              </p>
+            </div>
+            <div style={{ marginTop: "14px", paddingTop: "12px", borderTop: "1px solid var(--border-subtle)" }}>
+              <Link href="/friends" style={{ fontSize: "0.78rem", color: "var(--accent-primary)", textDecoration: "none", fontWeight: 700 }}>
+                Open Friends Circle &rarr;
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* MISSION & PHILOSOPHY CALLOUT */}
+        <div
+          className="card"
+          style={{
+            padding: "24px 28px",
+            backgroundColor: "#111111",
+            border: "1px solid rgba(255, 214, 0, 0.2)",
+            borderRadius: "14px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "20px",
+          }}
+        >
+          <div style={{ maxWidth: "720px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+              <span style={{ fontSize: "1rem" }}>💡</span>
+              <span style={{ fontSize: "0.78rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--accent-primary)" }}>
+                The AuraMind Core Creed
+              </span>
+            </div>
+            <blockquote
+              style={{
+                margin: "0 0 10px 0",
+                fontSize: "1.05rem",
+                fontWeight: 700,
+                color: "#FFFFFF",
+                fontStyle: "italic",
+                lineHeight: 1.5,
+              }}
+            >
+              &ldquo;Don&rsquo;t plan a perfect day. Build a system that learns your real one.&rdquo;
+            </blockquote>
+            <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: 1.6 }}>
+              Most productivity apps fail because they treat humans like machines. AuraMind treats your attention as a precious, scarce resource—using machine intelligence to continually recalibrate your timetable whenever life interferes.
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+              minWidth: "220px",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "0.75rem",
+                color: "var(--text-muted)",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                fontWeight: 700,
+                marginBottom: "4px",
+              }}
+            >
+              System Specs
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem" }}>
+              <span style={{ color: "var(--text-secondary)" }}>Platform Version:</span>
+              <span style={{ color: "#FFFFFF", fontWeight: 700 }}>AuraMind v2.4</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem" }}>
+              <span style={{ color: "var(--text-secondary)" }}>AI Synthesis:</span>
+              <span style={{ color: "var(--accent-primary)", fontWeight: 700 }}>Gemini 1.5 Pro</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem" }}>
+              <span style={{ color: "var(--text-secondary)" }}>Security Bot:</span>
+              <span style={{ color: "#10B981", fontWeight: 700 }}>AuraSentinel Active</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem" }}>
+              <span style={{ color: "var(--text-secondary)" }}>Telemetry:</span>
+              <span style={{ color: "#FFFFFF", fontWeight: 700 }}>End-to-End Encrypted</span>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
