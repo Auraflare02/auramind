@@ -1,6 +1,11 @@
 /**
  * Standalone Node.js script to render a 30-second 1080x1920 Instagram Reel video
- * with real-person footage integrated into key scenes, using headless Chrome and MediaRecorder.
+ * featuring:
+ * 1. Real-person cinematic footage clips in key emotional moments.
+ * 2. High-energy electronic synth background music (120 BPM driving beat).
+ * 3. Studio voiceover narration for all 6 scenes.
+ * 4. Realistic sound effects (bass drops, whooshes, WhatsApp pings, AI phone rings, XP level-up fanfare, and victory chord).
+ * Synchronized with Web Audio API hardware clock and MediaRecorder.
  */
 
 const http = require("http");
@@ -11,25 +16,26 @@ const { spawn } = require("child_process");
 const PORT = 8492;
 const OUTPUT_FILE = path.join(__dirname, "../public/videos/auramind_instagram_reel_30s.webm");
 const ASSETS_DIR = path.join(__dirname, "../public/videos/assets");
+const AUDIO_DIR = path.join(ASSETS_DIR, "audio");
 
-// Ensure output directory exists
-const dir = path.dirname(OUTPUT_FILE);
-if (!fs.existsSync(dir)) {
-  fs.mkdirSync(dir, { recursive: true });
+// Clear existing file before starting render
+if (fs.existsSync(OUTPUT_FILE)) {
+  fs.unlinkSync(OUTPUT_FILE);
+  console.log("Cleared old video file to ensure fresh render.");
 }
 
 console.log("==================================================");
-console.log("  AURAMIND 30s INSTAGRAM REEL VIDEO RENDERER      ");
-console.log("  Featuring Real-Person Cinematic Story Footage   ");
+console.log("  AURAMIND 30s INSTAGRAM REEL FULL STUDIO RENDER  ");
+console.log("  Video: 1080x1920 • Real-Person Cinematic Clips  ");
+console.log("  Audio: Voiceover + Sound Effects + Tech Music   ");
 console.log("==================================================");
 
-// HTML with 1080x1920 canvas animation, real-person assets, and MediaRecorder
 function getRecorderHtml() {
   return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>AuraMind 30s Reel</title>
+  <title>AuraMind 30s Reel Studio</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #000; overflow: hidden; display: flex; align-items: center; justify-content: center; width: 100vw; height: 100vh; }
@@ -39,6 +45,13 @@ function getRecorderHtml() {
 <body>
   <canvas id="canvas" width="1080" height="1920"></canvas>
   <script>
+    function log(msg) {
+      fetch('/log', { method: 'POST', body: msg }).catch(() => {});
+    }
+    window.onerror = (msg, url, line) => {
+      log('CLIENT ERROR: ' + msg + ' line: ' + line);
+    };
+
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     const W = 1080, H = 1920;
@@ -72,12 +85,10 @@ function getRecorderHtml() {
     }
 
     function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
-    function easeInOutQuad(t) { return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2)/2; }
 
-    function drawCinematicBackground(img, progress, darken = 0.62) {
+    function drawCinematicBackground(img, progress, darken) {
       if (!img || !img.complete || !img.naturalWidth) return;
       ctx.save();
-      // Ken Burns smooth zoom & subtle pan
       const zoom = 1.0 + 0.12 * progress;
       const w = W * zoom;
       const h = H * zoom;
@@ -85,12 +96,12 @@ function getRecorderHtml() {
       const y = (H - h) / 2;
       ctx.drawImage(img, x, y, w, h);
 
-      // Gradient overlay for contrast
+      // Contrast gradient overlay
       const grad = ctx.createLinearGradient(0, 0, 0, H);
-      grad.addColorStop(0, \`rgba(7, 7, 7, \${darken + 0.18})\`);
-      grad.addColorStop(0.35, \`rgba(7, 7, 7, \${darken})\`);
-      grad.addColorStop(0.7, \`rgba(7, 7, 7, \${darken + 0.08})\`);
-      grad.addColorStop(1, \`rgba(7, 7, 7, \${darken + 0.28})\`);
+      grad.addColorStop(0, 'rgba(7, 7, 7, ' + (darken + 0.18) + ')');
+      grad.addColorStop(0.35, 'rgba(7, 7, 7, ' + darken + ')');
+      grad.addColorStop(0.7, 'rgba(7, 7, 7, ' + (darken + 0.08) + ')');
+      grad.addColorStop(1, 'rgba(7, 7, 7, ' + (darken + 0.28) + ')');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, W, H);
       ctx.restore();
@@ -100,7 +111,7 @@ function getRecorderHtml() {
       ctx.fillStyle = '#070707';
       ctx.fillRect(0, 0, W, H);
 
-      // Base background or cinematic footage based on scene
+      // Scene-specific backgrounds
       if (timeSec >= 0 && timeSec < 5.0) {
         drawCinematicBackground(clips.overwhelmed, timeSec / 5.0, 0.58);
       } else if (timeSec >= 15.0 && timeSec < 20.0) {
@@ -110,7 +121,6 @@ function getRecorderHtml() {
       } else if (timeSec >= 25.0) {
         drawCinematicBackground(clips.success, (timeSec - 25.0) / 5.0, 0.60);
       } else {
-        // Scene 2 & 3: High-tech dark radial glow
         const bgGrad = ctx.createRadialGradient(W/2, H*0.4, 50, W/2, H*0.4, 900);
         bgGrad.addColorStop(0, 'rgba(255, 214, 0, 0.09)');
         bgGrad.addColorStop(1, 'rgba(7, 7, 7, 1)');
@@ -140,7 +150,6 @@ function getRecorderHtml() {
       ctx.textAlign = 'center';
       ctx.fillText('A U R A M I N D', W / 2, 120);
 
-      // Gold line under brand
       ctx.strokeStyle = '#FFD600';
       ctx.lineWidth = 3;
       ctx.beginPath();
@@ -149,9 +158,7 @@ function getRecorderHtml() {
       ctx.stroke();
       ctx.restore();
 
-      // ========================================================
-      // SCENE 1: (0s - 5s) THE VIRAL HOOK (REAL PERSON FRUSTRATION)
-      // ========================================================
+      // SCENE 1: (0s - 5s) THE VIRAL HOOK
       if (timeSec >= 0 && timeSec < 5.0) {
         const sTime = timeSec;
         const enterProgress = Math.min(1, sTime / 0.8);
@@ -161,7 +168,6 @@ function getRecorderHtml() {
         ctx.translate(W/2, H/2 - 80);
         ctx.scale(scale, scale);
 
-        // Warning badge
         ctx.fillStyle = 'rgba(239, 68, 68, 0.3)';
         ctx.strokeStyle = '#EF4444';
         ctx.lineWidth = 2;
@@ -175,7 +181,6 @@ function getRecorderHtml() {
         ctx.textAlign = 'center';
         ctx.fillText('⚠️ HARSH TRUTH', 0, -240);
 
-        // Giant Hook Text
         ctx.fillStyle = '#FFFFFF';
         ctx.font = '900 80px sans-serif';
         ctx.textAlign = 'center';
@@ -187,8 +192,7 @@ function getRecorderHtml() {
         ctx.fillStyle = '#EF4444';
         ctx.fillText('BY DAY 4?', 0, 60);
 
-        // Subtext glassmorphic card
-        ctx.fillStyle = 'rgba(10, 10, 10, 0.85)';
+        ctx.fillStyle = 'rgba(10, 10, 10, 0.88)';
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -207,9 +211,7 @@ function getRecorderHtml() {
         ctx.restore();
       }
 
-      // ========================================================
-      // SCENE 2: (5s - 10s) THE PARADIGM SHIFT (AURAMIND REVEAL)
-      // ========================================================
+      // SCENE 2: (5s - 10s) THE PARADIGM SHIFT
       else if (timeSec >= 5.0 && timeSec < 10.0) {
         const sTime = timeSec - 5.0;
         const enterProgress = Math.min(1, sTime / 0.8);
@@ -219,7 +221,6 @@ function getRecorderHtml() {
         ctx.translate(W/2, H/2 - 80);
         ctx.scale(scale, scale);
 
-        // Glowing Core Logo Reticle
         ctx.save();
         ctx.rotate(timeSec * 0.4);
         ctx.strokeStyle = 'rgba(255, 214, 0, 0.3)';
@@ -230,13 +231,11 @@ function getRecorderHtml() {
         ctx.stroke();
         ctx.restore();
 
-        // Inner Golden Circle
         ctx.fillStyle = '#FFD600';
         ctx.beginPath();
         ctx.arc(0, -220, 75, 0, Math.PI * 2);
         ctx.fill();
 
-        // Target arrow
         ctx.strokeStyle = '#070707';
         ctx.lineWidth = 14;
         ctx.lineCap = 'round';
@@ -248,18 +247,15 @@ function getRecorderHtml() {
         ctx.lineTo(25, -230);
         ctx.stroke();
 
-        // Title
         ctx.fillStyle = '#FFFFFF';
         ctx.font = '900 76px sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('ENTER AURAMIND', 0, -40);
 
-        // Subtitle
         ctx.fillStyle = '#FFD600';
         ctx.font = '700 34px sans-serif';
         ctx.fillText('YOUR AI ACCOUNTABILITY OPERATING SYSTEM', 0, 25);
 
-        // Creed Card
         ctx.fillStyle = '#141414';
         ctx.strokeStyle = 'rgba(255, 214, 0, 0.4)';
         ctx.lineWidth = 2;
@@ -281,14 +277,11 @@ function getRecorderHtml() {
         ctx.restore();
       }
 
-      // ========================================================
       // SCENE 3: (10s - 15s) 30-DAY ADAPTIVE TIMETABLE
-      // ========================================================
       else if (timeSec >= 10.0 && timeSec < 15.0) {
         ctx.save();
         ctx.translate(W/2, H/2 - 100);
 
-        // Badge
         ctx.fillStyle = 'rgba(255, 214, 0, 0.15)';
         ctx.strokeStyle = '#FFD600';
         ctx.lineWidth = 2;
@@ -302,19 +295,17 @@ function getRecorderHtml() {
         ctx.textAlign = 'center';
         ctx.fillText('⚡ 60-SECOND SYNTHESIS', 0, -284);
 
-        // Main Title
         ctx.fillStyle = '#FFFFFF';
         ctx.font = '900 68px sans-serif';
         ctx.fillText('30-DAY ADAPTIVE', 0, -190);
         ctx.fillStyle = '#FFD600';
         ctx.fillText('TIMETABLE', 0, -115);
 
-        // 4 Phase Cards
         const phases = [
-          { name: 'Week 1: Foundations', stat: 'Day 1–7 ✓', color: '#10B981', prog: 1.0 },
-          { name: 'Week 2: Core Mechanics', stat: 'Day 8–14 [ACTIVE]', color: '#FFD600', prog: 0.65 },
-          { name: 'Week 3: Real Synthesis', stat: 'Day 15–22', color: '#FFFFFF', prog: 0 },
-          { name: 'Week 4: Final Mastery', stat: 'Day 23–30', color: '#38BDF8', prog: 0 },
+          { name: 'Week 1: Foundations', stat: 'Day 1–7 ✓', color: '#10B981' },
+          { name: 'Week 2: Core Mechanics', stat: 'Day 8–14 [ACTIVE]', color: '#FFD600' },
+          { name: 'Week 3: Real Synthesis', stat: 'Day 15–22', color: '#FFFFFF' },
+          { name: 'Week 4: Final Mastery', stat: 'Day 23–30', color: '#38BDF8' },
         ];
 
         phases.forEach((ph, idx) => {
@@ -338,7 +329,6 @@ function getRecorderHtml() {
           ctx.fillText(ph.stat, 380, cardY + 58);
         });
 
-        // Bottom alert
         ctx.textAlign = 'center';
         ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
         ctx.font = '600 30px sans-serif';
@@ -347,14 +337,11 @@ function getRecorderHtml() {
         ctx.restore();
       }
 
-      // ========================================================
       // SCENE 4: (15s - 20s) REAL PERSON: WHATSAPP + AI CALLING
-      // ========================================================
       else if (timeSec >= 15.0 && timeSec < 20.0) {
         ctx.save();
         ctx.translate(W/2, H/2 - 100);
 
-        // Title
         ctx.fillStyle = '#FFFFFF';
         ctx.font = '900 64px sans-serif';
         ctx.textAlign = 'center';
@@ -363,8 +350,7 @@ function getRecorderHtml() {
         ctx.font = '700 34px sans-serif';
         ctx.fillText('NO MORE SILENT, PASSIVE APPS', 0, -185);
 
-        // 1. WhatsApp Card
-        ctx.fillStyle = 'rgba(15, 38, 28, 0.9)';
+        ctx.fillStyle = 'rgba(15, 38, 28, 0.92)';
         ctx.strokeStyle = '#10B981';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -387,8 +373,7 @@ function getRecorderHtml() {
         ctx.font = '600 24px monospace';
         ctx.fillText('Delivered at 2:00 PM ✓✓', 380, 65);
 
-        // 2. Incoming AI Call Card
-        ctx.fillStyle = 'rgba(28, 22, 8, 0.92)';
+        ctx.fillStyle = 'rgba(28, 22, 8, 0.94)';
         ctx.strokeStyle = '#FFD600';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -396,7 +381,6 @@ function getRecorderHtml() {
         ctx.fill();
         ctx.stroke();
 
-        // Pulsing phone icon
         const pRadius = 36 + 6 * Math.sin(timeSec * 8);
         ctx.fillStyle = '#FFD600';
         ctx.beginPath();
@@ -423,14 +407,11 @@ function getRecorderHtml() {
         ctx.restore();
       }
 
-      // ========================================================
-      // SCENE 5: (20s - 25s) REAL PERSON: DEEP FOCUS STATE & XP
-      // ========================================================
+      // SCENE 5: (20s - 25s) REAL PERSON: DEEP FOCUS & XP
       else if (timeSec >= 20.0 && timeSec < 25.0) {
         ctx.save();
         ctx.translate(W/2, H/2 - 80);
 
-        // Title
         ctx.fillStyle = '#FFFFFF';
         ctx.font = '900 68px sans-serif';
         ctx.textAlign = 'center';
@@ -439,8 +420,7 @@ function getRecorderHtml() {
         ctx.font = '700 32px sans-serif';
         ctx.fillText('TURN INVISIBLE WORK INTO MOMENTUM', 0, -185);
 
-        // Circular Timer Visual with background darkening disc
-        ctx.fillStyle = 'rgba(10, 10, 10, 0.8)';
+        ctx.fillStyle = 'rgba(10, 10, 10, 0.82)';
         ctx.beginPath();
         ctx.arc(0, -20, 140, 0, Math.PI * 2);
         ctx.fill();
@@ -466,8 +446,7 @@ function getRecorderHtml() {
         ctx.font = '700 22px sans-serif';
         ctx.fillText('DEEP FOCUS SPRINT', 0, 35);
 
-        // Level Up Badge
-        ctx.fillStyle = 'rgba(20, 20, 20, 0.9)';
+        ctx.fillStyle = 'rgba(20, 20, 20, 0.92)';
         ctx.strokeStyle = '#38BDF8';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -485,17 +464,11 @@ function getRecorderHtml() {
         ctx.restore();
       }
 
-      // ========================================================
-      // SCENE 6: (25s - 30s) REAL PERSON: SUCCESS & CALL TO ACTION
-      // ========================================================
+      // SCENE 6: (25s - 30s) REAL PERSON: SUCCESS & CTA
       else {
-        const sTime = timeSec - 25.0;
-        const enterProgress = Math.min(1, sTime / 0.6);
-
         ctx.save();
         ctx.translate(W/2, H/2 - 50);
 
-        // Target Logo
         ctx.fillStyle = '#FFD600';
         ctx.beginPath();
         ctx.arc(0, -220, 70, 0, Math.PI * 2);
@@ -512,7 +485,6 @@ function getRecorderHtml() {
         ctx.lineTo(22, -228);
         ctx.stroke();
 
-        // CTA Header
         ctx.fillStyle = '#FFFFFF';
         ctx.font = '900 74px sans-serif';
         ctx.textAlign = 'center';
@@ -522,7 +494,6 @@ function getRecorderHtml() {
         ctx.font = '600 32px sans-serif';
         ctx.fillText('Stop putting your goals on hold.', 0, -10);
 
-        // Giant Official Domain Button
         ctx.fillStyle = '#FFD600';
         ctx.beginPath();
         ctx.roundRect(-440, 60, 880, 140, 24);
@@ -532,12 +503,10 @@ function getRecorderHtml() {
         ctx.font = '900 48px monospace';
         ctx.fillText('theauramind.dpdns.org', 0, 145);
 
-        // Link in Bio
         ctx.fillStyle = '#FFFFFF';
         ctx.font = '800 38px sans-serif';
         ctx.fillText('🔗 LINK IN BIO', 0, 260);
 
-        // Sub features
         ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
         ctx.font = '600 28px sans-serif';
         ctx.fillText('AI Timetable in 60s • Hourly Check-ins • WhatsApp • AI Calling', 0, 320);
@@ -545,7 +514,7 @@ function getRecorderHtml() {
         ctx.restore();
       }
 
-      // Bottom Progress Bar (0% to 100% over 30s)
+      // Bottom Progress Bar
       const prog = Math.min(1, timeSec / DURATION);
       ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
       ctx.fillRect(80, H - 90, W - 160, 12);
@@ -561,64 +530,336 @@ function getRecorderHtml() {
       ctx.fillText('00:' + (curSec < 10 ? '0' + curSec : curSec) + ' / 00:30', W - 80, H - 120);
     }
 
-    // Capture and MediaRecorder
-    async function startRecording() {
-      // Ensure all images are preloaded before recording begins
-      const imagePromises = Object.values(clips).map(img => {
-        if (img.complete && img.naturalWidth) return Promise.resolve();
-        return new Promise((resolve) => {
-          img.onload = () => resolve();
-          img.onerror = () => resolve(); // fallback gracefully
-        });
+    // ==========================================
+    // AUDIO ENGINE (VOICEOVER + SFX + TECH BEAT)
+    // ==========================================
+    async function setupAudioEngine(actx, dest, baseT) {
+      log("Loading 6 voiceover audio tracks...");
+      const voiceFiles = [
+        '/audio/voice_scene1.wav',
+        '/audio/voice_scene2.wav',
+        '/audio/voice_scene3.wav',
+        '/audio/voice_scene4.wav',
+        '/audio/voice_scene5.wav',
+        '/audio/voice_scene6.wav'
+      ];
+
+      const voiceBuffers = await Promise.all(
+        voiceFiles.map(url =>
+          fetch(url)
+            .then(r => r.arrayBuffer())
+            .then(buf => actx.decodeAudioData(buf))
+        )
+      );
+      log("All 6 voiceover tracks decoded!");
+
+      // Gains
+      const voiceGain = actx.createGain();
+      voiceGain.gain.value = 1.35;
+      voiceGain.connect(dest);
+
+      const sfxGain = actx.createGain();
+      sfxGain.gain.value = 0.75;
+      sfxGain.connect(dest);
+
+      const musicGain = actx.createGain();
+      musicGain.gain.value = 0.28;
+      musicGain.connect(dest);
+
+      // Trigger Voiceover at exact scene timestamps
+      const sceneStarts = [0.15, 5.15, 10.15, 15.15, 20.15, 25.15];
+      voiceBuffers.forEach((vBuf, i) => {
+        const src = actx.createBufferSource();
+        src.buffer = vBuf;
+        src.connect(voiceGain);
+        src.start(baseT + sceneStarts[i]);
       });
-      await Promise.all(imagePromises);
 
-      const stream = canvas.captureStream(FPS);
-      const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
-        ? 'video/webm;codecs=vp9'
-        : 'video/webm';
-      
-      const recorder = new MediaRecorder(stream, {
-        mimeType: mime,
-        videoBitsPerSecond: 8000000 // 8 Mbps high quality
-      });
-
-      const chunks = [];
-      recorder.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) chunks.push(e.data);
-      };
-
-      recorder.onstop = async () => {
-        const blob = new Blob(chunks, { type: 'video/webm' });
-        console.log("Recorded blob size:", blob.size);
-
-        // Send blob to local Node server
-        const buffer = await blob.arrayBuffer();
-        await fetch('/save-video', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/octet-stream' },
-          body: buffer
-        });
-
-        document.title = "DONE";
-      };
-
-      recorder.start();
-
-      let currentSec = 0;
-      const intervalMs = 1000 / FPS;
-
-      function renderFrame() {
-        if (currentSec <= DURATION) {
-          draw(currentSec);
-          currentSec += intervalMs / 1000;
-          setTimeout(renderFrame, intervalMs);
-        } else {
-          recorder.stop();
-        }
+      // Sound Effect Triggers
+      function triggerKick(time) {
+        const osc = actx.createOscillator();
+        const gain = actx.createGain();
+        osc.frequency.setValueAtTime(140, baseT + time);
+        osc.frequency.exponentialRampToValueAtTime(38, baseT + time + 0.08);
+        gain.gain.setValueAtTime(0.7, baseT + time);
+        gain.gain.exponentialRampToValueAtTime(0.001, baseT + time + 0.12);
+        osc.connect(gain);
+        gain.connect(musicGain);
+        osc.start(baseT + time);
+        osc.stop(baseT + time + 0.15);
       }
 
-      renderFrame();
+      function triggerHiHat(time) {
+        const bufferSize = actx.sampleRate * 0.04;
+        const buffer = actx.createBuffer(1, bufferSize, actx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = actx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = actx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.value = 7500;
+        const gain = actx.createGain();
+        gain.gain.setValueAtTime(0.22, baseT + time);
+        gain.gain.exponentialRampToValueAtTime(0.001, baseT + time + 0.04);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(musicGain);
+        noise.start(baseT + time);
+        noise.stop(baseT + time + 0.05);
+      }
+
+      function triggerBass(time, freq, duration) {
+        const osc = actx.createOscillator();
+        const filter = actx.createBiquadFilter();
+        const gain = actx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, baseT + time);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(800, baseT + time);
+        filter.frequency.exponentialRampToValueAtTime(180, baseT + time + duration);
+        gain.gain.setValueAtTime(0.35, baseT + time);
+        gain.gain.exponentialRampToValueAtTime(0.001, baseT + time + duration);
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(musicGain);
+        osc.start(baseT + time);
+        osc.stop(baseT + time + duration);
+      }
+
+      function triggerSubDrop(time) {
+        const osc = actx.createOscillator();
+        const gain = actx.createGain();
+        osc.frequency.setValueAtTime(120, baseT + time);
+        osc.frequency.exponentialRampToValueAtTime(32, baseT + time + 1.2);
+        gain.gain.setValueAtTime(0.8, baseT + time);
+        gain.gain.exponentialRampToValueAtTime(0.001, baseT + time + 1.2);
+        osc.connect(gain);
+        gain.connect(sfxGain);
+        osc.start(baseT + time);
+        osc.stop(baseT + time + 1.3);
+      }
+
+      function triggerWhoosh(time) {
+        const bufferSize = Math.floor(actx.sampleRate * 0.6);
+        const buffer = actx.createBuffer(1, bufferSize, actx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = actx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = actx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(300, baseT + time);
+        filter.frequency.exponentialRampToValueAtTime(3500, baseT + time + 0.35);
+        filter.frequency.exponentialRampToValueAtTime(400, baseT + time + 0.6);
+        const gain = actx.createGain();
+        gain.gain.setValueAtTime(0.01, baseT + time);
+        gain.gain.linearRampToValueAtTime(0.4, baseT + time + 0.3);
+        gain.gain.exponentialRampToValueAtTime(0.001, baseT + time + 0.6);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(sfxGain);
+        noise.start(baseT + time);
+        noise.stop(baseT + time + 0.65);
+      }
+
+      function triggerWhatsAppPing(time) {
+        [1800, 2400].forEach((freq, idx) => {
+          const osc = actx.createOscillator();
+          const gain = actx.createGain();
+          const t = baseT + time + idx * 0.08;
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.45, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+          osc.connect(gain);
+          gain.connect(sfxGain);
+          osc.start(t);
+          osc.stop(t + 0.15);
+        });
+      }
+
+      function triggerPhoneRing(time) {
+        [440, 480].forEach(freq => {
+          const osc = actx.createOscillator();
+          const gain = actx.createGain();
+          osc.frequency.setValueAtTime(freq, baseT + time);
+          gain.gain.setValueAtTime(0.25, baseT + time);
+          gain.gain.setValueAtTime(0.25, baseT + time + 0.4);
+          gain.gain.exponentialRampToValueAtTime(0.001, baseT + time + 0.5);
+          osc.connect(gain);
+          gain.connect(sfxGain);
+          osc.start(baseT + time);
+          osc.stop(baseT + time + 0.55);
+        });
+      }
+
+      function triggerLevelUpChime(time) {
+        const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+        notes.forEach((freq, idx) => {
+          const osc = actx.createOscillator();
+          const gain = actx.createGain();
+          const t = baseT + time + idx * 0.07;
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.4, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+          osc.connect(gain);
+          gain.connect(sfxGain);
+          osc.start(t);
+          osc.stop(t + 0.55);
+        });
+      }
+
+      function triggerVictoryChord(time) {
+        const chord = [349.23, 440.00, 523.25, 698.46];
+        chord.forEach(freq => {
+          const osc = actx.createOscillator();
+          const gain = actx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, baseT + time);
+          gain.gain.setValueAtTime(0.3, baseT + time);
+          gain.gain.exponentialRampToValueAtTime(0.001, baseT + time + 2.0);
+          osc.connect(gain);
+          gain.connect(sfxGain);
+          osc.start(baseT + time);
+          osc.stop(baseT + time + 2.2);
+        });
+      }
+
+      // Schedule Sound Effects
+      triggerSubDrop(0.2);
+      triggerWhoosh(5.0);
+      triggerWhoosh(10.0);
+      triggerWhoosh(15.0);
+      triggerWhatsAppPing(15.3);
+      triggerPhoneRing(16.6);
+      triggerPhoneRing(18.2);
+      triggerWhoosh(20.0);
+      triggerLevelUpChime(22.8);
+      triggerWhoosh(25.0);
+      triggerVictoryChord(25.1);
+
+      // Driving 120 BPM Background Tech Beat (60 Beats)
+      const beatDuration = 0.5;
+      const bassProgression = [
+        73.42, 73.42, 73.42, 73.42, // D2
+        82.41, 82.41, 82.41, 82.41, // E2
+        110.0, 110.0, 110.0, 110.0, // A2
+        87.31, 87.31, 87.31, 87.31, // F2
+        98.00, 98.00, 98.00, 98.00, // G2
+        65.41, 65.41, 65.41, 65.41, // C2
+        87.31, 87.31, 87.31, 87.31, // F2
+        110.0, 110.0, 110.0, 110.0, // A2
+        98.00, 98.00, 98.00, 98.00, // G2
+        65.41, 65.41, 65.41, 65.41, // C2
+        87.31, 87.31, 87.31, 87.31, // F2
+        110.0, 110.0, 110.0, 110.0, // A2
+        98.00, 98.00, 98.00, 98.00, // G2
+        87.31, 87.31, 87.31, 87.31, // F2
+        65.41, 65.41, 65.41, 65.41  // C2
+      ];
+
+      for (let b = 0; b < 60; b++) {
+        const t = b * beatDuration;
+        triggerKick(t);
+        triggerHiHat(t + 0.25);
+        const bassFreq = bassProgression[Math.min(b, bassProgression.length - 1)];
+        triggerBass(t, bassFreq, 0.22);
+        triggerBass(t + 0.25, bassFreq * 1.5, 0.20);
+      }
+      log("All audio scheduled successfully!");
+    }
+
+    // Capture and MediaRecorder (Combined Video + Audio Stream)
+    async function startRecording() {
+      try {
+        log("Preloading images...");
+        const imagePromises = Object.values(clips).map(img => {
+          if (img.complete && img.naturalWidth) return Promise.resolve();
+          return new Promise((resolve) => {
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+          });
+        });
+        await Promise.all(imagePromises);
+        log("Images preloaded!");
+
+        const actx = new (window.AudioContext || window.webkitAudioContext)();
+        await actx.resume();
+        const audioDest = actx.createMediaStreamDestination();
+
+        const baseT = actx.currentTime + 0.1;
+        await setupAudioEngine(actx, audioDest, baseT);
+
+        // Combine video and audio tracks
+        const canvasStream = canvas.captureStream(FPS);
+        const combinedStream = new MediaStream([
+          ...canvasStream.getVideoTracks(),
+          ...audioDest.stream.getAudioTracks()
+        ]);
+
+        log("Combined stream tracks: " + combinedStream.getTracks().map(t => t.kind).join(", "));
+
+        const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
+          ? 'video/webm;codecs=vp9,opus'
+          : 'video/webm';
+        log("Using MIME: " + mime);
+
+        const recorder = new MediaRecorder(combinedStream, {
+          mimeType: mime,
+          videoBitsPerSecond: 8000000,
+          audioBitsPerSecond: 192000
+        });
+
+        const chunks = [];
+        recorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) chunks.push(e.data);
+        };
+
+        recorder.onstop = async () => {
+          log("Recorder stopped, chunks: " + chunks.length);
+          const blob = new Blob(chunks, { type: mime });
+          log("Recorded blob size: " + blob.size);
+
+          const buffer = await blob.arrayBuffer();
+          log("Sending " + buffer.byteLength + " bytes to /save-video...");
+          await fetch('/save-video', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/octet-stream' },
+            body: buffer
+          });
+
+          document.title = "DONE";
+        };
+
+        recorder.start();
+        log("Recorder started recording!");
+
+        let lastLoggedSec = -1;
+
+        function renderFrame() {
+          const currentSec = actx.currentTime - baseT;
+          if (currentSec <= DURATION) {
+            if (currentSec >= 0) {
+              draw(currentSec);
+            }
+            const secInt = Math.floor(currentSec);
+            if (secInt % 5 === 0 && secInt !== lastLoggedSec) {
+              lastLoggedSec = secInt;
+              log("Progress: " + currentSec.toFixed(1) + "s / 30.0s");
+            }
+            requestAnimationFrame(renderFrame);
+          } else {
+            log("Reached 30s! Stopping recorder...");
+            recorder.stop();
+          }
+        }
+
+        requestAnimationFrame(renderFrame);
+      } catch (err) {
+        log("START RECORDING ERROR: " + err.message + " stack: " + err.stack);
+      }
     }
 
     window.onload = () => {
@@ -629,9 +870,17 @@ function getRecorderHtml() {
 </html>`;
 }
 
-// Start temporary local HTTP server to receive the recorded video buffer
+// HTTP server
 const server = http.createServer((req, res) => {
-  if (req.url === "/" || req.url === "/record") {
+  if (req.url === "/log" && req.method === "POST") {
+    let body = "";
+    req.on("data", (c) => (body += c));
+    req.on("end", () => {
+      console.log(`[BROWSER]: ${body}`);
+      res.writeHead(200);
+      res.end("ok");
+    });
+  } else if (req.url === "/" || req.url === "/record") {
     res.writeHead(200, { "Content-Type": "text/html" });
     res.end(getRecorderHtml());
   } else if (req.url.startsWith("/assets/")) {
@@ -645,13 +894,24 @@ const server = http.createServer((req, res) => {
       res.writeHead(404);
       res.end("Asset not found");
     }
+  } else if (req.url.startsWith("/audio/")) {
+    const audioName = path.basename(req.url);
+    const audioPath = path.join(AUDIO_DIR, audioName);
+    if (fs.existsSync(audioPath)) {
+      const data = fs.readFileSync(audioPath);
+      res.writeHead(200, { "Content-Type": "audio/wav" });
+      res.end(data);
+    } else {
+      res.writeHead(404);
+      res.end("Audio not found");
+    }
   } else if (req.url === "/save-video" && req.method === "POST") {
     const chunks = [];
     req.on("data", (chunk) => chunks.push(chunk));
     req.on("end", () => {
       const buffer = Buffer.concat(chunks);
       fs.writeFileSync(OUTPUT_FILE, buffer);
-      console.log(`\\n✔ [SUCCESS] Video recorded and saved successfully with real-person clips!`);
+      console.log(`\n✔ [SUCCESS] Video rendered with FULL AUDIO (Voiceover + SFX + Tech Music)!`);
       console.log(`File: ${OUTPUT_FILE}`);
       console.log(`Size: ${(buffer.length / (1024 * 1024)).toFixed(2)} MB`);
       res.writeHead(200, { "Content-Type": "application/json" });
@@ -670,17 +930,16 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, () => {
   console.log(`Local video capture server listening on http://localhost:${PORT}`);
-  console.log(`Launching Chrome headless to render 30s video at 1080x1920 (9:16)...`);
+  console.log(`Launching Chrome headless to render 30s video with AUDIO at 1080x1920 (9:16)...`);
 
-  const chromePath = "C:\\\\Program Files\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe";
-  const edgePath = "C:\\\\Program Files (x86)\\\\Microsoft\\\\Edge\\\\Application\\\\msedge.exe";
+  const chromePath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+  const edgePath = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
   const browserBinary = fs.existsSync(chromePath) ? chromePath : edgePath;
 
   const chromeProcess = spawn(
     browserBinary,
     [
       "--headless=new",
-      "--disable-gpu",
       "--no-sandbox",
       "--autoplay-policy=no-user-gesture-required",
       "--window-size=1080,1920",
@@ -693,13 +952,14 @@ server.listen(PORT, () => {
     console.log(`Browser exited with code ${code}`);
   });
 
-  // Timeout guard (40s)
+  // Timeout guard (45s)
   setTimeout(() => {
     if (fs.existsSync(OUTPUT_FILE)) {
-      console.log("Finished recording.");
+      console.log("Finished recording guard check.");
       process.exit(0);
     } else {
-      console.log("Capture in progress...");
+      console.log("Capture timed out without output file.");
+      process.exit(1);
     }
-  }, 40000);
+  }, 45000);
 });
