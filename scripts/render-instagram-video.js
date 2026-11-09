@@ -1,9 +1,9 @@
 /**
  * Standalone Node.js script to render a 30-second 1080x1920 Instagram Reel video
  * featuring:
- * 1. Real-person cinematic footage clips in key emotional moments.
- * 2. High-energy electronic synth background music (120 BPM driving beat).
- * 3. Studio voiceover narration for all 6 scenes.
+ * 1. Crystal-clear spoken Hindi voiceover across all 6 scenes.
+ * 2. Real-person cinematic footage clips matched to each scene's vibe.
+ * 3. High-energy electronic synth background music (120 BPM driving beat).
  * 4. Realistic sound effects (bass drops, whooshes, WhatsApp pings, AI phone rings, XP level-up fanfare, and victory chord).
  * Synchronized with Web Audio API hardware clock and MediaRecorder.
  */
@@ -25,9 +25,9 @@ if (fs.existsSync(OUTPUT_FILE)) {
 }
 
 console.log("==================================================");
-console.log("  AURAMIND 30s INSTAGRAM REEL FULL STUDIO RENDER  ");
+console.log("  AURAMIND 30s HINDI REEL STUDIO RENDER           ");
+console.log("  Voiceover: Fluent & Crystal-Clear Hindi         ");
 console.log("  Video: 1080x1920 • Real-Person Cinematic Clips  ");
-console.log("  Audio: Voiceover + Sound Effects + Tech Music   ");
 console.log("==================================================");
 
 function getRecorderHtml() {
@@ -35,7 +35,7 @@ function getRecorderHtml() {
 <html>
 <head>
   <meta charset="utf-8">
-  <title>AuraMind 30s Reel Studio</title>
+  <title>AuraMind 30s Hindi Reel</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #000; overflow: hidden; display: flex; align-items: center; justify-content: center; width: 100vw; height: 100vh; }
@@ -96,7 +96,6 @@ function getRecorderHtml() {
       const y = (H - h) / 2;
       ctx.drawImage(img, x, y, w, h);
 
-      // Contrast gradient overlay
       const grad = ctx.createLinearGradient(0, 0, 0, H);
       grad.addColorStop(0, 'rgba(7, 7, 7, ' + (darken + 0.18) + ')');
       grad.addColorStop(0.35, 'rgba(7, 7, 7, ' + darken + ')');
@@ -172,25 +171,25 @@ function getRecorderHtml() {
         ctx.strokeStyle = '#EF4444';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.roundRect(-170, -280, 340, 60, 30);
+        ctx.roundRect(-200, -280, 400, 60, 30);
         ctx.fill();
         ctx.stroke();
 
         ctx.fillStyle = '#EF4444';
         ctx.font = '800 26px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('⚠️ HARSH TRUTH', 0, -240);
+        ctx.fillText('⚠️ कड़वा सच • HARSH TRUTH', 0, -240);
 
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = '900 80px sans-serif';
+        ctx.font = '900 78px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('WHY DO 92%', 0, -120);
+        ctx.fillText('92% GOALS', 0, -120);
         
         ctx.fillStyle = '#FFD600';
-        ctx.fillText('OF GOALS FAIL', 0, -30);
+        ctx.fillText('4 दिन में FAIL', 0, -30);
 
         ctx.fillStyle = '#EF4444';
-        ctx.fillText('BY DAY 4?', 0, 60);
+        ctx.fillText('क्यों होते हैं?', 0, 60);
 
         ctx.fillStyle = 'rgba(10, 10, 10, 0.88)';
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
@@ -202,11 +201,11 @@ function getRecorderHtml() {
 
         ctx.fillStyle = '#E5E5E5';
         ctx.font = '600 36px sans-serif';
-        ctx.fillText('Traditional to-do apps assume', 0, 225);
-        ctx.fillText('you are a robot.', 0, 275);
+        ctx.fillText('पुराने टू-डू ऐप्स आपको रोबोट समझते हैं।', 0, 225);
+        ctx.fillText('एक दिन मिस हुआ, और आप छोड़ देते हैं।', 0, 275);
         ctx.fillStyle = '#FFD600';
-        ctx.font = '700 34px sans-serif';
-        ctx.fillText('Life happens. You miss 1 day. You quit.', 0, 320);
+        ctx.font = '700 32px sans-serif';
+        ctx.fillText('अब समय है एक नए स्मार्ट सिस्टम का!', 0, 320);
 
         ctx.restore();
       }
@@ -253,8 +252,8 @@ function getRecorderHtml() {
         ctx.fillText('ENTER AURAMIND', 0, -40);
 
         ctx.fillStyle = '#FFD600';
-        ctx.font = '700 34px sans-serif';
-        ctx.fillText('YOUR AI ACCOUNTABILITY OPERATING SYSTEM', 0, 25);
+        ctx.font = '700 32px sans-serif';
+        ctx.fillText('आपका पर्सनल AI अकाउंटेबिलिटी पार्टनर', 0, 25);
 
         ctx.fillStyle = '#141414';
         ctx.strokeStyle = 'rgba(255, 214, 0, 0.4)';
@@ -265,14 +264,14 @@ function getRecorderHtml() {
         ctx.stroke();
 
         ctx.fillStyle = '#FFD600';
-        ctx.font = '800 30px sans-serif';
-        ctx.fillText('💡 THE CORE PRINCIPLE', 0, 145);
+        ctx.font = '800 28px sans-serif';
+        ctx.fillText('💡 मुख्य नियम • THE GOLDEN RULE', 0, 145);
 
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'italic 700 40px serif';
-        ctx.fillText('“Don’t plan a perfect day.', 0, 215);
+        ctx.font = '700 38px sans-serif';
+        ctx.fillText('“परफेक्ट दिन मत प्लान करो।', 0, 215);
         ctx.fillStyle = '#FFD600';
-        ctx.fillText('Build a system that learns your real one.”', 0, 275);
+        ctx.fillText('काम करने वाला सिस्टम बनाओ!”', 0, 275);
 
         ctx.restore();
       }
@@ -286,14 +285,14 @@ function getRecorderHtml() {
         ctx.strokeStyle = '#FFD600';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.roundRect(-210, -320, 420, 56, 28);
+        ctx.roundRect(-240, -320, 480, 56, 28);
         ctx.fill();
         ctx.stroke();
 
         ctx.fillStyle = '#FFD600';
         ctx.font = '800 24px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('⚡ 60-SECOND SYNTHESIS', 0, -284);
+        ctx.fillText('⚡ 60-सेकंड में AI टाइमटेबल', 0, -284);
 
         ctx.fillStyle = '#FFFFFF';
         ctx.font = '900 68px sans-serif';
@@ -302,10 +301,10 @@ function getRecorderHtml() {
         ctx.fillText('TIMETABLE', 0, -115);
 
         const phases = [
-          { name: 'Week 1: Foundations', stat: 'Day 1–7 ✓', color: '#10B981' },
-          { name: 'Week 2: Core Mechanics', stat: 'Day 8–14 [ACTIVE]', color: '#FFD600' },
-          { name: 'Week 3: Real Synthesis', stat: 'Day 15–22', color: '#FFFFFF' },
-          { name: 'Week 4: Final Mastery', stat: 'Day 23–30', color: '#38BDF8' },
+          { name: 'हफ़्ता 1: बुनियादी शुरुआत', stat: 'Day 1–7 ✓', color: '#10B981' },
+          { name: 'हफ़्ता 2: कोर मोमेंटम', stat: 'Day 8–14 [ACTIVE]', color: '#FFD600' },
+          { name: 'हफ़्ता 3: गहरा फोकस', stat: 'Day 15–22', color: '#FFFFFF' },
+          { name: 'हफ़्ता 4: लक्ष्य पूरा!', stat: 'Day 23–30', color: '#38BDF8' },
         ];
 
         phases.forEach((ph, idx) => {
@@ -320,7 +319,7 @@ function getRecorderHtml() {
 
           ctx.textAlign = 'left';
           ctx.fillStyle = '#FFFFFF';
-          ctx.font = '700 32px sans-serif';
+          ctx.font = '700 30px sans-serif';
           ctx.fillText(ph.name, -380, cardY + 58);
 
           ctx.textAlign = 'right';
@@ -330,9 +329,9 @@ function getRecorderHtml() {
         });
 
         ctx.textAlign = 'center';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.font = '600 30px sans-serif';
-        ctx.fillText('Missed a day? AI recalibrates Days 9–30 instantly.', 0, 480);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.font = '600 28px sans-serif';
+        ctx.fillText('एक दिन मिस हुआ? AI अपने आप टाइमटेबल एडजस्ट करेगा!', 0, 480);
 
         ctx.restore();
       }
@@ -347,8 +346,8 @@ function getRecorderHtml() {
         ctx.textAlign = 'center';
         ctx.fillText('PROACTIVE ACCOUNTABILITY', 0, -250);
         ctx.fillStyle = '#10B981';
-        ctx.font = '700 34px sans-serif';
-        ctx.fillText('NO MORE SILENT, PASSIVE APPS', 0, -185);
+        ctx.font = '700 32px sans-serif';
+        ctx.fillText('व्हाट्सएप चेक-इन + AI कॉलिंग एजेंट', 0, -185);
 
         ctx.fillStyle = 'rgba(15, 38, 28, 0.92)';
         ctx.strokeStyle = '#10B981';
@@ -361,17 +360,17 @@ function getRecorderHtml() {
         ctx.textAlign = 'left';
         ctx.fillStyle = '#10B981';
         ctx.font = '800 28px sans-serif';
-        ctx.fillText('💬 HOURLY WHATSAPP CHECK-IN', -380, -60);
+        ctx.fillText('💬 हर घंटे व्हाट्सएप चेक-इन', -380, -60);
 
         ctx.fillStyle = '#FFFFFF';
         ctx.font = '600 32px sans-serif';
-        ctx.fillText('"Hey Alex! Did you finish your 90-min', -380, -10);
-        ctx.fillText('Python deep work sprint?"', -380, 30);
+        ctx.fillText('"नमस्ते राहुल! क्या आपने 90 मिनट का', -380, -10);
+        ctx.fillText('स्टडी / कोडिंग सेशन पूरा किया?"', -380, 30);
 
         ctx.textAlign = 'right';
         ctx.fillStyle = '#A7F3D0';
         ctx.font = '600 24px monospace';
-        ctx.fillText('Delivered at 2:00 PM ✓✓', 380, 65);
+        ctx.fillText('2:00 PM पर मिला ✓✓', 380, 65);
 
         ctx.fillStyle = 'rgba(28, 22, 8, 0.94)';
         ctx.strokeStyle = '#FFD600';
@@ -394,15 +393,15 @@ function getRecorderHtml() {
         ctx.textAlign = 'left';
         ctx.fillStyle = '#FFD600';
         ctx.font = '800 28px sans-serif';
-        ctx.fillText('AI CALLING AGENT (HINDI & ENGLISH)', -270, 185);
+        ctx.fillText('AI कॉलिंग एजेंट (हिंदी और इंग्लिश)', -270, 185);
 
         ctx.fillStyle = '#FFFFFF';
         ctx.font = '700 34px sans-serif';
-        ctx.fillText('“Aapka agla task ready hai!”', -270, 240);
+        ctx.fillText('“आपका अगला टास्क रेडी है!”', -270, 240);
 
         ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
         ctx.font = '500 26px sans-serif';
-        ctx.fillText('Checks completed tasks & briefs next action.', -270, 290);
+        ctx.fillText('काम चेक करता है और आगे का रास्ता बताता है।', -270, 290);
 
         ctx.restore();
       }
@@ -418,7 +417,7 @@ function getRecorderHtml() {
         ctx.fillText('FOCUS TIMER & XP', 0, -250);
         ctx.fillStyle = '#FFD600';
         ctx.font = '700 32px sans-serif';
-        ctx.fillText('TURN INVISIBLE WORK INTO MOMENTUM', 0, -185);
+        ctx.fillText('डीप वर्क करो और लेवल अप करो', 0, -185);
 
         ctx.fillStyle = 'rgba(10, 10, 10, 0.82)';
         ctx.beginPath();
@@ -459,7 +458,7 @@ function getRecorderHtml() {
         ctx.fillText('🏆 LEVEL 8 ACHIEVED • +120 XP', 0, 230);
         ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
         ctx.font = '500 26px sans-serif';
-        ctx.fillText('Circle of 50 Friends • Zero-Abuse World Chat', 0, 275);
+        ctx.fillText('दोस्तों का सर्कल • वर्ल्ड चैट कम्युनिटी', 0, 275);
 
         ctx.restore();
       }
@@ -492,7 +491,7 @@ function getRecorderHtml() {
 
         ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
         ctx.font = '600 32px sans-serif';
-        ctx.fillText('Stop putting your goals on hold.', 0, -10);
+        ctx.fillText('आज ही शुरुआत करें, कल पर मत टालें।', 0, -10);
 
         ctx.fillStyle = '#FFD600';
         ctx.beginPath();
@@ -509,7 +508,7 @@ function getRecorderHtml() {
 
         ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
         ctx.font = '600 28px sans-serif';
-        ctx.fillText('AI Timetable in 60s • Hourly Check-ins • WhatsApp • AI Calling', 0, 320);
+        ctx.fillText('AI टाइमटेबल • व्हाट्सएप चेक-इन • AI कॉलिंग एजेंट', 0, 320);
 
         ctx.restore();
       }
@@ -522,7 +521,6 @@ function getRecorderHtml() {
       ctx.fillStyle = '#FFD600';
       ctx.fillRect(80, H - 90, (W - 160) * prog, 12);
 
-      // Timestamp
       ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
       ctx.font = '600 24px monospace';
       ctx.textAlign = 'right';
@@ -531,17 +529,17 @@ function getRecorderHtml() {
     }
 
     // ==========================================
-    // AUDIO ENGINE (VOICEOVER + SFX + TECH BEAT)
+    // AUDIO ENGINE (CRYSTAL-CLEAR HINDI VOICEOVER)
     // ==========================================
     async function setupAudioEngine(actx, dest, baseT) {
-      log("Loading 6 voiceover audio tracks...");
+      log("Loading 6 Hindi voiceover tracks...");
       const voiceFiles = [
-        '/audio/voice_scene1.wav',
-        '/audio/voice_scene2.wav',
-        '/audio/voice_scene3.wav',
-        '/audio/voice_scene4.wav',
-        '/audio/voice_scene5.wav',
-        '/audio/voice_scene6.wav'
+        '/audio/voice_scene1.mp3',
+        '/audio/voice_scene2.mp3',
+        '/audio/voice_scene3.mp3',
+        '/audio/voice_scene4.mp3',
+        '/audio/voice_scene5.mp3',
+        '/audio/voice_scene6.mp3'
       ];
 
       const voiceBuffers = await Promise.all(
@@ -551,26 +549,27 @@ function getRecorderHtml() {
             .then(buf => actx.decodeAudioData(buf))
         )
       );
-      log("All 6 voiceover tracks decoded!");
+      log("All 6 Hindi voiceover tracks decoded!");
 
-      // Gains
+      // Gains: Louder, crisp voice + balanced background music
       const voiceGain = actx.createGain();
-      voiceGain.gain.value = 1.35;
+      voiceGain.gain.value = 1.65; // Crystal-clear, audible Hindi vocals
       voiceGain.connect(dest);
 
       const sfxGain = actx.createGain();
-      sfxGain.gain.value = 0.75;
+      sfxGain.gain.value = 0.65;
       sfxGain.connect(dest);
 
       const musicGain = actx.createGain();
-      musicGain.gain.value = 0.28;
+      musicGain.gain.value = 0.18; // Subtle energetic bed beneath voice
       musicGain.connect(dest);
 
-      // Trigger Voiceover at exact scene timestamps
+      // Play Voiceover at Scene Start Timestamps with 1.15x natural speed boost
       const sceneStarts = [0.15, 5.15, 10.15, 15.15, 20.15, 25.15];
       voiceBuffers.forEach((vBuf, i) => {
         const src = actx.createBufferSource();
         src.buffer = vBuf;
+        src.playbackRate.value = 1.15; // Natural 15% pace boost for clarity & energy
         src.connect(voiceGain);
         src.start(baseT + sceneStarts[i]);
       });
@@ -600,7 +599,7 @@ function getRecorderHtml() {
         filter.type = 'highpass';
         filter.frequency.value = 7500;
         const gain = actx.createGain();
-        gain.gain.setValueAtTime(0.22, baseT + time);
+        gain.gain.setValueAtTime(0.20, baseT + time);
         gain.gain.exponentialRampToValueAtTime(0.001, baseT + time + 0.04);
         noise.connect(filter);
         filter.connect(gain);
@@ -618,7 +617,7 @@ function getRecorderHtml() {
         filter.type = 'lowpass';
         filter.frequency.setValueAtTime(800, baseT + time);
         filter.frequency.exponentialRampToValueAtTime(180, baseT + time + duration);
-        gain.gain.setValueAtTime(0.35, baseT + time);
+        gain.gain.setValueAtTime(0.32, baseT + time);
         gain.gain.exponentialRampToValueAtTime(0.001, baseT + time + duration);
         osc.connect(filter);
         filter.connect(gain);
@@ -632,7 +631,7 @@ function getRecorderHtml() {
         const gain = actx.createGain();
         osc.frequency.setValueAtTime(120, baseT + time);
         osc.frequency.exponentialRampToValueAtTime(32, baseT + time + 1.2);
-        gain.gain.setValueAtTime(0.8, baseT + time);
+        gain.gain.setValueAtTime(0.7, baseT + time);
         gain.gain.exponentialRampToValueAtTime(0.001, baseT + time + 1.2);
         osc.connect(gain);
         gain.connect(sfxGain);
@@ -654,7 +653,7 @@ function getRecorderHtml() {
         filter.frequency.exponentialRampToValueAtTime(400, baseT + time + 0.6);
         const gain = actx.createGain();
         gain.gain.setValueAtTime(0.01, baseT + time);
-        gain.gain.linearRampToValueAtTime(0.4, baseT + time + 0.3);
+        gain.gain.linearRampToValueAtTime(0.35, baseT + time + 0.3);
         gain.gain.exponentialRampToValueAtTime(0.001, baseT + time + 0.6);
         noise.connect(filter);
         filter.connect(gain);
@@ -670,7 +669,7 @@ function getRecorderHtml() {
           const t = baseT + time + idx * 0.08;
           osc.type = 'sine';
           osc.frequency.setValueAtTime(freq, t);
-          gain.gain.setValueAtTime(0.45, t);
+          gain.gain.setValueAtTime(0.40, t);
           gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
           osc.connect(gain);
           gain.connect(sfxGain);
@@ -684,8 +683,8 @@ function getRecorderHtml() {
           const osc = actx.createOscillator();
           const gain = actx.createGain();
           osc.frequency.setValueAtTime(freq, baseT + time);
-          gain.gain.setValueAtTime(0.25, baseT + time);
-          gain.gain.setValueAtTime(0.25, baseT + time + 0.4);
+          gain.gain.setValueAtTime(0.22, baseT + time);
+          gain.gain.setValueAtTime(0.22, baseT + time + 0.4);
           gain.gain.exponentialRampToValueAtTime(0.001, baseT + time + 0.5);
           osc.connect(gain);
           gain.connect(sfxGain);
@@ -702,7 +701,7 @@ function getRecorderHtml() {
           const t = baseT + time + idx * 0.07;
           osc.type = 'sine';
           osc.frequency.setValueAtTime(freq, t);
-          gain.gain.setValueAtTime(0.4, t);
+          gain.gain.setValueAtTime(0.35, t);
           gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
           osc.connect(gain);
           gain.connect(sfxGain);
@@ -718,7 +717,7 @@ function getRecorderHtml() {
           const gain = actx.createGain();
           osc.type = 'triangle';
           osc.frequency.setValueAtTime(freq, baseT + time);
-          gain.gain.setValueAtTime(0.3, baseT + time);
+          gain.gain.setValueAtTime(0.28, baseT + time);
           gain.gain.exponentialRampToValueAtTime(0.001, baseT + time + 2.0);
           osc.connect(gain);
           gain.connect(sfxGain);
@@ -727,7 +726,7 @@ function getRecorderHtml() {
         });
       }
 
-      // Schedule Sound Effects
+      // Schedule SFX
       triggerSubDrop(0.2);
       triggerWhoosh(5.0);
       triggerWhoosh(10.0);
@@ -899,7 +898,9 @@ const server = http.createServer((req, res) => {
     const audioPath = path.join(AUDIO_DIR, audioName);
     if (fs.existsSync(audioPath)) {
       const data = fs.readFileSync(audioPath);
-      res.writeHead(200, { "Content-Type": "audio/wav" });
+      const ext = path.extname(audioName);
+      const contentType = ext === ".mp3" ? "audio/mpeg" : "audio/wav";
+      res.writeHead(200, { "Content-Type": contentType });
       res.end(data);
     } else {
       res.writeHead(404);
@@ -911,7 +912,7 @@ const server = http.createServer((req, res) => {
     req.on("end", () => {
       const buffer = Buffer.concat(chunks);
       fs.writeFileSync(OUTPUT_FILE, buffer);
-      console.log(`\n✔ [SUCCESS] Video rendered with FULL AUDIO (Voiceover + SFX + Tech Music)!`);
+      console.log(`\n✔ [SUCCESS] Video rendered with CLEAR HINDI AUDIO!`);
       console.log(`File: ${OUTPUT_FILE}`);
       console.log(`Size: ${(buffer.length / (1024 * 1024)).toFixed(2)} MB`);
       res.writeHead(200, { "Content-Type": "application/json" });
@@ -930,7 +931,7 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, () => {
   console.log(`Local video capture server listening on http://localhost:${PORT}`);
-  console.log(`Launching Chrome headless to render 30s video with AUDIO at 1080x1920 (9:16)...`);
+  console.log(`Launching Chrome headless to render 30s video with CLEAR HINDI AUDIO at 1080x1920 (9:16)...`);
 
   const chromePath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
   const edgePath = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
