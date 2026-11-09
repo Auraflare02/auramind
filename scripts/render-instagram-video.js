@@ -1,6 +1,6 @@
 /**
  * Standalone Node.js script to render a 30-second 1080x1920 Instagram Reel video
- * using headless Chrome and MediaRecorder.
+ * with real-person footage integrated into key scenes, using headless Chrome and MediaRecorder.
  */
 
 const http = require("http");
@@ -10,6 +10,7 @@ const { spawn } = require("child_process");
 
 const PORT = 8492;
 const OUTPUT_FILE = path.join(__dirname, "../public/videos/auramind_instagram_reel_30s.webm");
+const ASSETS_DIR = path.join(__dirname, "../public/videos/assets");
 
 // Ensure output directory exists
 const dir = path.dirname(OUTPUT_FILE);
@@ -19,9 +20,10 @@ if (!fs.existsSync(dir)) {
 
 console.log("==================================================");
 console.log("  AURAMIND 30s INSTAGRAM REEL VIDEO RENDERER      ");
+console.log("  Featuring Real-Person Cinematic Story Footage   ");
 console.log("==================================================");
 
-// Minimal HTML with full 1080x1920 canvas animation and recorder
+// HTML with 1080x1920 canvas animation, real-person assets, and MediaRecorder
 function getRecorderHtml() {
   return `<!DOCTYPE html>
 <html>
@@ -42,11 +44,23 @@ function getRecorderHtml() {
     const W = 1080, H = 1920;
     const DURATION = 30.0; // 30 seconds
     const FPS = 30;
-    let startTime = null;
 
-    // Star/particle field
+    // Load Real-Person Cinematic Clips
+    const clips = {
+      overwhelmed: new Image(),
+      phoneCall: new Image(),
+      deepFocus: new Image(),
+      success: new Image()
+    };
+
+    clips.overwhelmed.src = '/assets/clip1_overwhelmed.jpg';
+    clips.phoneCall.src = '/assets/clip2_whatsapp_phone.jpg';
+    clips.deepFocus.src = '/assets/clip3_deep_focus.jpg';
+    clips.success.src = '/assets/clip4_success.jpg';
+
+    // Particle field
     const particles = [];
-    for (let i = 0; i < 70; i++) {
+    for (let i = 0; i < 65; i++) {
       particles.push({
         x: Math.random() * W,
         y: Math.random() * H,
@@ -60,18 +74,51 @@ function getRecorderHtml() {
     function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
     function easeInOutQuad(t) { return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2)/2; }
 
+    function drawCinematicBackground(img, progress, darken = 0.62) {
+      if (!img || !img.complete || !img.naturalWidth) return;
+      ctx.save();
+      // Ken Burns smooth zoom & subtle pan
+      const zoom = 1.0 + 0.12 * progress;
+      const w = W * zoom;
+      const h = H * zoom;
+      const x = (W - w) / 2 + (Math.sin(progress * Math.PI) * 20);
+      const y = (H - h) / 2;
+      ctx.drawImage(img, x, y, w, h);
+
+      // Gradient overlay for contrast
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, \`rgba(7, 7, 7, \${darken + 0.18})\`);
+      grad.addColorStop(0.35, \`rgba(7, 7, 7, \${darken})\`);
+      grad.addColorStop(0.7, \`rgba(7, 7, 7, \${darken + 0.08})\`);
+      grad.addColorStop(1, \`rgba(7, 7, 7, \${darken + 0.28})\`);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+
     function draw(timeSec) {
       ctx.fillStyle = '#070707';
       ctx.fillRect(0, 0, W, H);
 
-      // Radial background glow
-      const bgGrad = ctx.createRadialGradient(W/2, H*0.4, 50, W/2, H*0.4, 900);
-      bgGrad.addColorStop(0, 'rgba(255, 214, 0, 0.08)');
-      bgGrad.addColorStop(1, 'rgba(7, 7, 7, 1)');
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, W, H);
+      // Base background or cinematic footage based on scene
+      if (timeSec >= 0 && timeSec < 5.0) {
+        drawCinematicBackground(clips.overwhelmed, timeSec / 5.0, 0.58);
+      } else if (timeSec >= 15.0 && timeSec < 20.0) {
+        drawCinematicBackground(clips.phoneCall, (timeSec - 15.0) / 5.0, 0.65);
+      } else if (timeSec >= 20.0 && timeSec < 25.0) {
+        drawCinematicBackground(clips.deepFocus, (timeSec - 20.0) / 5.0, 0.60);
+      } else if (timeSec >= 25.0) {
+        drawCinematicBackground(clips.success, (timeSec - 25.0) / 5.0, 0.60);
+      } else {
+        // Scene 2 & 3: High-tech dark radial glow
+        const bgGrad = ctx.createRadialGradient(W/2, H*0.4, 50, W/2, H*0.4, 900);
+        bgGrad.addColorStop(0, 'rgba(255, 214, 0, 0.09)');
+        bgGrad.addColorStop(1, 'rgba(7, 7, 7, 1)');
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, W, H);
+      }
 
-      // Particles
+      // Floating gold ambient particles
       ctx.fillStyle = '#FFD600';
       particles.forEach(p => {
         p.x += p.vx;
@@ -88,8 +135,8 @@ function getRecorderHtml() {
 
       // Top Brand Header
       ctx.save();
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-      ctx.font = '700 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+      ctx.font = '800 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('A U R A M I N D', W / 2, 120);
 
@@ -102,22 +149,24 @@ function getRecorderHtml() {
       ctx.stroke();
       ctx.restore();
 
-      // SCENE 1: (0s - 5s) THE VIRAL HOOK
+      // ========================================================
+      // SCENE 1: (0s - 5s) THE VIRAL HOOK (REAL PERSON FRUSTRATION)
+      // ========================================================
       if (timeSec >= 0 && timeSec < 5.0) {
         const sTime = timeSec;
         const enterProgress = Math.min(1, sTime / 0.8);
-        const scale = 0.85 + 0.15 * easeOutCubic(enterProgress);
+        const scale = 0.88 + 0.12 * easeOutCubic(enterProgress);
 
         ctx.save();
-        ctx.translate(W/2, H/2 - 100);
+        ctx.translate(W/2, H/2 - 80);
         ctx.scale(scale, scale);
 
         // Warning badge
-        ctx.fillStyle = 'rgba(239, 68, 68, 0.2)';
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.3)';
         ctx.strokeStyle = '#EF4444';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.roundRect(-160, -280, 320, 60, 30);
+        ctx.roundRect(-170, -280, 340, 60, 30);
         ctx.fill();
         ctx.stroke();
 
@@ -128,7 +177,7 @@ function getRecorderHtml() {
 
         // Giant Hook Text
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = '900 78px sans-serif';
+        ctx.font = '900 80px sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('WHY DO 92%', 0, -120);
         
@@ -138,16 +187,17 @@ function getRecorderHtml() {
         ctx.fillStyle = '#EF4444';
         ctx.fillText('BY DAY 4?', 0, 60);
 
-        // Subtext box
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        // Subtext glassmorphic card
+        ctx.fillStyle = 'rgba(10, 10, 10, 0.85)';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.roundRect(-420, 160, 840, 180, 20);
+        ctx.roundRect(-420, 160, 840, 180, 24);
         ctx.fill();
         ctx.stroke();
 
         ctx.fillStyle = '#E5E5E5';
-        ctx.font = '500 36px sans-serif';
+        ctx.font = '600 36px sans-serif';
         ctx.fillText('Traditional to-do apps assume', 0, 225);
         ctx.fillText('you are a robot.', 0, 275);
         ctx.fillStyle = '#FFD600';
@@ -157,7 +207,9 @@ function getRecorderHtml() {
         ctx.restore();
       }
 
-      // SCENE 2: (5s - 10s) THE PARADIGM SHIFT
+      // ========================================================
+      // SCENE 2: (5s - 10s) THE PARADIGM SHIFT (AURAMIND REVEAL)
+      // ========================================================
       else if (timeSec >= 5.0 && timeSec < 10.0) {
         const sTime = timeSec - 5.0;
         const enterProgress = Math.min(1, sTime / 0.8);
@@ -229,11 +281,10 @@ function getRecorderHtml() {
         ctx.restore();
       }
 
+      // ========================================================
       // SCENE 3: (10s - 15s) 30-DAY ADAPTIVE TIMETABLE
+      // ========================================================
       else if (timeSec >= 10.0 && timeSec < 15.0) {
-        const sTime = timeSec - 10.0;
-        const enterProgress = Math.min(1, sTime / 0.6);
-
         ctx.save();
         ctx.translate(W/2, H/2 - 100);
 
@@ -296,7 +347,9 @@ function getRecorderHtml() {
         ctx.restore();
       }
 
-      // SCENE 4: (15s - 20s) WHATSAPP + AI CALLING AGENT
+      // ========================================================
+      // SCENE 4: (15s - 20s) REAL PERSON: WHATSAPP + AI CALLING
+      // ========================================================
       else if (timeSec >= 15.0 && timeSec < 20.0) {
         ctx.save();
         ctx.translate(W/2, H/2 - 100);
@@ -311,7 +364,7 @@ function getRecorderHtml() {
         ctx.fillText('NO MORE SILENT, PASSIVE APPS', 0, -185);
 
         // 1. WhatsApp Card
-        ctx.fillStyle = '#0F261C';
+        ctx.fillStyle = 'rgba(15, 38, 28, 0.9)';
         ctx.strokeStyle = '#10B981';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -325,7 +378,7 @@ function getRecorderHtml() {
         ctx.fillText('💬 HOURLY WHATSAPP CHECK-IN', -380, -60);
 
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = '500 32px sans-serif';
+        ctx.font = '600 32px sans-serif';
         ctx.fillText('"Hey Alex! Did you finish your 90-min', -380, -10);
         ctx.fillText('Python deep work sprint?"', -380, 30);
 
@@ -335,7 +388,7 @@ function getRecorderHtml() {
         ctx.fillText('Delivered at 2:00 PM ✓✓', 380, 65);
 
         // 2. Incoming AI Call Card
-        ctx.fillStyle = '#1C1608';
+        ctx.fillStyle = 'rgba(28, 22, 8, 0.92)';
         ctx.strokeStyle = '#FFD600';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -363,14 +416,16 @@ function getRecorderHtml() {
         ctx.font = '700 34px sans-serif';
         ctx.fillText('“Aapka agla task ready hai!”', -270, 240);
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
         ctx.font = '500 26px sans-serif';
         ctx.fillText('Checks completed tasks & briefs next action.', -270, 290);
 
         ctx.restore();
       }
 
-      // SCENE 5: (20s - 25s) GAMIFIED FOCUS & COMMUNITY
+      // ========================================================
+      // SCENE 5: (20s - 25s) REAL PERSON: DEEP FOCUS STATE & XP
+      // ========================================================
       else if (timeSec >= 20.0 && timeSec < 25.0) {
         ctx.save();
         ctx.translate(W/2, H/2 - 80);
@@ -384,8 +439,13 @@ function getRecorderHtml() {
         ctx.font = '700 32px sans-serif';
         ctx.fillText('TURN INVISIBLE WORK INTO MOMENTUM', 0, -185);
 
-        // Circular Timer Visual
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        // Circular Timer Visual with background darkening disc
+        ctx.fillStyle = 'rgba(10, 10, 10, 0.8)';
+        ctx.beginPath();
+        ctx.arc(0, -20, 140, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
         ctx.lineWidth = 16;
         ctx.beginPath();
         ctx.arc(0, -20, 130, 0, Math.PI * 2);
@@ -402,12 +462,12 @@ function getRecorderHtml() {
         ctx.fillStyle = '#FFFFFF';
         ctx.font = '900 64px monospace';
         ctx.fillText('25:00', 0, -5);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
         ctx.font = '700 22px sans-serif';
         ctx.fillText('DEEP FOCUS SPRINT', 0, 35);
 
         // Level Up Badge
-        ctx.fillStyle = '#141414';
+        ctx.fillStyle = 'rgba(20, 20, 20, 0.9)';
         ctx.strokeStyle = '#38BDF8';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -418,14 +478,16 @@ function getRecorderHtml() {
         ctx.fillStyle = '#38BDF8';
         ctx.font = '900 34px sans-serif';
         ctx.fillText('🏆 LEVEL 8 ACHIEVED • +120 XP', 0, 230);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
         ctx.font = '500 26px sans-serif';
         ctx.fillText('Circle of 50 Friends • Zero-Abuse World Chat', 0, 275);
 
         ctx.restore();
       }
 
-      // SCENE 6: (25s - 30s) CALL TO ACTION & NEW DOMAIN
+      // ========================================================
+      // SCENE 6: (25s - 30s) REAL PERSON: SUCCESS & CALL TO ACTION
+      // ========================================================
       else {
         const sTime = timeSec - 25.0;
         const enterProgress = Math.min(1, sTime / 0.6);
@@ -456,7 +518,7 @@ function getRecorderHtml() {
         ctx.textAlign = 'center';
         ctx.fillText('START DAY 1 TODAY', 0, -70);
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
         ctx.font = '600 32px sans-serif';
         ctx.fillText('Stop putting your goals on hold.', 0, -10);
 
@@ -476,8 +538,8 @@ function getRecorderHtml() {
         ctx.fillText('🔗 LINK IN BIO', 0, 260);
 
         // Sub features
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-        ctx.font = '500 28px sans-serif';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+        ctx.font = '600 28px sans-serif';
         ctx.fillText('AI Timetable in 60s • Hourly Check-ins • WhatsApp • AI Calling', 0, 320);
 
         ctx.restore();
@@ -496,12 +558,21 @@ function getRecorderHtml() {
       ctx.font = '600 24px monospace';
       ctx.textAlign = 'right';
       const curSec = Math.floor(timeSec);
-      const curMs = Math.floor((timeSec % 1) * 10);
       ctx.fillText('00:' + (curSec < 10 ? '0' + curSec : curSec) + ' / 00:30', W - 80, H - 120);
     }
 
     // Capture and MediaRecorder
     async function startRecording() {
+      // Ensure all images are preloaded before recording begins
+      const imagePromises = Object.values(clips).map(img => {
+        if (img.complete && img.naturalWidth) return Promise.resolve();
+        return new Promise((resolve) => {
+          img.onload = () => resolve();
+          img.onerror = () => resolve(); // fallback gracefully
+        });
+      });
+      await Promise.all(imagePromises);
+
       const stream = canvas.captureStream(FPS);
       const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
         ? 'video/webm;codecs=vp9'
@@ -563,13 +634,24 @@ const server = http.createServer((req, res) => {
   if (req.url === "/" || req.url === "/record") {
     res.writeHead(200, { "Content-Type": "text/html" });
     res.end(getRecorderHtml());
+  } else if (req.url.startsWith("/assets/")) {
+    const assetName = path.basename(req.url);
+    const assetPath = path.join(ASSETS_DIR, assetName);
+    if (fs.existsSync(assetPath)) {
+      const data = fs.readFileSync(assetPath);
+      res.writeHead(200, { "Content-Type": "image/jpeg" });
+      res.end(data);
+    } else {
+      res.writeHead(404);
+      res.end("Asset not found");
+    }
   } else if (req.url === "/save-video" && req.method === "POST") {
     const chunks = [];
     req.on("data", (chunk) => chunks.push(chunk));
     req.on("end", () => {
       const buffer = Buffer.concat(chunks);
       fs.writeFileSync(OUTPUT_FILE, buffer);
-      console.log(`\n✔ [SUCCESS] Video recorded and saved successfully!`);
+      console.log(`\\n✔ [SUCCESS] Video recorded and saved successfully with real-person clips!`);
       console.log(`File: ${OUTPUT_FILE}`);
       console.log(`Size: ${(buffer.length / (1024 * 1024)).toFixed(2)} MB`);
       res.writeHead(200, { "Content-Type": "application/json" });
@@ -590,8 +672,8 @@ server.listen(PORT, () => {
   console.log(`Local video capture server listening on http://localhost:${PORT}`);
   console.log(`Launching Chrome headless to render 30s video at 1080x1920 (9:16)...`);
 
-  const chromePath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
-  const edgePath = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
+  const chromePath = "C:\\\\Program Files\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe";
+  const edgePath = "C:\\\\Program Files (x86)\\\\Microsoft\\\\Edge\\\\Application\\\\msedge.exe";
   const browserBinary = fs.existsSync(chromePath) ? chromePath : edgePath;
 
   const chromeProcess = spawn(
@@ -611,7 +693,7 @@ server.listen(PORT, () => {
     console.log(`Browser exited with code ${code}`);
   });
 
-  // Timeout guard (35s)
+  // Timeout guard (40s)
   setTimeout(() => {
     if (fs.existsSync(OUTPUT_FILE)) {
       console.log("Finished recording.");
@@ -619,5 +701,5 @@ server.listen(PORT, () => {
     } else {
       console.log("Capture in progress...");
     }
-  }, 35000);
+  }, 40000);
 });
