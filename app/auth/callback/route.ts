@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { recordConsent, POLICY_VERSIONS } from "@/lib/consent";
 
@@ -9,6 +9,14 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get("code");
   const error = requestUrl.searchParams.get("error");
   const errorDescription = requestUrl.searchParams.get("error_description");
+
+  // Determine canonical origin
+  const host =
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("host") ||
+    requestUrl.host;
+  const isLocal = host.includes("localhost") || host.includes("127.0.0.1");
+  const origin = isLocal ? `http://${host}` : "https://theauramind.dpdns.org";
 
   // Validate next path against open-redirect vulnerabilities
   let next = requestUrl.searchParams.get("next") || "/dashboard";
@@ -20,24 +28,74 @@ export async function GET(request: Request) {
   if (error) {
     console.error("[auth callback error]", { error, errorDescription });
     return NextResponse.redirect(
-      new URL(`/login?error=${encodeURIComponent(errorDescription || error)}`, requestUrl.origin)
+      new URL(`/login?error=${encodeURIComponent(errorDescription || error)}`, origin)
     );
   }
 
   if (code) {
     try {
-      const supabase = createClient();
+      const cookieStore = cookies();
+      const supabaseUrl =
+        process.env.NEXT_PUBLIC_SUPABASE_URL ||
+        process.env.SUPABASE_URL ||
+        "https://pckeesudjibgniijijhl.supabase.co";
+      const supabaseKey =
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+        process.env.SUPABASE_ANON_KEY ||
+        process.env.SUPABASE_SERVICE_ROLE_KEY ||
+        "";
+
+      const targetUrl = new URL(next, origin);
+      const response = NextResponse.redirect(targetUrl);
+
+      const supabase = createServerClient(supabaseUrl, supabaseKey, {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+          set(name: string, value: string, options: CookieOptions) {
+            try {
+              cookieStore.set({ name, value, ...options });
+            } catch {
+              // Ignore if headers sent
+            }
+            response.cookies.set({
+              name,
+              value,
+              ...options,
+              path: "/",
+              sameSite: "lax",
+              secure: !isLocal,
+            });
+          },
+          remove(name: string, options: CookieOptions) {
+            try {
+              cookieStore.set({ name, value: "", ...options });
+            } catch {
+              // Ignore if headers sent
+            }
+            response.cookies.set({
+              name,
+              value: "",
+              ...options,
+              path: "/",
+              maxAge: 0,
+            });
+          },
+        },
+      });
+
       const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
       if (exchangeError) {
         console.error("[auth exchange error]", exchangeError.message);
         return NextResponse.redirect(
-          new URL(`/login?error=${encodeURIComponent(exchangeError.message)}`, requestUrl.origin)
+          new URL(`/login?error=${encodeURIComponent(exchangeError.message)}`, origin)
         );
       }
 
       // Ensure user profile is registered in public.profiles table
-      const user = data.user;
+      const user = data?.user;
       if (user) {
         try {
           const admin = getAdminClient();
@@ -65,7 +123,10 @@ export async function GET(request: Request) {
           // If first-time OAuth signin, record affirmative consent audit records
           if (!user.user_metadata?.terms_accepted) {
             const nowIso = new Date().toISOString();
-            const ipAddress = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || undefined;
+            const ipAddress =
+              request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+              request.headers.get("x-real-ip") ||
+              undefined;
             const userAgent = request.headers.get("user-agent") || undefined;
 
             await Promise.allSettled([
@@ -107,20 +168,29 @@ export async function GET(request: Request) {
         }
       }
 
-      const cookieStore = cookies();
+      // Ensure any additional cookies in cookieStore are also propagated with path: '/'
       const allCookies = cookieStore.getAll();
-      const response = NextResponse.redirect(new URL(next, requestUrl.origin));
       for (const c of allCookies) {
-        response.cookies.set(c.name, c.value);
+        if (!response.cookies.has(c.name)) {
+          response.cookies.set({
+            name: c.name,
+            value: c.value,
+            path: "/",
+            sameSite: "lax",
+            secure: !isLocal,
+            maxAge: 60 * 60 * 24 * 365,
+          });
+        }
       }
+
       return response;
     } catch (e: any) {
       console.error("[auth callback unexpected exception]", e);
       return NextResponse.redirect(
-        new URL(`/login?error=${encodeURIComponent("Authentication exchange failed.")}`, requestUrl.origin)
+        new URL(`/login?error=${encodeURIComponent("Authentication exchange failed.")}`, origin)
       );
     }
   }
 
-  return NextResponse.redirect(new URL("/login", requestUrl.origin));
+  return NextResponse.redirect(new URL("/login", origin));
 }

@@ -53,7 +53,9 @@ export async function submitPaymentRequest(params: {
   const plan = SUBSCRIPTION_PLANS[tier];
   const billingCycle = params.billingCycle || "monthly";
   const defaultAmount =
-    billingCycle === "annual"
+    tier === "beta"
+      ? 99
+      : billingCycle === "annual"
       ? plan.annualPriceMonthly * 12
       : plan.monthlyPriceIntro || plan.monthlyPriceRegular;
   const amount = params.amount && params.amount > 0 ? params.amount : defaultAmount;

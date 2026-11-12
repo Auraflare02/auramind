@@ -261,8 +261,8 @@ export default function FeaturesPage() {
           </p>
 
           <div style={{ display: "flex", gap: "14px", justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/#create-goal" className="btn btn-primary btn-lg">
-              Start Free Goal Plan &rarr;
+            <Link href="/beta" className="btn btn-primary btn-lg">
+              🚀 JOIN THE ₹99 BETA
             </Link>
             <Link href="/pricing" className="btn btn-secondary btn-lg">
               View Subscription Plans

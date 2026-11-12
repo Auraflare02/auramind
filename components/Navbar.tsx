@@ -244,20 +244,25 @@ export default function Navbar() {
               Access Request
             </Link>
             <Link
-              href="/admin"
+              href="/beta"
               style={{
-                color: "var(--text-primary)",
+                color: "#000000",
                 textDecoration: "none",
                 fontSize: "0.825rem",
-                fontWeight: 600,
-                padding: "6px 18px",
+                fontWeight: 800,
+                padding: "6px 16px",
                 borderRadius: "9999px",
-                backgroundColor: "var(--bg-surface)",
-                border: "1px solid var(--border-default)",
+                backgroundColor: "var(--accent-primary)",
+                border: "1px solid var(--accent-primary)",
+                boxShadow: "0 2px 10px rgba(255, 214, 0, 0.25)",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
                 transition: "all var(--transition-fast)",
               }}
             >
-              Admin
+              <span>🚀</span>
+              <span>JOIN THE ₹99 BETA</span>
             </Link>
 
             {/* Desktop Auth Controls */}
@@ -799,7 +804,7 @@ export default function Navbar() {
             </Link>
 
             <Link
-              href="/admin"
+              href="/beta"
               onClick={() => setMobileMenuOpen(false)}
               className="mobile-nav-link"
               style={{
@@ -808,19 +813,19 @@ export default function Navbar() {
                 justifyContent: "space-between",
                 padding: "14px 16px",
                 borderRadius: "10px",
-                backgroundColor: "var(--bg-surface)",
-                border: "1px solid var(--border-default)",
-                color: "var(--text-primary)",
+                backgroundColor: "rgba(255, 214, 0, 0.12)",
+                border: "1px solid var(--accent-primary)",
+                color: "#FFFFFF",
                 textDecoration: "none",
-                fontWeight: 500,
+                fontWeight: 700,
                 fontSize: "0.92rem",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <span style={{ fontSize: "1.2rem" }}>🛡️</span>
-                <span>Research Admin Console</span>
+                <span style={{ fontSize: "1.2rem" }}>🚀</span>
+                <span>Join the ₹99 Beta (100 Slots)</span>
               </div>
-              <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>&rarr;</span>
+              <span style={{ color: "var(--accent-primary)", fontSize: "0.85rem", fontWeight: 800 }}>&rarr;</span>
             </Link>
           </div>
 

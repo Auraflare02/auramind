@@ -6,7 +6,7 @@ import DashboardClient from "@/components/DashboardClient";
 
 export const metadata = {
   title: "Dashboard — AuraMind",
-  description: "Your personalized deliberate practice trajectories and behavioral telemetry.",
+  description: "Your personalized 30-day goal timetables, daily check-ins, and focus progress.",
 };
 
 export default async function DashboardPage() {

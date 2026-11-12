@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import FeedbackModal from "@/components/FeedbackModal";
 
 interface UserProfile {
   id: string;
@@ -54,6 +55,7 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
   const [friendsCount, setFriendsCount] = useState<number>(0);
   const [subData, setSubData] = useState<any>(null);
   const [copiedId, setCopiedId] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   useEffect(() => {
     async function loadFriendsMeta() {
@@ -212,19 +214,25 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
                       padding: "2px 8px",
                       borderRadius: "9999px",
                       backgroundColor:
-                        subData.tier === "diamond"
+                        subData.tier === "beta"
+                          ? "rgba(16, 185, 129, 0.15)"
+                          : subData.tier === "diamond"
                           ? "rgba(56, 189, 248, 0.15)"
                           : subData.tier === "platinum"
                           ? "rgba(255, 214, 0, 0.15)"
                           : "rgba(234, 179, 8, 0.15)",
                       color:
-                        subData.tier === "diamond"
+                        subData.tier === "beta"
+                          ? "#34D399"
+                          : subData.tier === "diamond"
                           ? "#38BDF8"
                           : subData.tier === "platinum"
                           ? "var(--accent-primary)"
                           : "#EAB308",
                       border: `1px solid ${
-                        subData.tier === "diamond"
+                        subData.tier === "beta"
+                          ? "rgba(16, 185, 129, 0.4)"
+                          : subData.tier === "diamond"
                           ? "rgba(56, 189, 248, 0.4)"
                           : subData.tier === "platinum"
                           ? "rgba(255, 214, 0, 0.4)"
@@ -232,7 +240,9 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
                       }`,
                     }}
                   >
-                    {subData.tier === "diamond"
+                    {subData.tier === "beta"
+                      ? "🚀 Beta Pass (20 Days)"
+                      : subData.tier === "diamond"
                       ? "💎 Diamond Plan"
                       : subData.tier === "platinum"
                       ? "🥈 Platinum Plan"
@@ -252,6 +262,14 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
 
         {/* Action Controls */}
         <div className="dashboard-profile-actions">
+          <button
+            type="button"
+            onClick={() => setIsFeedbackOpen(true)}
+            className="btn btn-secondary"
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+          >
+            <span>💬 Beta Feedback</span>
+          </button>
           <Link href="/pricing" className="btn btn-secondary" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
             <span>⚡ Plans</span>
           </Link>
@@ -814,12 +832,20 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
               <span style={{ color: "#10B981", fontWeight: 700 }}>AuraSentinel Active</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem" }}>
-              <span style={{ color: "var(--text-secondary)" }}>Telemetry:</span>
+              <span style={{ color: "var(--text-secondary)" }}>Data Privacy:</span>
               <span style={{ color: "#FFFFFF", fontWeight: 700 }}>End-to-End Encrypted</span>
             </div>
           </div>
         </div>
       </section>
+
+      {/* Beta Feedback Modal */}
+      <FeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+        defaultCategory="other"
+        defaultFeature="Dashboard"
+      />
     </div>
   );
 }

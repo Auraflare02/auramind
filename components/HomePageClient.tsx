@@ -202,10 +202,10 @@ export default function HomePageClient() {
   };
 
   const GEN_STEPS = [
-    { title: "Analyzing Cognitive Baseline", desc: `Calibrating ${hours}h daily budget inside your peak ${focus} window.` },
-    { title: "Synthesizing Goal Intelligence Blueprint", desc: "Isolating domain-specific workstreams, dependencies, and milestones." },
-    { title: "Architecting 30-Day Execution Timetable", desc: "Constructing daily deliberate practice blocks with actionable criteria." },
-    { title: "Running Personalization Quality Control Audit", desc: "Checking feasibility, eliminating generic filler, and verifying alignment." },
+    { title: "Analyzing Your Goal & Schedule", desc: `Calibrating ${hours}h daily budget inside your peak ${focus} window.` },
+    { title: "Synthesizing Goal Intelligence Blueprint", desc: "Isolating key milestones, required skills, and practical checkpoints." },
+    { title: "Building 30-Day Execution Timetable", desc: "Constructing daily focus blocks with clear, actionable criteria." },
+    { title: "Running Quality & Feasibility Check", desc: "Ensuring tasks are realistic, personalized, and structured for daily consistency." },
   ];
 
   const formatTimerDigits = (sec: number) => {
@@ -242,12 +242,15 @@ export default function HomePageClient() {
             </p>
 
             <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", alignItems: "center" }}>
-              <a href="#create-goal" className="btn btn-primary btn-lg">
-                Start Your Goal &rarr;
+              <Link href="/beta" className="btn btn-primary btn-lg" style={{ fontWeight: 800 }}>
+                🚀 JOIN THE ₹99 BETA
+              </Link>
+              <a href="#create-goal" className="btn btn-secondary btn-lg">
+                Create 30-Day Plan &rarr;
               </a>
-              <a href="#product-preview" className="btn btn-secondary btn-lg">
-                Explore AuraMind
-              </a>
+              <Link href="/pricing" className="btn btn-secondary btn-lg">
+                View Pricing
+              </Link>
             </div>
           </div>
 
@@ -413,7 +416,7 @@ export default function HomePageClient() {
                     </button>
                   </div>
                   <p className="text-xs text-muted" style={{ margin: 0 }}>
-                    Calm, telemetry-tracked focus sprint. Completed sessions automatically award XP and update daily metrics.
+                    Distraction-free focus sprint. Completed sessions automatically award XP and update daily metrics.
                   </p>
                 </div>
               )}
@@ -437,7 +440,7 @@ export default function HomePageClient() {
                     </div>
                     <div style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: "10px" }}>
                       <div className="text-xs text-yellow" style={{ fontWeight: 600, marginBottom: "2px" }}>
-                        AuraMind Cognitive Telemetry:
+                        AuraMind AI Feedback:
                       </div>
                       <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)" }}>
                         &ldquo;High retention observed. The 5-minute break prevented fatigue accumulation before Block 2.&rdquo;
@@ -909,7 +912,7 @@ export default function HomePageClient() {
               </h2>
 
               <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", lineHeight: 1.6, maxWidth: "480px", margin: "0 auto 28px" }}>
-                AuraMind crafts personalized deliberate practice timetables and syncs your daily milestones to Google Calendar. Please log in or create a free account to access goal creation.
+                AuraMind crafts personalized 30-day goal timetables and syncs your daily milestones to Google Calendar. Please log in or create an account to start your goal.
               </p>
 
               <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
@@ -925,7 +928,7 @@ export default function HomePageClient() {
                   className="btn btn-secondary btn-lg"
                   style={{ minWidth: "180px" }}
                 >
-                  Create Free Account
+                  Create Account
                 </Link>
               </div>
 
@@ -1460,7 +1463,7 @@ export default function HomePageClient() {
                   Essential Productivity
                 </div>
                 <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "var(--accent-primary)", marginBottom: "14px" }}>
-                  ₹199<span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>/month</span>
+                  ₹249<span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>/month</span>
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: 1.5, margin: "0 0 16px" }}>
                   Up to 1 goal, 5 friends, focus timer, XP levels, daily/weekly reports, and hourly in-app check-ins.
@@ -1508,7 +1511,7 @@ export default function HomePageClient() {
                   Smart Accountability
                 </div>
                 <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "var(--accent-primary)", marginBottom: "14px" }}>
-                  ₹499<span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>/month</span>
+                  ₹699<span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>/month</span>
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: 1.5, margin: "0 0 16px" }}>
                   Up to 3 goals, 15 friends, WhatsApp check-ins, conversational Hindi AI calling agent, and Google Calendar.
@@ -1540,7 +1543,7 @@ export default function HomePageClient() {
                   Complete AI Accountability
                 </div>
                 <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "#38BDF8", marginBottom: "14px" }}>
-                  ₹999<span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>/month</span>
+                  ₹1,299<span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>/month</span>
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: 1.5, margin: "0 0 16px" }}>
                   Up to 25 goals, 50 friends, WhatsApp milestone check-ins, 15+ AI phone calls, and 2-way Google Calendar sync.

@@ -27,9 +27,9 @@ export async function POST(request: Request) {
     const amount = Number(body.amount) || undefined;
     const notes = body.notes ? String(body.notes).trim() : undefined;
 
-    if (!tier || !["gold", "platinum", "diamond"].includes(tier)) {
+    if (!tier || !["gold", "platinum", "diamond", "beta"].includes(tier)) {
       return NextResponse.json(
-        { error: "Valid subscription tier (Gold, Platinum, or Diamond) is required." },
+        { error: "Valid subscription tier (Gold, Platinum, Diamond, or Beta) is required." },
         { status: 400 }
       );
     }

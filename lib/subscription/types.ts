@@ -1,4 +1,4 @@
-export type SubscriptionTier = "gold" | "platinum" | "diamond";
+export type SubscriptionTier = "gold" | "platinum" | "diamond" | "beta";
 export type BillingCycle = "monthly" | "annual";
 
 export interface PlanConfig {

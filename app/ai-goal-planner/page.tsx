@@ -42,7 +42,7 @@ export default function AiGoalPlannerPage() {
         <div className="container" style={{ maxWidth: "860px" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
             <span className="badge badge-yellow" style={{ fontSize: "0.8rem", padding: "4px 12px" }}>
-              Cognitive Architecture &bull; Deliberate Practice Engine
+              AI Goal Planning &bull; 30-Day Step-by-Step Timetable
             </span>
           </div>
 
@@ -51,7 +51,7 @@ export default function AiGoalPlannerPage() {
           </h1>
 
           <p className="lead" style={{ maxWidth: "720px", margin: "0 auto 36px", color: "var(--text-secondary)" }}>
-            Turn vague ambitions into mathematically calibrated 30-day execution roadmaps. Discover how AuraMind deconstructs complex skills into daily, frictionless deliberate practice.
+            Turn ambitious goals into clear, achievable 30-day daily schedules. Tell AuraMind what you want to learn or achieve, your available daily hours, and let AI build your timetable.
           </p>
 
           <div style={{ display: "flex", gap: "14px", justifyContent: "center", flexWrap: "wrap" }}>
@@ -458,11 +458,11 @@ export default function AiGoalPlannerPage() {
             Ready to Generate Your 30-Day Timetable?
           </h2>
           <p style={{ color: "var(--text-secondary)", fontSize: "1rem", marginBottom: "32px" }}>
-            Experience the power of cognitive architecture. Input your goal and generate an actionable daily execution plan in seconds.
+            Build a system that fits your real schedule. Input your goal and generate an actionable daily execution plan in seconds.
           </p>
           <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/#create-goal" className="btn btn-primary btn-lg">
-              Generate 30-Day Timetable Now
+            <Link href="/beta" className="btn btn-primary btn-lg">
+              🚀 JOIN THE ₹99 BETA
             </Link>
             <Link href="/pricing" className="btn btn-secondary btn-lg">
               Compare Subscription Plans

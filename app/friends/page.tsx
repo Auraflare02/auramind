@@ -397,7 +397,7 @@ function FriendsContent() {
 
   return (
     <div className="container" style={{ paddingTop: "40px", paddingBottom: "80px", maxWidth: "1080px" }}>
-      {/* 1. TOP HEADER & TELEMETRY */}
+      {/* 1. TOP HEADER & STATS */}
       <div
         style={{
           display: "flex",
@@ -871,7 +871,7 @@ function FriendsContent() {
                       </p>
                     )}
 
-                    {/* Telemetry preview if shared */}
+                    {/* Stats preview if shared */}
                     {friend.stats && (
                       <div
                         style={{
@@ -1691,7 +1691,7 @@ function FriendsContent() {
             </h3>
             <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", margin: "0 0 24px" }}>
               {confirmModal.type === "remove"
-                ? `Are you sure you want to unfriend ${confirmModal.targetName}? You will both be removed from each other's circle and will no longer see mutual goals or practice telemetry.`
+                ? `Are you sure you want to unfriend ${confirmModal.targetName}? You will both be removed from each other's circle and will no longer see mutual goals or focus progress.`
                 : `Are you sure you want to block ${confirmModal.targetName}? They will be removed from your friends, unable to find your profile, or send you requests.`}
             </p>
 

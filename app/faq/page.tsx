@@ -29,7 +29,7 @@ export default function FaqPage() {
     {
       category: "General & Methodology",
       q: "What makes AuraMind different from traditional to-do list apps?",
-      a: "Traditional to-do apps are passive lists that sit quietly until you forget them. AuraMind is an active accountability operating system. It translates your ambitious goal into a structured 30-day timetable with daily focus blocks, checks in with you proactively every hour, logs focus telemetry, and dynamically recalibrates future days if life causes a disruption.",
+      a: "Traditional to-do apps are passive lists that sit quietly until you forget them. AuraMind is an active accountability system. It translates your ambitious goal into a structured 30-day timetable with daily focus blocks, checks in with you proactively every hour, tracks your daily focus minutes, and dynamically recalibrates future days if life causes a disruption.",
     },
     {
       category: "General & Methodology",

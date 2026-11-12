@@ -8,20 +8,21 @@ export async function middleware(request: NextRequest) {
   const host = request.headers.get("host") || "";
   const pathname = request.nextUrl.pathname;
 
-  // 301 Permanent Redirect from old domain to new official canonical domain
+  // Redirect from old domain to new official canonical domain
   if (host.includes(OLD_HOST)) {
-    // Preserve auth callback routes in case OAuth provider redirects there
-    const isAuthCallback =
-      pathname.startsWith("/auth/callback") ||
-      pathname.startsWith("/api/auth/google") ||
-      pathname.startsWith("/api/auth/callback");
+    const targetUrl = new URL(request.url);
+    targetUrl.protocol = "https:";
+    targetUrl.host = NEW_OFFICIAL_HOST;
 
-    if (!isAuthCallback) {
-      const targetUrl = new URL(request.url);
-      targetUrl.protocol = "https:";
-      targetUrl.host = NEW_OFFICIAL_HOST;
-      return NextResponse.redirect(targetUrl, 301);
+    // For auth callbacks and API routes, use 307 Temporary Redirect to preserve GET query parameters & method
+    if (
+      pathname.startsWith("/auth/callback") ||
+      pathname.startsWith("/api/auth")
+    ) {
+      return NextResponse.redirect(targetUrl, 307);
     }
+
+    return NextResponse.redirect(targetUrl, 301);
   }
 
   return await updateSession(request);

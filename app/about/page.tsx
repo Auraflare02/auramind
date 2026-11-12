@@ -14,8 +14,8 @@ export const metadata: Metadata = constructMetadata({
     "AuraMind story",
     "AI productivity platform",
     "AI accountability system",
-    "deliberate practice",
-    "cognitive architecture startup",
+    "goal achievement system",
+    "AI productivity startup",
   ],
 });
 

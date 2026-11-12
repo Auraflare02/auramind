@@ -279,13 +279,16 @@ export default function TermsPage() {
             </p>
             <ul style={{ paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "8px", margin: "12px 0" }}>
               <li>
-                <strong>🥇 Gold Plan (₹199/month intro / ₹249 regular):</strong> Includes up to 1 goal, 5 accountability friends, focus timer, XP progression, daily/weekly productivity reports, and hourly in-app notification check-ins.
+                <strong>🚀 20-Day Beta Programme (₹99 one-time):</strong> Limited to 100 early adopters. Includes 1 active goal, personalized 30-day AI timetable, application check-ins, focus timer, progress reports, missed-task recovery plans, and direct priority feedback to the engineering team. No automatic renewals or surprise charges.
               </li>
               <li>
-                <strong>🥈 Platinum Plan (₹499/month intro / ₹699 regular):</strong> Includes up to 3 goals, 15 friends, WhatsApp check-in messages, conversational Hindi AI calling agent (2 to 60 calls/month), and Google Calendar integration.
+                <strong>🥇 Gold Plan (₹249/month):</strong> Includes up to 1 active goal, 5 accountability friends, focus timer, XP progression, daily/weekly productivity reports, and hourly in-app notification check-ins.
               </li>
               <li>
-                <strong>💎 Diamond Plan (₹999/month intro / ₹1299 regular):</strong> Includes up to 25 goals, 50 friends, WhatsApp check-ins for every milestone, Premium AI calling agent (15 to 450 calls/month), full 2-way Google Calendar synchronization, and monthly comparative reports.
+                <strong>🥈 Platinum Plan (₹699/month):</strong> Includes up to 3 active goals, 15 friends, hourly WhatsApp check-ins, AI calling assistant (up to 60 calls/month), preferred calling times, basic Google Calendar integration, and advanced productivity reports.
+              </li>
+              <li>
+                <strong>💎 Diamond Plan (₹1,299/month):</strong> Includes up to 25 active goals, 50 friends, WhatsApp check-ins for every scheduled milestone, AI calling assistant (up to 450 calls/month), preferred calling times, full 2-way Google Calendar synchronization, and detailed monthly comparative reports.
               </li>
             </ul>
             <p>

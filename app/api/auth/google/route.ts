@@ -5,9 +5,16 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const next = requestUrl.searchParams.get("next") || "/dashboard";
-  const origin = requestUrl.origin;
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  // Determine canonical origin
+  const host =
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("host") ||
+    requestUrl.host;
+  const isLocal = host.includes("localhost") || host.includes("127.0.0.1");
+  const origin = isLocal ? `http://${host}` : "https://theauramind.dpdns.org";
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "https://pckeesudjibgniijijhl.supabase.co";
   const supabaseKey =
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
     process.env.SUPABASE_ANON_KEY ||
@@ -32,14 +39,14 @@ export async function GET(request: Request) {
       },
       set(name: string, value: string, options) {
         try {
-          cookieStore.set({ name, value, ...options });
+          cookieStore.set({ name, value, ...options, path: "/" });
         } catch {
           // Handled if headers already sent
         }
       },
       remove(name: string, options) {
         try {
-          cookieStore.set({ name, value: "", ...options });
+          cookieStore.set({ name, value: "", ...options, path: "/" });
         } catch {
           // Handled if headers already sent
         }

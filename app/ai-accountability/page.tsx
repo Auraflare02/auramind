@@ -360,11 +360,11 @@ export default function AiAccountabilityPage() {
             Choose the level of accountability that fits your ambitions. From essential hourly app reminders to daily conversational phone calls.
           </p>
           <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/pricing" className="btn btn-primary btn-lg">
-              View Plans &amp; Start Today
+            <Link href="/beta" className="btn btn-primary btn-lg">
+              🚀 JOIN THE ₹99 BETA
             </Link>
-            <Link href="/#create-goal" className="btn btn-secondary btn-lg">
-              Start Free 30-Day Goal Plan
+            <Link href="/pricing" className="btn btn-secondary btn-lg">
+              View Subscription Plans
             </Link>
           </div>
         </div>

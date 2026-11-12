@@ -70,12 +70,13 @@ export default function RefundPolicyPage() {
               AuraMind provides tiered digital productivity subscriptions:
             </p>
             <ul style={{ paddingLeft: "24px", display: "flex", flexDirection: "column", gap: "8px", margin: "12px 0" }}>
+              <li><strong>20-Day Beta Programme:</strong> ₹99 one-time payment for 20 days of full beta access. Limited to 100 users with zero auto-renewals.</li>
               <li><strong>Gold Plan:</strong> ₹249 per month (or discounted annual commitment).</li>
               <li><strong>Platinum Plan:</strong> ₹699 per month (or discounted annual commitment).</li>
               <li><strong>Diamond Plan:</strong> ₹1,299 per month (or discounted annual commitment).</li>
             </ul>
             <p>
-              Subscriptions provide access to digital cloud services, including AI 30-day timetable generation, hourly check-in dispatching, WhatsApp accountability integrations, conversational AI calling allowances, and focus telemetry. All fees are quoted and settled in Indian Rupees (INR).
+              Subscriptions provide access to digital cloud services, including AI 30-day timetable generation, daily check-in dispatching, WhatsApp accountability integrations, conversational AI calling allowances, and focus session tracking. All fees are quoted and settled in Indian Rupees (INR).
             </p>
           </section>
 

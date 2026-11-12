@@ -137,13 +137,13 @@ export async function updateUserSubscription(
   billingCycle: BillingCycle = "monthly"
 ): Promise<{ success: boolean; message: string; subscription: UserSubscription }> {
   if (!SUBSCRIPTION_PLANS[tier]) {
-    throw new Error(`Invalid subscription plan: '${tier}'. Must be gold, platinum, or diamond.`);
+    throw new Error(`Invalid subscription plan: '${tier}'. Must be gold, platinum, diamond, or beta.`);
   }
 
   const admin = getAdminClient();
   const now = new Date();
   const startedAt = now.toISOString();
-  const renewalDays = billingCycle === "annual" ? 365 : 30;
+  const renewalDays = tier === "beta" ? 20 : billingCycle === "annual" ? 365 : 30;
   const renewsAt = new Date(now.getTime() + renewalDays * 24 * 60 * 60 * 1000).toISOString();
 
   // Update in-memory fallback

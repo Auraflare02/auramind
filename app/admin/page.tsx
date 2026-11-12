@@ -12,13 +12,20 @@ export default function AdminPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  // Tab & Payments State
-  const [activeTab, setActiveTab] = useState<"payments" | "requests">("payments");
+  // Tab & Operations State
+  const [activeTab, setActiveTab] = useState<"payments" | "requests" | "feedback">("payments");
   const [payments, setPayments] = useState<any[]>([]);
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>("all");
   const [paymentSearch, setPaymentSearch] = useState<string>("");
   const [copiedTxId, setCopiedTxId] = useState<string | null>(null);
   const [processingPaymentId, setProcessingPaymentId] = useState<string | null>(null);
+
+  // Beta Feedback State
+  const [feedbackList, setFeedbackList] = useState<any[]>([]);
+  const [feedbackPriorityFilter, setFeedbackPriorityFilter] = useState<string>("all");
+  const [feedbackStatusFilter, setFeedbackStatusFilter] = useState<string>("all");
+  const [processingFeedbackId, setProcessingFeedbackId] = useState<string | null>(null);
+  const [feedbackAdminNotes, setFeedbackAdminNotes] = useState<Record<string, string>>({});
 
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
@@ -49,6 +56,24 @@ export default function AdminPage() {
     }
   }, [adminKey]);
 
+  const loadFeedback = useCallback(async (keyToUse = adminKey) => {
+    if (!keyToUse) return;
+    try {
+      const res = await fetch("/api/admin/feedback", {
+        headers: {
+          "content-type": "application/json",
+          "x-admin-key": keyToUse,
+        },
+      });
+      const data = await res.json();
+      if (res.ok && data.feedback) {
+        setFeedbackList(data.feedback);
+      }
+    } catch (e) {
+      console.warn("Failed to load feedback:", e);
+    }
+  }, [adminKey]);
+
   // Attempt to restore adminKey from sessionStorage
   useEffect(() => {
     const saved = sessionStorage.getItem("auramind_admin_key");
@@ -56,8 +81,9 @@ export default function AdminPage() {
       setAdminKey(saved);
       loadRequests(saved);
       loadPayments(saved);
+      loadFeedback(saved);
     }
-  }, [loadPayments]);
+  }, [loadPayments, loadFeedback]);
 
   const syncSelectedRequestState = (req: any) => {
     const rd = req.research_data;
@@ -89,6 +115,7 @@ export default function AdminPage() {
       setIsAuthenticated(true);
       sessionStorage.setItem("auramind_admin_key", keyToUse);
       loadPayments(keyToUse);
+      loadFeedback(keyToUse);
 
       // Keep selected request in sync
       if (selectedId) {
@@ -101,7 +128,7 @@ export default function AdminPage() {
       setErrorMsg(e.message || "Failed to load requests.");
       setIsAuthenticated(false);
     }
-  }, [adminKey, selectedId]);
+  }, [adminKey, selectedId, loadPayments, loadFeedback]);
 
   const handleSelectRequest = (r: any) => {
     setSelectedId(r.id);
@@ -209,6 +236,44 @@ export default function AdminPage() {
     }
   };
 
+  const handleUpdateFeedbackStatus = async (id: string, status: string) => {
+    setProcessingFeedbackId(id);
+    setErrorMsg("");
+    setSuccessMsg("");
+    try {
+      const res = await fetch("/api/admin/feedback", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-admin-key": adminKey,
+        },
+        body: JSON.stringify({
+          id,
+          status,
+          adminNotes: feedbackAdminNotes[id] || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update feedback status.");
+      setSuccessMsg(`Feedback marked as ${status}.`);
+      await loadFeedback(adminKey);
+    } catch (err: any) {
+      setErrorMsg(err.message || "Error updating feedback status.");
+    } finally {
+      setProcessingFeedbackId(null);
+    }
+  };
+
+  const openFeedbackCount = feedbackList.filter((f) => f.status === "open").length;
+  const criticalFeedbackCount = feedbackList.filter((f) => f.priority === "critical" && f.status === "open").length;
+  const highFeedbackCount = feedbackList.filter((f) => f.priority === "high" && f.status === "open").length;
+
+  const filteredFeedback = feedbackList.filter((f) => {
+    const matchesPriority = feedbackPriorityFilter === "all" ? true : f.priority === feedbackPriorityFilter;
+    const matchesStatus = feedbackStatusFilter === "all" ? true : f.status === feedbackStatusFilter;
+    return matchesPriority && matchesStatus;
+  });
+
   const pendingPaymentsCount = payments.filter((p) => p.status === "pending").length;
   const approvedPaymentsCount = payments.filter((p) => p.status === "approved").length;
   const totalRevenue = payments
@@ -313,6 +378,7 @@ export default function AdminPage() {
             onClick={() => {
               loadRequests();
               loadPayments();
+              loadFeedback();
             }}
             disabled={Boolean(busyAction) || Boolean(processingPaymentId)}
           >
@@ -363,6 +429,29 @@ export default function AdminPage() {
           style={{ padding: "10px 20px", fontWeight: 700, fontSize: "0.9rem" }}
         >
           🎯 Curriculum Research &amp; Timetables ({requests.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("feedback")}
+          className={activeTab === "feedback" ? "btn btn-primary" : "btn btn-secondary"}
+          style={{ padding: "10px 20px", fontWeight: 700, fontSize: "0.9rem" }}
+        >
+          💬 Beta Feedback Triage ({feedbackList.length})
+          {openFeedbackCount > 0 && (
+            <span
+              style={{
+                marginLeft: "8px",
+                padding: "2px 8px",
+                borderRadius: "9999px",
+                backgroundColor: criticalFeedbackCount > 0 ? "#EF4444" : "#F59E0B",
+                color: criticalFeedbackCount > 0 ? "#FFFFFF" : "#000000",
+                fontSize: "0.75rem",
+                fontWeight: 800,
+              }}
+            >
+              {openFeedbackCount} OPEN
+            </span>
+          )}
         </button>
       </div>
 
@@ -558,13 +647,17 @@ export default function AdminPage() {
                             padding: "4px 10px",
                             borderRadius: "6px",
                             backgroundColor:
-                              p.tier === "diamond"
+                              p.tier === "beta"
+                                ? "rgba(16, 185, 129, 0.15)"
+                                : p.tier === "diamond"
                                 ? "rgba(168, 85, 247, 0.15)"
                                 : p.tier === "platinum"
                                 ? "rgba(59, 130, 246, 0.15)"
                                 : "rgba(255, 214, 0, 0.15)",
                             color:
-                              p.tier === "diamond"
+                              p.tier === "beta"
+                                ? "#34D399"
+                                : p.tier === "diamond"
                                 ? "#C084FC"
                                 : p.tier === "platinum"
                                 ? "#60A5FA"
@@ -572,7 +665,7 @@ export default function AdminPage() {
                             border: "1px solid currentColor",
                           }}
                         >
-                          {p.tier.toUpperCase()} PLAN &bull; ₹{p.amount}
+                          {p.tier === "beta" ? "BETA 20-DAY PASS" : `${p.tier.toUpperCase()} PLAN`} &bull; ₹{p.amount}
                         </span>
 
                         <span
@@ -1101,6 +1194,361 @@ export default function AdminPage() {
           )}
         </main>
       </div>
+      )}
+
+      {/* TAB 3: BETA FEEDBACK TRIAGE CONSOLE */}
+      {activeTab === "feedback" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+          {/* METRICS ROW */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: "16px",
+            }}
+          >
+            <div
+              className="card"
+              style={{
+                padding: "18px 20px",
+                backgroundColor: criticalFeedbackCount > 0 ? "rgba(239, 68, 68, 0.1)" : "var(--bg-card)",
+                border: criticalFeedbackCount > 0 ? "1px solid rgba(239, 68, 68, 0.4)" : "1px solid var(--border-default)",
+              }}
+            >
+              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
+                Critical Issues
+              </div>
+              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: criticalFeedbackCount > 0 ? "#EF4444" : "#FFFFFF", margin: "4px 0" }}>
+                {criticalFeedbackCount}
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                Requires immediate developer triage
+              </div>
+            </div>
+
+            <div
+              className="card"
+              style={{
+                padding: "18px 20px",
+                backgroundColor: highFeedbackCount > 0 ? "rgba(249, 115, 22, 0.08)" : "var(--bg-card)",
+                border: highFeedbackCount > 0 ? "1px solid rgba(249, 115, 22, 0.3)" : "1px solid var(--border-default)",
+              }}
+            >
+              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
+                High Priority
+              </div>
+              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: highFeedbackCount > 0 ? "#F97316" : "#FFFFFF", margin: "4px 0" }}>
+                {highFeedbackCount}
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                Important functional issues
+              </div>
+            </div>
+
+            <div className="card" style={{ padding: "18px 20px" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
+                Total Open
+              </div>
+              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "var(--accent-primary)", margin: "4px 0" }}>
+                {openFeedbackCount}
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                Awaiting resolution
+              </div>
+            </div>
+
+            <div className="card" style={{ padding: "18px 20px" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
+                Resolved Items
+              </div>
+              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "#10B981", margin: "4px 0" }}>
+                {feedbackList.filter((f) => f.status === "resolved").length}
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                Fixed in current builds
+              </div>
+            </div>
+          </div>
+
+          {/* FILTER TOOLBAR */}
+          <div
+            className="card"
+            style={{
+              padding: "16px 20px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "14px",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-muted)" }}>
+                Priority:
+              </span>
+              {(["all", "critical", "high", "medium", "low"] as const).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setFeedbackPriorityFilter(p)}
+                  className={feedbackPriorityFilter === p ? "btn btn-primary btn-sm" : "btn btn-secondary btn-sm"}
+                  style={{ textTransform: "capitalize", fontSize: "0.78rem", padding: "4px 10px" }}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-muted)" }}>
+                Status:
+              </span>
+              <select
+                value={feedbackStatusFilter}
+                onChange={(e) => setFeedbackStatusFilter(e.target.value)}
+                style={{
+                  backgroundColor: "#181818",
+                  border: "1px solid var(--border-default)",
+                  borderRadius: "8px",
+                  color: "#FFFFFF",
+                  padding: "6px 12px",
+                  fontSize: "0.82rem",
+                }}
+              >
+                <option value="all">All Statuses ({feedbackList.length})</option>
+                <option value="open">Open ({openFeedbackCount})</option>
+                <option value="in_review">In Review ({feedbackList.filter((f) => f.status === "in_review").length})</option>
+                <option value="resolved">Resolved ({feedbackList.filter((f) => f.status === "resolved").length})</option>
+                <option value="closed">Closed ({feedbackList.filter((f) => f.status === "closed").length})</option>
+              </select>
+            </div>
+          </div>
+
+          {/* FEEDBACK LIST */}
+          {filteredFeedback.length === 0 ? (
+            <div className="card" style={{ padding: "60px 20px", textAlign: "center" }}>
+              <div style={{ fontSize: "2.5rem", marginBottom: "10px" }}>💬</div>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, margin: "0 0 6px" }}>No Feedback Submissions Found</h3>
+              <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", margin: 0 }}>
+                {feedbackList.length === 0
+                  ? "When beta users submit feedback or bug reports from their dashboard, they will appear here for engineering triage."
+                  : "No submissions match your selected priority/status filters."}
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              {filteredFeedback.map((f: any) => {
+                const isCritical = f.priority === "critical";
+                const isHigh = f.priority === "high";
+                const isOpen = f.status === "open";
+                const isInReview = f.status === "in_review";
+                const isResolved = f.status === "resolved";
+
+                const priorityColor = isCritical ? "#EF4444" : isHigh ? "#F97316" : f.priority === "medium" ? "#EAB308" : "#10B981";
+
+                return (
+                  <div
+                    key={f.id}
+                    className="card"
+                    style={{
+                      padding: "20px 24px",
+                      backgroundColor: isCritical ? "rgba(239, 68, 68, 0.05)" : "var(--bg-card)",
+                      border: isCritical ? "1px solid rgba(239, 68, 68, 0.4)" : "1px solid var(--border-default)",
+                      borderRadius: "14px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        flexWrap: "wrap",
+                        gap: "12px",
+                        marginBottom: "12px",
+                      }}
+                    >
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "4px" }}>
+                          <span style={{ fontWeight: 800, fontSize: "1.05rem", color: "#FFFFFF" }}>
+                            {f.userName || f.userEmail.split("@")[0]}
+                          </span>
+                          <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontFamily: "monospace" }}>
+                            {f.userEmail}
+                          </span>
+                          {f.satisfactionRating && (
+                            <span style={{ fontSize: "0.85rem" }}>
+                              {"⭐".repeat(f.satisfactionRating)}
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
+                          Submitted: {new Date(f.createdAt).toLocaleString()} &bull; ID: <code>{f.id}</code>
+                        </div>
+                      </div>
+
+                      {/* BADGES */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                        <span
+                          style={{
+                            fontSize: "0.72rem",
+                            fontWeight: 800,
+                            padding: "3px 8px",
+                            borderRadius: "6px",
+                            backgroundColor: `${priorityColor}22`,
+                            color: priorityColor,
+                            border: `1px solid ${priorityColor}66`,
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          {f.priority} SEVERITY
+                        </span>
+
+                        <span
+                          className="badge badge-neutral"
+                          style={{ fontSize: "0.72rem", padding: "3px 8px", textTransform: "uppercase" }}
+                        >
+                          {f.category.replace("_", " ")}
+                        </span>
+
+                        <span
+                          style={{
+                            fontSize: "0.72rem",
+                            fontWeight: 800,
+                            padding: "3px 8px",
+                            borderRadius: "6px",
+                            backgroundColor: isOpen
+                              ? "rgba(234, 179, 8, 0.15)"
+                              : isInReview
+                              ? "rgba(59, 130, 246, 0.15)"
+                              : isResolved
+                              ? "rgba(16, 185, 129, 0.15)"
+                              : "rgba(107, 114, 128, 0.15)",
+                            color: isOpen
+                              ? "#EAB308"
+                              : isInReview
+                              ? "#60A5FA"
+                              : isResolved
+                              ? "#10B981"
+                              : "#9CA3AF",
+                            border: "1px solid currentColor",
+                          }}
+                        >
+                          {f.status.replace("_", " ").toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* FEATURE TAG */}
+                    {f.feature && (
+                      <div style={{ marginBottom: "8px" }}>
+                        <span style={{ fontSize: "0.75rem", color: "var(--accent-primary)", fontWeight: 700 }}>
+                          Feature Area: {f.feature}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* DESCRIPTION */}
+                    <div
+                      style={{
+                        backgroundColor: "#101010",
+                        padding: "14px 16px",
+                        borderRadius: "8px",
+                        border: "1px solid var(--border-default)",
+                        fontSize: "0.9rem",
+                        color: "var(--text-secondary)",
+                        lineHeight: 1.6,
+                        whiteSpace: "pre-wrap",
+                        marginBottom: "14px",
+                      }}
+                    >
+                      {f.description}
+                    </div>
+
+                    {/* ADMIN TRIAGE ACTIONS & NOTES */}
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                        gap: "12px",
+                        paddingTop: "10px",
+                        borderTop: "1px solid rgba(255, 255, 255, 0.06)",
+                      }}
+                    >
+                      {/* ADMIN NOTE INPUT */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: "260px" }}>
+                        <input
+                          type="text"
+                          placeholder={f.adminNotes ? `Note: ${f.adminNotes}` : "Add triage note or resolution fix..."}
+                          value={feedbackAdminNotes[f.id] ?? (f.adminNotes || "")}
+                          onChange={(e) =>
+                            setFeedbackAdminNotes((prev) => ({ ...prev, [f.id]: e.target.value }))
+                          }
+                          style={{
+                            flex: 1,
+                            padding: "6px 10px",
+                            backgroundColor: "#161616",
+                            border: "1px solid var(--border-default)",
+                            borderRadius: "6px",
+                            color: "#FFFFFF",
+                            fontSize: "0.8rem",
+                          }}
+                        />
+                        <button
+                          type="button"
+                          disabled={processingFeedbackId === f.id}
+                          onClick={() => handleUpdateFeedbackStatus(f.id, f.status)}
+                          className="btn btn-secondary btn-sm"
+                          style={{ fontSize: "0.75rem", padding: "6px 10px" }}
+                        >
+                          Save Note
+                        </button>
+                      </div>
+
+                      {/* STATUS TRANSITIONS */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        {f.status !== "in_review" && (
+                          <button
+                            type="button"
+                            disabled={processingFeedbackId === f.id}
+                            onClick={() => handleUpdateFeedbackStatus(f.id, "in_review")}
+                            className="btn btn-secondary btn-sm"
+                            style={{ fontSize: "0.75rem", padding: "6px 12px" }}
+                          >
+                            Mark In Review
+                          </button>
+                        )}
+                        {f.status !== "resolved" && (
+                          <button
+                            type="button"
+                            disabled={processingFeedbackId === f.id}
+                            onClick={() => handleUpdateFeedbackStatus(f.id, "resolved")}
+                            className="btn btn-primary btn-sm"
+                            style={{ fontSize: "0.75rem", padding: "6px 12px", fontWeight: 700 }}
+                          >
+                            ✓ Mark Resolved
+                          </button>
+                        )}
+                        {f.status === "resolved" && (
+                          <button
+                            type="button"
+                            disabled={processingFeedbackId === f.id}
+                            onClick={() => handleUpdateFeedbackStatus(f.id, "open")}
+                            className="btn btn-secondary btn-sm"
+                            style={{ fontSize: "0.75rem", padding: "6px 12px" }}
+                          >
+                            Reopen
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
