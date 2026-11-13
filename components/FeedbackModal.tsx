@@ -89,7 +89,7 @@ export default function FeedbackModal({
       <div
         className="card"
         style={{
-          backgroundColor: "#121212",
+          backgroundColor: "var(--card)",
           border: "1px solid var(--accent-primary)",
           borderRadius: "16px",
           width: "100%",
@@ -103,7 +103,7 @@ export default function FeedbackModal({
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{ fontSize: "1.4rem" }}>💬</span>
-            <h3 style={{ fontSize: "1.25rem", fontWeight: 800, margin: 0, color: "#FFFFFF" }}>
+            <h3 style={{ fontSize: "1.25rem", fontWeight: 800, margin: 0, color: "var(--text)" }}>
               Beta Feedback &amp; Bug Report
             </h3>
           </div>
@@ -126,7 +126,7 @@ export default function FeedbackModal({
         {isSuccess ? (
           <div style={{ textAlign: "center", padding: "40px 10px" }}>
             <div style={{ fontSize: "3rem", marginBottom: "12px" }}>🎉</div>
-            <h4 style={{ fontSize: "1.2rem", fontWeight: 800, color: "#10B981", margin: "0 0 8px" }}>
+            <h4 style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--success)", margin: "0 0 8px" }}>
               Feedback Received!
             </h4>
             <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", margin: 0 }}>
@@ -144,7 +144,7 @@ export default function FeedbackModal({
                 style={{
                   backgroundColor: "rgba(239, 68, 68, 0.12)",
                   border: "1px solid rgba(239, 68, 68, 0.3)",
-                  color: "#FCA5A5",
+                  color: "var(--error)",
                   padding: "10px 14px",
                   borderRadius: "8px",
                   fontSize: "0.85rem",
@@ -166,10 +166,10 @@ export default function FeedbackModal({
                 style={{
                   width: "100%",
                   padding: "10px 12px",
-                  backgroundColor: "#181818",
+                  backgroundColor: "var(--card)",
                   border: "1px solid var(--border-default)",
                   borderRadius: "8px",
-                  color: "#FFFFFF",
+                  color: "var(--text)",
                   fontSize: "0.9rem",
                 }}
               >
@@ -196,10 +196,10 @@ export default function FeedbackModal({
                 style={{
                   width: "100%",
                   padding: "10px 12px",
-                  backgroundColor: "#181818",
+                  backgroundColor: "var(--card)",
                   border: "1px solid var(--border-default)",
                   borderRadius: "8px",
-                  color: "#FFFFFF",
+                  color: "var(--text)",
                   fontSize: "0.9rem",
                 }}
               />
@@ -215,12 +215,12 @@ export default function FeedbackModal({
                   const isSel = priority === p;
                   const color =
                     p === "critical"
-                      ? "#EF4444"
+                      ? "var(--error)"
                       : p === "high"
-                      ? "#F97316"
+                      ? "var(--warning)"
                       : p === "medium"
-                      ? "#EAB308"
-                      : "#10B981";
+                      ? "var(--warning)"
+                      : "var(--success)";
 
                   return (
                     <button
@@ -235,7 +235,7 @@ export default function FeedbackModal({
                         textTransform: "uppercase",
                         cursor: "pointer",
                         border: isSel ? `2px solid ${color}` : "1px solid var(--border-default)",
-                        backgroundColor: isSel ? `${color}22` : "#181818",
+                        backgroundColor: isSel ? "var(--accent-muted)" : "var(--card)",
                         color: isSel ? color : "var(--text-muted)",
                       }}
                     >
@@ -275,7 +275,7 @@ export default function FeedbackModal({
             {/* DESCRIPTION */}
             <div style={{ marginBottom: "20px" }}>
               <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 700, marginBottom: "6px", color: "var(--text-muted)" }}>
-                DETAILS &amp; STEPS TO REPRODUCE <span style={{ color: "#EF4444" }}>*</span>
+                DETAILS &amp; STEPS TO REPRODUCE <span style={{ color: "var(--error)" }}>*</span>
               </label>
               <textarea
                 required
@@ -286,10 +286,10 @@ export default function FeedbackModal({
                 style={{
                   width: "100%",
                   padding: "10px 12px",
-                  backgroundColor: "#181818",
+                  backgroundColor: "var(--card)",
                   border: "1px solid var(--border-default)",
                   borderRadius: "8px",
-                  color: "#FFFFFF",
+                  color: "var(--text)",
                   fontSize: "0.9rem",
                   resize: "vertical",
                   fontFamily: "inherit",

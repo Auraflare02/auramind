@@ -81,7 +81,7 @@ function SignupForm() {
 
   const strengthScore = getPasswordStrength(password);
   const strengthLabels = ["Weak", "Fair", "Good", "Strong"];
-  const strengthColors = ["#EF4444", "#F59E0B", "#22C55E", "var(--accent-primary)"];
+  const strengthColors = ["var(--error)", "var(--warning)", "var(--success)", "var(--accent)"];
 
   // 1. Mobile OTP: Send Code
   const handleSendSignupOtp = async (e?: React.FormEvent) => {

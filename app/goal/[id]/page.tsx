@@ -1401,7 +1401,7 @@ export default function GoalHub() {
                             : isToday
                             ? "var(--bg-elevated)"
                             : "var(--bg-secondary)",
-                          color: isSelected ? "#0A0A0A" : isToday ? "var(--accent-primary)" : "var(--text-secondary)",
+                          color: isSelected ? "var(--on-accent)" : isToday ? "var(--accent)" : "var(--text-muted)",
                           border: isToday
                             ? "1px solid var(--accent-primary)"
                             : "1px solid var(--border-subtle)",
@@ -2123,7 +2123,7 @@ export default function GoalHub() {
                             padding: "12px 16px",
                             borderRadius: "var(--radius-sm)",
                             backgroundColor: isUser ? "var(--accent-primary)" : "var(--bg-elevated)",
-                            color: isUser ? "#0A0A0A" : "var(--text-primary)",
+                            color: isUser ? "var(--on-accent)" : "var(--text)",
                             border: isUser ? "none" : "1px solid var(--border-subtle)",
                             fontSize: "0.925rem",
                             lineHeight: 1.5,

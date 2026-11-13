@@ -466,8 +466,8 @@ export default function AdminPage() {
                 marginLeft: "8px",
                 padding: "2px 8px",
                 borderRadius: "9999px",
-                backgroundColor: "#EF4444",
-                color: "#FFFFFF",
+                backgroundColor: "var(--error)",
+                color: "var(--text)",
                 fontSize: "0.75rem",
                 fontWeight: 800,
               }}
@@ -497,8 +497,8 @@ export default function AdminPage() {
                 marginLeft: "8px",
                 padding: "2px 8px",
                 borderRadius: "9999px",
-                backgroundColor: criticalFeedbackCount > 0 ? "#EF4444" : "#F59E0B",
-                color: criticalFeedbackCount > 0 ? "#FFFFFF" : "#000000",
+                backgroundColor: criticalFeedbackCount > 0 ? "var(--error)" : "var(--warning)",
+                color: criticalFeedbackCount > 0 ? "var(--text)" : "var(--on-accent)",
                 fontSize: "0.75rem",
                 fontWeight: 800,
               }}
@@ -525,11 +525,11 @@ export default function AdminPage() {
                 borderRadius: "9999px",
                 backgroundColor:
                   spendingData.spending.thresholdState === "hard_stop_100"
-                    ? "#EF4444"
+                    ? "var(--error)"
                     : spendingData.spending.thresholdState === "calling_suspended_90"
-                    ? "#F59E0B"
-                    : "#10B981",
-                color: "#FFFFFF",
+                    ? "var(--warning)"
+                    : "var(--success)",
+                color: "var(--text)",
                 fontSize: "0.75rem",
                 fontWeight: 800,
               }}
@@ -565,7 +565,7 @@ export default function AdminPage() {
               <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
                 Pending Verifications
               </div>
-              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: pendingPaymentsCount > 0 ? "#EF4444" : "var(--accent-primary)", marginTop: "4px" }}>
+              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: pendingPaymentsCount > 0 ? "var(--error)" : "var(--accent-primary)", marginTop: "4px" }}>
                 {pendingPaymentsCount}
               </div>
               <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "2px" }}>
@@ -577,7 +577,7 @@ export default function AdminPage() {
               <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
                 Activated Plans
               </div>
-              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "#10B981", marginTop: "4px" }}>
+              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "var(--success)", marginTop: "4px" }}>
                 {approvedPaymentsCount}
               </div>
               <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "2px" }}>
@@ -601,7 +601,7 @@ export default function AdminPage() {
               <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
                 Verification Protocol
               </div>
-              <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "#FFFFFF", marginTop: "8px" }}>
+              <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--text)", marginTop: "8px" }}>
                 UPI Bank Reconciliation
               </div>
               <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "4px" }}>
@@ -634,7 +634,7 @@ export default function AdminPage() {
                   borderRadius: "8px",
                   backgroundColor: "var(--bg-surface)",
                   border: "1px solid var(--border-default)",
-                  color: "#FFFFFF",
+                  color: "var(--text)",
                   fontSize: "0.85rem",
                 }}
               />
@@ -650,7 +650,7 @@ export default function AdminPage() {
                   borderRadius: "8px",
                   backgroundColor: "var(--bg-surface)",
                   border: "1px solid var(--border-default)",
-                  color: "#FFFFFF",
+                  color: "var(--text)",
                   fontSize: "0.82rem",
                 }}
               >
@@ -689,7 +689,7 @@ export default function AdminPage() {
                     className="card"
                     style={{
                       padding: "20px 24px",
-                      backgroundColor: isPending ? "#181818" : "var(--bg-card)",
+                      backgroundColor: isPending ? "var(--border)" : "var(--card)",
                       border: isPending ? "1px solid rgba(255, 214, 0, 0.4)" : "1px solid var(--border-default)",
                       borderRadius: "14px",
                     }}
@@ -706,7 +706,7 @@ export default function AdminPage() {
                     >
                       <div>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "4px" }}>
-                          <span style={{ fontWeight: 800, fontSize: "1.1rem", color: "#FFFFFF" }}>
+                          <span style={{ fontWeight: 800, fontSize: "1.1rem", color: "var(--text)" }}>
                             {p.userName || p.userEmail.split("@")[0]}
                           </span>
                           <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontFamily: "monospace" }}>
@@ -741,11 +741,11 @@ export default function AdminPage() {
                                 : "rgba(255, 214, 0, 0.15)",
                             color:
                               p.tier === "beta" || p.tier === "platinum_beta"
-                                ? "#34D399"
+                                ? "var(--success)"
                                 : p.tier === "diamond"
-                                ? "#C084FC"
+                                ? "var(--accent)"
                                 : p.tier === "platinum"
-                                ? "#60A5FA"
+                                ? "var(--tier-diamond)"
                                 : "var(--accent-primary)",
                             border: "1px solid currentColor",
                           }}
@@ -760,7 +760,7 @@ export default function AdminPage() {
                             padding: "4px 10px",
                             borderRadius: "6px",
                             backgroundColor: isPending ? "rgba(255, 214, 0, 0.15)" : isApproved ? "rgba(16, 185, 129, 0.15)" : "rgba(239, 68, 68, 0.15)",
-                            color: isPending ? "var(--accent-primary)" : isApproved ? "#10B981" : "#EF4444",
+                            color: isPending ? "var(--accent)" : isApproved ? "var(--success)" : "var(--error)",
                             border: `1px solid ${isPending ? "rgba(255, 214, 0, 0.3)" : isApproved ? "rgba(16, 185, 129, 0.3)" : "rgba(239, 68, 68, 0.3)"}`,
                           }}
                         >
@@ -772,7 +772,7 @@ export default function AdminPage() {
                     {/* TRANSACTION ID & TIMESTAMPS */}
                     <div
                       style={{
-                        backgroundColor: "#111111",
+                        backgroundColor: "var(--card)",
                         padding: "14px 18px",
                         borderRadius: "10px",
                         border: "1px solid var(--border-subtle)",
@@ -789,7 +789,7 @@ export default function AdminPage() {
                           Submitted UPI UTR / Transaction ID
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "2px" }}>
-                          <span style={{ fontSize: "1.1rem", fontWeight: 900, color: "#FFFFFF", fontFamily: "monospace", letterSpacing: "0.05em" }}>
+                          <span style={{ fontSize: "1.1rem", fontWeight: 900, color: "var(--text)", fontFamily: "monospace", letterSpacing: "0.05em" }}>
                             {p.transactionId}
                           </span>
                           <button
@@ -812,12 +812,12 @@ export default function AdminPage() {
                           Submitted: {new Date(p.createdAt).toLocaleDateString()} {new Date(p.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                         </div>
                         {isPending && (
-                          <div style={{ fontSize: "0.78rem", fontWeight: 700, color: remMs <= 0 ? "#EF4444" : remHours < 2 ? "#F59E0B" : "var(--accent-primary)", marginTop: "2px" }}>
+                          <div style={{ fontSize: "0.78rem", fontWeight: 700, color: remMs <= 0 ? "var(--error)" : remHours < 2 ? "var(--warning)" : "var(--accent-primary)", marginTop: "2px" }}>
                             {remMs <= 0 ? "⚠ 6h SLA Exceeded" : `⏳ ${remHours}h ${remMins}m remaining in 6h SLA`}
                           </div>
                         )}
                         {isApproved && (
-                          <div style={{ fontSize: "0.75rem", color: "#10B981", marginTop: "2px" }}>
+                          <div style={{ fontSize: "0.75rem", color: "var(--success)", marginTop: "2px" }}>
                             Approved by {p.reviewedBy || "Admin"}
                           </div>
                         )}
@@ -839,9 +839,9 @@ export default function AdminPage() {
                           disabled={processingPaymentId === p.id}
                           className="btn btn-primary"
                           style={{
-                            backgroundColor: "#10B981",
-                            borderColor: "#10B981",
-                            color: "#000000",
+                            backgroundColor: "var(--success)",
+                            borderColor: "var(--success)",
+                            color: "var(--on-accent)",
                             fontWeight: 800,
                             padding: "8px 18px",
                             fontSize: "0.85rem",
@@ -857,7 +857,7 @@ export default function AdminPage() {
                           disabled={processingPaymentId === p.id}
                           className="btn btn-secondary"
                           style={{
-                            color: "#EF4444",
+                            color: "var(--error)",
                             borderColor: "rgba(239, 68, 68, 0.4)",
                             padding: "8px 14px",
                             fontSize: "0.85rem",
@@ -1303,7 +1303,7 @@ export default function AdminPage() {
               <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
                 Critical Issues
               </div>
-              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: criticalFeedbackCount > 0 ? "#EF4444" : "#FFFFFF", margin: "4px 0" }}>
+              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: criticalFeedbackCount > 0 ? "var(--error)" : "var(--text)", margin: "4px 0" }}>
                 {criticalFeedbackCount}
               </div>
               <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
@@ -1322,7 +1322,7 @@ export default function AdminPage() {
               <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
                 High Priority
               </div>
-              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: highFeedbackCount > 0 ? "#F97316" : "#FFFFFF", margin: "4px 0" }}>
+              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: highFeedbackCount > 0 ? "var(--warning)" : "var(--text)", margin: "4px 0" }}>
                 {highFeedbackCount}
               </div>
               <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
@@ -1346,7 +1346,7 @@ export default function AdminPage() {
               <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
                 Resolved Items
               </div>
-              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "#10B981", margin: "4px 0" }}>
+              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "var(--success)", margin: "4px 0" }}>
                 {feedbackList.filter((f) => f.status === "resolved").length}
               </div>
               <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
@@ -1392,10 +1392,10 @@ export default function AdminPage() {
                 value={feedbackStatusFilter}
                 onChange={(e) => setFeedbackStatusFilter(e.target.value)}
                 style={{
-                  backgroundColor: "#181818",
+                  backgroundColor: "var(--card)",
                   border: "1px solid var(--border-default)",
                   borderRadius: "8px",
-                  color: "#FFFFFF",
+                  color: "var(--text)",
                   padding: "6px 12px",
                   fontSize: "0.82rem",
                 }}
@@ -1429,7 +1429,7 @@ export default function AdminPage() {
                 const isInReview = f.status === "in_review";
                 const isResolved = f.status === "resolved";
 
-                const priorityColor = isCritical ? "#EF4444" : isHigh ? "#F97316" : f.priority === "medium" ? "#EAB308" : "#10B981";
+                const priorityColor = isCritical ? "var(--error)" : isHigh ? "var(--warning)" : f.priority === "medium" ? "var(--warning)" : "var(--success)";
 
                 return (
                   <div
@@ -1454,7 +1454,7 @@ export default function AdminPage() {
                     >
                       <div>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "4px" }}>
-                          <span style={{ fontWeight: 800, fontSize: "1.05rem", color: "#FFFFFF" }}>
+                          <span style={{ fontWeight: 800, fontSize: "1.05rem", color: "var(--text)" }}>
                             {f.userName || f.userEmail.split("@")[0]}
                           </span>
                           <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontFamily: "monospace" }}>
@@ -1509,12 +1509,12 @@ export default function AdminPage() {
                               ? "rgba(16, 185, 129, 0.15)"
                               : "rgba(107, 114, 128, 0.15)",
                             color: isOpen
-                              ? "#EAB308"
+                              ? "var(--warning)"
                               : isInReview
-                              ? "#60A5FA"
+                              ? "var(--tier-diamond)"
                               : isResolved
-                              ? "#10B981"
-                              : "#9CA3AF",
+                              ? "var(--success)"
+                              : "var(--text-muted)",
                             border: "1px solid currentColor",
                           }}
                         >
@@ -1535,7 +1535,7 @@ export default function AdminPage() {
                     {/* DESCRIPTION */}
                     <div
                       style={{
-                        backgroundColor: "#101010",
+                        backgroundColor: "var(--bg)",
                         padding: "14px 16px",
                         borderRadius: "8px",
                         border: "1px solid var(--border-default)",
@@ -1573,10 +1573,10 @@ export default function AdminPage() {
                           style={{
                             flex: 1,
                             padding: "6px 10px",
-                            backgroundColor: "#161616",
+                            backgroundColor: "var(--card)",
                             border: "1px solid var(--border-default)",
                             borderRadius: "6px",
-                            color: "#FFFFFF",
+                            color: "var(--text)",
                             fontSize: "0.8rem",
                           }}
                         />
@@ -1666,13 +1666,13 @@ export default function AdminPage() {
                     textTransform: "uppercase",
                     backgroundColor:
                       spendingData?.spending?.thresholdState === "hard_stop_100"
-                        ? "#EF4444"
+                        ? "var(--error)"
                         : spendingData?.spending?.thresholdState === "calling_suspended_90"
-                        ? "#F59E0B"
+                        ? "var(--warning)"
                         : spendingData?.spending?.thresholdState === "warning_70"
-                        ? "#FBBF24"
-                        : "#10B981",
-                    color: spendingData?.spending?.thresholdState === "warning_70" ? "#000000" : "#FFFFFF",
+                        ? "var(--warning)"
+                        : "var(--success)",
+                    color: spendingData?.spending?.thresholdState === "warning_70" ? "var(--on-accent)" : "var(--text)",
                   }}
                 >
                   {spendingData?.spending?.thresholdState || "NORMAL (<70%)"}
@@ -1721,7 +1721,7 @@ export default function AdminPage() {
                 style={{
                   width: "100%",
                   height: "8px",
-                  backgroundColor: "#222222",
+                  backgroundColor: "var(--card)",
                   borderRadius: "9999px",
                   overflow: "hidden",
                 }}
@@ -1732,10 +1732,10 @@ export default function AdminPage() {
                     height: "100%",
                     backgroundColor:
                       (spendingData?.spending?.percentSpent || 0) >= 90
-                        ? "#EF4444"
+                        ? "var(--error)"
                         : (spendingData?.spending?.percentSpent || 0) >= 70
-                        ? "#F59E0B"
-                        : "#10B981",
+                        ? "var(--warning)"
+                        : "var(--success)",
                     transition: "width 0.4s ease",
                   }}
                 />
@@ -1747,13 +1747,13 @@ export default function AdminPage() {
               <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
                 AI Calling (Bland AI)
               </div>
-              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "#FFFFFF", margin: "4px 0" }}>
+              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "var(--text)", margin: "4px 0" }}>
                 ₹{Math.round(spendingData?.spending?.totalCallCost || 0).toLocaleString()}
               </div>
               <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
                 {spendingData?.callsCount || 0} calls &bull; {spendingData?.avgCallDurationSeconds || 0}s avg
               </div>
-              <div style={{ fontSize: "0.72rem", color: "#10B981", marginTop: "4px", fontWeight: 600 }}>
+              <div style={{ fontSize: "0.72rem", color: "var(--success)", marginTop: "4px", fontWeight: 600 }}>
                 ✓ Max 90s auto-cutoff &bull; 20 calls cap
               </div>
             </div>
@@ -1763,13 +1763,13 @@ export default function AdminPage() {
               <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
                 WhatsApp Check-ins
               </div>
-              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "#FFFFFF", margin: "4px 0" }}>
+              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "var(--text)", margin: "4px 0" }}>
                 ₹{Math.round(spendingData?.spending?.totalWhatsappCost || 0).toLocaleString()}
               </div>
               <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
                 {spendingData?.whatsappCount || 0} outbound messages
               </div>
-              <div style={{ fontSize: "0.72rem", color: "#10B981", marginTop: "4px", fontWeight: 600 }}>
+              <div style={{ fontSize: "0.72rem", color: "var(--success)", marginTop: "4px", fontWeight: 600 }}>
                 ✓ Quiet hours (22:00-08:00) enforced
               </div>
             </div>
@@ -1779,7 +1779,7 @@ export default function AdminPage() {
               <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
                 Cost Per Beta User
               </div>
-              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "#FFFFFF", margin: "4px 0" }}>
+              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "var(--text)", margin: "4px 0" }}>
                 ₹{spendingData?.costPerParticipant || 0}
               </div>
               <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
@@ -1788,7 +1788,7 @@ export default function AdminPage() {
               <div
                 style={{
                   fontSize: "0.72rem",
-                  color: (spendingData?.costPerParticipant || 0) <= 300 ? "#10B981" : "#EF4444",
+                  color: (spendingData?.costPerParticipant || 0) <= 300 ? "var(--success)" : "var(--error)",
                   marginTop: "4px",
                   fontWeight: 600,
                 }}
@@ -1803,14 +1803,14 @@ export default function AdminPage() {
             className="card"
             style={{
               padding: "24px",
-              backgroundColor: "#111111",
+              backgroundColor: "var(--card)",
               border: "1px solid rgba(239, 68, 68, 0.3)",
               borderRadius: "14px",
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
               <span style={{ fontSize: "1.3rem" }}>🚨</span>
-              <h3 style={{ fontSize: "1.15rem", fontWeight: 800, margin: 0, color: "#F87171" }}>
+              <h3 style={{ fontSize: "1.15rem", fontWeight: 800, margin: 0, color: "var(--error)" }}>
                 Emergency Integration Kill Switches
               </h3>
             </div>
@@ -1828,7 +1828,7 @@ export default function AdminPage() {
               {/* SWITCH 1: AI CALLING */}
               <div
                 style={{
-                  backgroundColor: "#181818",
+                  backgroundColor: "var(--card)",
                   padding: "18px 20px",
                   borderRadius: "10px",
                   border: "1px solid var(--border-default)",
@@ -1845,7 +1845,7 @@ export default function AdminPage() {
                     Status:{" "}
                     <strong
                       style={{
-                        color: spendingData?.spending?.callingKillSwitchActive ? "#EF4444" : "#10B981",
+                        color: spendingData?.spending?.callingKillSwitchActive ? "var(--error)" : "var(--success)",
                       }}
                     >
                       {spendingData?.spending?.callingKillSwitchActive
@@ -1873,8 +1873,8 @@ export default function AdminPage() {
                     fontWeight: 800,
                     fontSize: "0.8rem",
                     padding: "8px 14px",
-                    backgroundColor: spendingData?.spending?.callingKillSwitchActive ? "#222222" : "#DC2626",
-                    color: "#FFFFFF",
+                    backgroundColor: spendingData?.spending?.callingKillSwitchActive ? "var(--card)" : "var(--error)",
+                    color: "var(--text)",
                   }}
                 >
                   {isTogglingKillSwitch === "calling"
@@ -1888,7 +1888,7 @@ export default function AdminPage() {
               {/* SWITCH 2: WHATSAPP */}
               <div
                 style={{
-                  backgroundColor: "#181818",
+                  backgroundColor: "var(--card)",
                   padding: "18px 20px",
                   borderRadius: "10px",
                   border: "1px solid var(--border-default)",
@@ -1905,7 +1905,7 @@ export default function AdminPage() {
                     Status:{" "}
                     <strong
                       style={{
-                        color: spendingData?.spending?.whatsappKillSwitchActive ? "#EF4444" : "#10B981",
+                        color: spendingData?.spending?.whatsappKillSwitchActive ? "var(--error)" : "var(--success)",
                       }}
                     >
                       {spendingData?.spending?.whatsappKillSwitchActive
@@ -1933,8 +1933,8 @@ export default function AdminPage() {
                     fontWeight: 800,
                     fontSize: "0.8rem",
                     padding: "8px 14px",
-                    backgroundColor: spendingData?.spending?.whatsappKillSwitchActive ? "#222222" : "#DC2626",
-                    color: "#FFFFFF",
+                    backgroundColor: spendingData?.spending?.whatsappKillSwitchActive ? "var(--card)" : "var(--error)",
+                    color: "var(--text)",
                   }}
                 >
                   {isTogglingKillSwitch === "whatsapp"
@@ -2081,7 +2081,7 @@ export default function AdminPage() {
                     {spendingData.participants.map((p: any, idx: number) => (
                       <tr key={idx} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
                         <td style={{ padding: "10px 12px" }}>
-                          <div style={{ fontWeight: 700, color: "#FFFFFF" }}>{p.fullName || "Beta User"}</div>
+                          <div style={{ fontWeight: 700, color: "var(--text)" }}>{p.fullName || "Beta User"}</div>
                           <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>{p.email}</div>
                         </td>
                         <td style={{ padding: "10px 12px" }}>

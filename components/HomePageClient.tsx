@@ -238,7 +238,7 @@ export default function HomePageClient() {
               Your Personal AI Accountability Assistant.
             </h1>
 
-            <p style={{ maxWidth: "760px", marginBottom: "18px", fontSize: "1.35rem", color: "#FFFFFF", fontWeight: 700, lineHeight: 1.4 }}>
+            <p style={{ maxWidth: "760px", marginBottom: "18px", fontSize: "1.35rem", color: "var(--text)", fontWeight: 700, lineHeight: 1.4 }}>
               &ldquo;Stop setting goals and abandoning them. Start following through with AI-powered accountability.&rdquo;
             </p>
 
@@ -483,7 +483,7 @@ export default function HomePageClient() {
       </section>
 
       {/* 2. THE 6-STEP ACCOUNTABILITY USER JOURNEY */}
-      <section id="how-it-works" style={{ padding: "80px 0", borderTop: "1px solid var(--border-default)", backgroundColor: "#0C0C0C" }}>
+      <section id="how-it-works" style={{ padding: "80px 0", borderTop: "1px solid var(--border-default)", backgroundColor: "var(--bg)" }}>
         <div className="container" style={{ maxWidth: "1080px" }}>
           <div style={{ textAlign: "center", maxWidth: "760px", margin: "0 auto 52px" }}>
             <span className="badge badge-yellow" style={{ marginBottom: "12px" }}>
@@ -571,7 +571,7 @@ export default function HomePageClient() {
                     STEP {s.step}
                   </span>
                 </div>
-                <h3 style={{ fontSize: "1.15rem", fontWeight: 800, margin: 0, color: "#FFFFFF" }}>
+                <h3 style={{ fontSize: "1.15rem", fontWeight: 800, margin: 0, color: "var(--text)" }}>
                   {s.title}
                 </h3>
                 <p style={{ margin: 0, fontSize: "0.88rem", color: "var(--text-secondary)", lineHeight: 1.55 }}>
@@ -595,7 +595,7 @@ export default function HomePageClient() {
             <div style={{ fontSize: "0.82rem", fontWeight: 800, color: "var(--accent-primary)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "8px" }}>
               THE AURAMIND DIFFERENCE
             </div>
-            <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#FFFFFF", maxWidth: "800px", margin: "0 auto 8px" }}>
+            <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "var(--text)", maxWidth: "800px", margin: "0 auto 8px" }}>
               &ldquo;AuraMind doesn&apos;t just help users create goals. It helps them stay accountable while working towards them.&rdquo;
             </div>
             <p style={{ color: "var(--text-secondary)", fontSize: "0.92rem", margin: 0 }}>
@@ -990,9 +990,9 @@ export default function HomePageClient() {
                           justifyContent: "center",
                           fontSize: "0.75rem",
                           fontWeight: 700,
-                          backgroundColor: isDone ? "var(--accent-primary)" : isCurrent ? "var(--accent-muted)" : "var(--bg-secondary)",
-                          color: isDone ? "#0A0A0A" : isCurrent ? "var(--accent-primary)" : "var(--text-muted)",
-                          border: isCurrent ? "1px solid var(--accent-primary)" : "1px solid var(--border-default)",
+                          backgroundColor: isDone ? "var(--accent)" : isCurrent ? "var(--accent-muted)" : "var(--bg-secondary)",
+                          color: isDone ? "var(--on-accent)" : isCurrent ? "var(--accent)" : "var(--text-muted)",
+                          border: isCurrent ? "1px solid var(--accent)" : "1px solid var(--border-default)",
                           flexShrink: 0,
                         }}
                       >
@@ -1530,7 +1530,7 @@ export default function HomePageClient() {
           <span className="badge badge-yellow" style={{ marginBottom: "10px" }}>
             🔒 Authenticated Member Access
           </span>
-          <h2 style={{ fontSize: "1.8rem", fontWeight: 800, margin: "0 0 10px", color: "#FFFFFF" }}>
+          <h2 style={{ fontSize: "1.8rem", fontWeight: 800, margin: "0 0 10px", color: "var(--text)" }}>
             Already on an AuraMind Goal Journey?
           </h2>
           <p style={{ margin: "0 auto 28px", color: "var(--text-secondary)", fontSize: "0.95rem", lineHeight: 1.6 }}>
@@ -1561,7 +1561,7 @@ export default function HomePageClient() {
       </section>
 
       {/* 5. SUBSCRIPTION PLANS CALLOUT SECTION */}
-      <section style={{ padding: "64px 0", borderTop: "1px solid var(--border-default)", backgroundColor: "#0C0C0C" }}>
+      <section style={{ padding: "64px 0", borderTop: "1px solid var(--border-default)", backgroundColor: "var(--bg)" }}>
         <div className="container" style={{ maxWidth: "1080px", textAlign: "center" }}>
           <span className="badge badge-yellow" style={{ marginBottom: "12px" }}>
             Accountability Subscriptions
@@ -1585,7 +1585,7 @@ export default function HomePageClient() {
             {/* Gold Preview */}
             <div
               style={{
-                backgroundColor: "#141414",
+                backgroundColor: "var(--card)",
                 border: "1px solid var(--border-default)",
                 borderRadius: "16px",
                 padding: "24px",
@@ -1595,13 +1595,13 @@ export default function HomePageClient() {
               }}
             >
               <div>
-                <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "#EAB308", marginBottom: "4px" }}>
+                <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "var(--tier-gold)", marginBottom: "4px" }}>
                   🥇 GOLD PLAN
                 </div>
-                <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#FFFFFF", marginBottom: "6px" }}>
+                <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--text)", marginBottom: "6px" }}>
                   Essential Productivity
                 </div>
-                <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "var(--accent-primary)", marginBottom: "14px" }}>
+                <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "var(--accent)", marginBottom: "14px" }}>
                   ₹249<span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>/month</span>
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: 1.5, margin: "0 0 16px" }}>
@@ -1616,14 +1616,14 @@ export default function HomePageClient() {
             {/* Platinum Preview */}
             <div
               style={{
-                backgroundColor: "#161616",
-                border: "2px solid var(--accent-primary)",
+                backgroundColor: "var(--card)",
+                border: "2px solid var(--accent)",
                 borderRadius: "16px",
                 padding: "24px",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
-                boxShadow: "0 0 25px rgba(255, 214, 0, 0.12)",
+                boxShadow: "0 0 25px var(--accent-glow)",
                 position: "relative",
               }}
             >
@@ -1632,8 +1632,8 @@ export default function HomePageClient() {
                   position: "absolute",
                   top: "-11px",
                   right: "20px",
-                  backgroundColor: "var(--accent-primary)",
-                  color: "#000",
+                  backgroundColor: "var(--accent)",
+                  color: "var(--on-accent)",
                   fontSize: "0.68rem",
                   fontWeight: 900,
                   padding: "2px 10px",
@@ -1643,13 +1643,13 @@ export default function HomePageClient() {
                 POPULAR
               </div>
               <div>
-                <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "var(--accent-primary)", marginBottom: "4px" }}>
+                <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "var(--accent)", marginBottom: "4px" }}>
                   🥈 PLATINUM PLAN
                 </div>
-                <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#FFFFFF", marginBottom: "6px" }}>
+                <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--text)", marginBottom: "6px" }}>
                   Smart Accountability
                 </div>
-                <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "var(--accent-primary)", marginBottom: "14px" }}>
+                <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "var(--accent)", marginBottom: "14px" }}>
                   ₹699<span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>/month</span>
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: 1.5, margin: "0 0 16px" }}>
@@ -1664,24 +1664,24 @@ export default function HomePageClient() {
             {/* Diamond Preview */}
             <div
               style={{
-                backgroundColor: "#141414",
-                border: "1px solid #38BDF8",
+                backgroundColor: "var(--card)",
+                border: "1px solid var(--tier-diamond)",
                 borderRadius: "16px",
                 padding: "24px",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
-                boxShadow: "0 0 25px rgba(56, 189, 248, 0.12)",
+                boxShadow: "0 0 25px rgba(103, 232, 249, 0.15)",
               }}
             >
               <div>
-                <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "#38BDF8", marginBottom: "4px" }}>
+                <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "var(--tier-diamond)", marginBottom: "4px" }}>
                   💎 DIAMOND PLAN
                 </div>
-                <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#FFFFFF", marginBottom: "6px" }}>
+                <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--text)", marginBottom: "6px" }}>
                   Complete AI Accountability
                 </div>
-                <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "#38BDF8", marginBottom: "14px" }}>
+                <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "var(--tier-diamond)", marginBottom: "14px" }}>
                   ₹1,299<span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>/month</span>
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: 1.5, margin: "0 0 16px" }}>

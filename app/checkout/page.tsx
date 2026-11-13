@@ -14,7 +14,7 @@ export default function CheckoutPage() {
   return (
     <Suspense
       fallback={
-        <div style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#080808", color: "#FFFFFF" }}>
+        <div style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--bg)", color: "var(--text)" }}>
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--accent-primary)", marginBottom: "8px" }}>
               Loading Checkout...

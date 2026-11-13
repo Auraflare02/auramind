@@ -55,7 +55,7 @@ export default function PendingClient() {
   };
 
   return (
-    <div style={{ backgroundColor: "#080808", color: "#FFFFFF", minHeight: "100vh", paddingTop: "60px", paddingBottom: "96px" }}>
+    <div style={{ backgroundColor: "var(--bg)", color: "var(--text)", minHeight: "100vh", paddingTop: "60px", paddingBottom: "96px" }}>
       <div className="container" style={{ maxWidth: "680px" }}>
         
         {/* CARD CONTAINER */}
@@ -63,7 +63,7 @@ export default function PendingClient() {
           className="card"
           style={{
             padding: "36px 32px",
-            backgroundColor: "#111111",
+            backgroundColor: "var(--card)",
             borderRadius: "20px",
             border: "1px solid rgba(255, 214, 0, 0.35)",
             boxShadow: "0 12px 40px rgba(0, 0, 0, 0.7)",
@@ -107,7 +107,7 @@ export default function PendingClient() {
             </span>
           </div>
 
-          <h1 style={{ fontSize: "1.85rem", fontWeight: 800, margin: "0 0 10px", color: "#FFFFFF" }}>
+          <h1 style={{ fontSize: "1.85rem", fontWeight: 800, margin: "0 0 10px", color: "var(--text)" }}>
             Payment Proof Received!
           </h1>
 
@@ -118,7 +118,7 @@ export default function PendingClient() {
           {/* ORDER RECEIPT DETAILS */}
           <div
             style={{
-              backgroundColor: "#161616",
+              backgroundColor: "var(--card)",
               borderRadius: "14px",
               padding: "20px 24px",
               textAlign: "left",
@@ -133,7 +133,7 @@ export default function PendingClient() {
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.88rem" }}>
               <div className="flex-between">
                 <span style={{ color: "var(--text-secondary)" }}>Plan Requested:</span>
-                <span style={{ fontWeight: 800, color: "#FFFFFF" }}>{tier} Plan</span>
+                <span style={{ fontWeight: 800, color: "var(--text)" }}>{tier} Plan</span>
               </div>
               <div className="flex-between">
                 <span style={{ color: "var(--text-secondary)" }}>Payable Amount:</span>
@@ -143,7 +143,7 @@ export default function PendingClient() {
                 <div className="flex-between" style={{ alignItems: "center" }}>
                   <span style={{ color: "var(--text-secondary)" }}>Submitted UTR / Tx ID:</span>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ fontFamily: "monospace", fontWeight: 700, color: "#FFFFFF" }}>{tx}</span>
+                    <span style={{ fontFamily: "monospace", fontWeight: 700, color: "var(--text)" }}>{tx}</span>
                     <button
                       type="button"
                       onClick={copyTx}
@@ -161,14 +161,14 @@ export default function PendingClient() {
               </div>
               <div className="flex-between">
                 <span style={{ color: "var(--text-secondary)" }}>Maximum SLA:</span>
-                <span style={{ color: "#10B981", fontWeight: 700 }}>Within 6 Hours</span>
+                <span style={{ color: "var(--success)", fontWeight: 700 }}>Within 6 Hours</span>
               </div>
             </div>
           </div>
 
           {/* NEXT STEPS GUIDE */}
           <div style={{ textAlign: "left", marginBottom: "32px", fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: 1.6 }}>
-            <strong style={{ color: "#FFFFFF" }}>What happens next?</strong>
+            <strong style={{ color: "var(--text)" }}>What happens next?</strong>
             <ul style={{ paddingLeft: "20px", margin: "6px 0 0", display: "flex", flexDirection: "column", gap: "4px" }}>
               <li>You can continue using your account normally right now.</li>
               <li>Once verified, your tier privileges (extra goals, WhatsApp prompts, AI voice calls) unlock automatically.</li>

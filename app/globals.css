@@ -1,48 +1,62 @@
-:root {
-  /* Default: Dark Theme */
+:root, [data-theme="midnight"] {
   color-scheme: dark;
 
-  --bg-primary: #0A0A0A;
-  --bg-secondary: #111111;
-  --bg-surface: #171717;
-  --bg-card: #171717;
-  --bg-elevated: #202020;
-  --bg-hover: #262626;
+  --bg: #0A0A0F;
+  --card: #14141C;
+  --border: #2A2A38;
+  --text: #F4F4F8;
+  --text-muted: #9A9AB0;
+  --accent: #7C5CFF;
+  --on-accent: #FFFFFF;
+  --success: #34D399;
+  --xp: #7C5CFF;
 
-  --accent-primary: #FFD600;
-  --accent-hover: #FFE44D;
-  --accent-muted: rgba(255, 214, 0, 0.10);
-  --accent-border: rgba(255, 214, 0, 0.28);
-  --accent-glow: rgba(255, 214, 0, 0.15);
+  /* Constant Tier Badge Tokens (Requirement 9) */
+  --tier-gold: #E5B84B;
+  --tier-platinum: #A8B3C7;
+  --tier-diamond: #67E8F9;
+  --tier-dark-text: #0A0A0F;
 
-  --text-primary: #F5F5F5;
-  --text-secondary: #A3A3A3;
-  --text-muted: #737373;
-  --text-inverse: #0A0A0A;
+  /* System Compatibility Mappings */
+  --bg-primary: var(--bg);
+  --bg-secondary: var(--card);
+  --bg-surface: var(--card);
+  --bg-card: var(--card);
+  --bg-elevated: var(--card);
+  --bg-hover: var(--border);
 
-  --border-subtle: #242424;
-  --border-default: #303030;
-  --border-strong: #404040;
-  --border-accent: rgba(255, 214, 0, 0.35);
+  --accent-primary: var(--accent);
+  --accent-hover: #9074FF;
+  --accent-muted: rgba(124, 92, 255, 0.15);
+  --accent-border: var(--border);
+  --accent-glow: rgba(124, 92, 255, 0.25);
 
-  --header-bg: rgba(10, 10, 10, 0.92);
-  --code-bg: #141414;
-  --bento-ring-color: rgba(255, 214, 0, 0.04);
-  --bento-ring-color-subtle: rgba(255, 214, 0, 0.025);
-  --bento-ring-color-faint: rgba(255, 214, 0, 0.015);
+  --text-primary: var(--text);
+  --text-secondary: var(--text-muted);
+  --text-inverse: var(--on-accent);
+
+  --border-subtle: var(--border);
+  --border-default: var(--border);
+  --border-strong: #3A3A4D;
+  --border-accent: var(--accent);
+
+  --header-bg: rgba(10, 10, 15, 0.94);
+  --code-bg: var(--card);
+  --bento-ring-color: rgba(124, 92, 255, 0.08);
+  --bento-ring-color-subtle: rgba(124, 92, 255, 0.05);
+  --bento-ring-color-faint: rgba(124, 92, 255, 0.02);
   --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --card-shadow-hover: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 214, 0, 0.06);
+  --card-shadow-hover: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 20px rgba(124, 92, 255, 0.12);
 
-  --success: #22C55E;
-  --success-bg: rgba(34, 197, 94, 0.10);
-  --success-border: rgba(34, 197, 94, 0.25);
+  --success-bg: rgba(52, 211, 153, 0.12);
+  --success-border: rgba(52, 211, 153, 0.3);
 
   --error: #EF4444;
-  --error-bg: rgba(239, 68, 68, 0.10);
-  --error-border: rgba(239, 68, 68, 0.25);
+  --error-bg: rgba(239, 68, 68, 0.12);
+  --error-border: rgba(239, 68, 68, 0.3);
 
   --warning: #F59E0B;
-  --warning-bg: rgba(245, 158, 11, 0.10);
+  --warning-bg: rgba(245, 158, 11, 0.12);
 
   /* Geometry Tokens */
   --radius-xs: 4px;
@@ -61,52 +75,143 @@
   --transition-normal: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-[data-theme="light"], html.light {
-  color-scheme: light;
+[data-theme="forest"] {
+  color-scheme: dark;
 
-  /* Brand Color Tokens - Clean Minimalist Light Mode */
-  --bg-primary: #FAFAFA;
-  --bg-secondary: #F4F4F5;
-  --bg-surface: #FFFFFF;
-  --bg-card: #FFFFFF;
-  --bg-elevated: #F4F4F5;
-  --bg-hover: #E4E4E7;
+  --bg: #0F1A14;
+  --card: #16251D;
+  --border: #27392F;
+  --text: #ECF3EE;
+  --text-muted: #8FA89A;
+  --accent: #A3E635;
+  --on-accent: #0F1A14;
+  --success: #A3E635;
+  --xp: #A3E635;
 
-  /* Engineered High-Contrast Amber Accent for Light Mode */
-  --accent-primary: #D97706;
-  --accent-hover: #B45309;
-  --accent-muted: rgba(217, 119, 6, 0.10);
-  --accent-border: rgba(217, 119, 6, 0.32);
-  --accent-glow: rgba(217, 119, 6, 0.18);
+  /* Constant Tier Badge Tokens (Requirement 9) */
+  --tier-gold: #E5B84B;
+  --tier-platinum: #A8B3C7;
+  --tier-diamond: #67E8F9;
+  --tier-dark-text: #0A0A0F;
 
-  --text-primary: #09090B;
-  --text-secondary: #52525B;
-  --text-muted: #71717A;
-  --text-inverse: #FFFFFF;
+  /* System Compatibility Mappings */
+  --bg-primary: var(--bg);
+  --bg-secondary: var(--card);
+  --bg-surface: var(--card);
+  --bg-card: var(--card);
+  --bg-elevated: var(--card);
+  --bg-hover: var(--border);
 
-  --border-subtle: #E4E4E7;
-  --border-default: #D4D4D8;
-  --border-strong: #A1A1AA;
-  --border-accent: rgba(217, 119, 6, 0.45);
+  --accent-primary: var(--accent);
+  --accent-hover: #B7F04E;
+  --accent-muted: rgba(163, 230, 53, 0.12);
+  --accent-border: var(--border);
+  --accent-glow: rgba(163, 230, 53, 0.25);
 
-  --header-bg: rgba(250, 250, 250, 0.90);
-  --code-bg: #F4F4F5;
-  --bento-ring-color: rgba(217, 119, 6, 0.05);
-  --bento-ring-color-subtle: rgba(217, 119, 6, 0.03);
-  --bento-ring-color-faint: rgba(217, 119, 6, 0.015);
-  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --card-shadow-hover: 0 10px 28px rgba(0, 0, 0, 0.08), 0 0 16px rgba(217, 119, 6, 0.08);
+  --text-primary: var(--text);
+  --text-secondary: var(--text-muted);
+  --text-inverse: var(--on-accent);
 
-  --success: #16A34A;
-  --success-bg: rgba(22, 163, 74, 0.08);
-  --success-border: rgba(22, 163, 74, 0.25);
+  --border-subtle: var(--border);
+  --border-default: var(--border);
+  --border-strong: #334A3D;
+  --border-accent: var(--accent);
 
-  --error: #DC2626;
-  --error-bg: rgba(220, 38, 38, 0.08);
-  --error-border: rgba(220, 38, 38, 0.25);
+  --header-bg: rgba(15, 26, 20, 0.94);
+  --code-bg: var(--card);
+  --bento-ring-color: rgba(163, 230, 53, 0.08);
+  --bento-ring-color-subtle: rgba(163, 230, 53, 0.05);
+  --bento-ring-color-faint: rgba(163, 230, 53, 0.02);
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --card-shadow-hover: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 20px rgba(163, 230, 53, 0.12);
 
-  --warning: #D97706;
-  --warning-bg: rgba(217, 119, 6, 0.08);
+  --success-bg: rgba(163, 230, 53, 0.12);
+  --success-border: rgba(163, 230, 53, 0.3);
+
+  --error: #EF4444;
+  --error-bg: rgba(239, 68, 68, 0.12);
+  --error-border: rgba(239, 68, 68, 0.3);
+
+  --warning: #F59E0B;
+  --warning-bg: rgba(245, 158, 11, 0.12);
+
+  /* Geometry Tokens */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* Typography Stack - Kept identical (Requirement 7) */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* Motion */
+  --transition-fast: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-normal: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Smooth 200ms theme transitions (Requirement 6) */
+body, header, nav, main, footer, section, div, .card, .btn, button, input, select, textarea, span, p, h1, h2, h3, h4, h5, h6, a, table, tr, th, td {
+  transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body, header, nav, main, footer, section, div, .card, .btn, button, input, select, textarea, span, p, h1, h2, h3, h4, h5, h6, a, table, tr, th, td, *, *::before, *::after {
+    transition: none !important;
+  }
+}
+
+/* Theme Toggle Button Component Styles (Requirement 3) */
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  min-width: 40px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
+}
+
+.theme-toggle-btn:hover {
+  background-color: var(--border);
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.theme-toggle-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Tier Badge Tokens (Requirement 9) */
+.badge-gold {
+  background-color: var(--tier-gold);
+  color: var(--tier-dark-text);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  font-weight: 800;
+}
+.badge-platinum {
+  background-color: var(--tier-platinum);
+  color: var(--tier-dark-text);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  font-weight: 800;
+}
+.badge-diamond {
+  background-color: var(--tier-diamond);
+  color: var(--tier-dark-text);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  font-weight: 800;
 }
 
 /* Base Reset */
@@ -274,37 +379,39 @@ p {
 }
 
 .btn-primary {
-  background-color: var(--accent-primary);
-  color: var(--text-inverse);
-  border-color: var(--accent-primary);
+  background-color: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--accent-hover);
-  border-color: var(--accent-hover);
+  background-color: var(--accent);
+  filter: brightness(1.1);
+  border-color: var(--accent);
+  color: var(--on-accent);
   box-shadow: 0 2px 12px var(--accent-glow);
 }
 
 .btn-secondary {
-  background-color: var(--bg-surface);
-  color: var(--text-primary);
-  border-color: var(--border-default);
+  background-color: var(--card);
+  color: var(--text);
+  border-color: var(--border);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background-color: var(--bg-elevated);
-  border-color: var(--border-strong);
-  color: var(--text-primary);
+  background-color: var(--border);
+  border-color: var(--border);
+  color: var(--text);
 }
 
 .btn-ghost {
   background-color: transparent;
-  color: var(--text-secondary);
+  color: var(--text-muted);
 }
 
 .btn-ghost:hover:not(:disabled) {
-  background-color: var(--bg-hover);
-  color: var(--text-primary);
+  background-color: var(--border);
+  color: var(--text);
 }
 
 .btn-danger {
@@ -339,22 +446,35 @@ p {
 
 /* Cards & Surfaces */
 .card {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-default);
+  background-color: var(--card);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 24px;
   box-shadow: var(--card-shadow);
-  transition: all var(--transition-fast);
 }
 
 .card:hover {
-  border-color: var(--border-accent);
+  border-color: var(--accent);
 }
 
 .card-highlight {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-accent);
+  background-color: var(--card);
+  border: 1px solid var(--accent);
   box-shadow: var(--card-shadow-hover);
+}
+
+/* Productivity & Status Theme Tokens */
+.xp-bar, .timer-ring, .progress-bar-fill {
+  background-color: var(--xp);
+  color: var(--xp);
+}
+
+.text-success, .state-done, .state-success {
+  color: var(--success) !important;
+}
+
+.text-muted, .text-secondary {
+  color: var(--text-muted) !important;
 }
 
 /* Bento Card System Matching Reference Design */

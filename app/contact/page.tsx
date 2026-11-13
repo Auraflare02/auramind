@@ -24,7 +24,7 @@ export default function ContactPage() {
   ]);
 
   return (
-    <div style={{ backgroundColor: "#080808", color: "#FFFFFF", minHeight: "100vh" }}>
+    <div style={{ backgroundColor: "var(--bg)", color: "var(--text)", minHeight: "100vh" }}>
       <JsonLd data={breadcrumbs} />
 
       {/* HERO HEADER */}

@@ -288,7 +288,7 @@ export default function ChatPage() {
                 key={idx}
                 style={{
                   margin: "12px 0",
-                  backgroundColor: "#0d0d0d",
+                  backgroundColor: "var(--bg)",
                   borderRadius: "var(--radius-xs)",
                   border: "1px solid var(--border-subtle)",
                   overflow: "hidden",
@@ -601,7 +601,7 @@ export default function ChatPage() {
                     height: "48px",
                     borderRadius: "var(--radius-xs)",
                     backgroundColor: "var(--accent-primary)",
-                    color: "#0A0A0A",
+                    color: "var(--on-accent)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -671,7 +671,7 @@ export default function ChatPage() {
                       padding: "12px 18px",
                       borderRadius: "var(--radius-sm)",
                       backgroundColor: "var(--accent-primary)",
-                      color: "#0A0A0A",
+                      color: "var(--on-accent)",
                       fontWeight: 500,
                       fontSize: "0.95rem",
                       lineHeight: 1.5,

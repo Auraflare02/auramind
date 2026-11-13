@@ -44,7 +44,7 @@ export default function ContactClient() {
           border: "1px solid var(--border-default)",
         }}
       >
-        <h2 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#FFFFFF", marginBottom: "8px" }}>
+        <h2 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--text)", marginBottom: "8px" }}>
           Send a Direct Message
         </h2>
         <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.6, marginBottom: "24px" }}>
@@ -62,7 +62,7 @@ export default function ContactClient() {
             }}
           >
             <div style={{ fontSize: "2rem", marginBottom: "8px" }}>✅</div>
-            <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#10B981", marginBottom: "6px" }}>
+            <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--success)", marginBottom: "6px" }}>
               Message Received
             </h3>
             <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", margin: 0 }}>
@@ -93,7 +93,7 @@ export default function ContactClient() {
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g. Ridham"
                 className="input-field"
-                style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid var(--border-default)", backgroundColor: "var(--bg-surface)", color: "#FFFFFF" }}
+                style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid var(--border-default)", backgroundColor: "var(--bg-surface)", color: "var(--text)" }}
               />
             </div>
 
@@ -108,7 +108,7 @@ export default function ContactClient() {
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="you@example.com"
                 className="input-field"
-                style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid var(--border-default)", backgroundColor: "var(--bg-surface)", color: "#FFFFFF" }}
+                style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid var(--border-default)", backgroundColor: "var(--bg-surface)", color: "var(--text)" }}
               />
             </div>
 
@@ -120,7 +120,7 @@ export default function ContactClient() {
                 value={formData.subject}
                 onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                 className="input-field"
-                style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid var(--border-default)", backgroundColor: "var(--bg-surface)", color: "#FFFFFF" }}
+                style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid var(--border-default)", backgroundColor: "var(--bg-surface)", color: "var(--text)" }}
               >
                 <option value="general">General Question</option>
                 <option value="subscription">Subscription &amp; Pricing (Gold, Platinum, Diamond)</option>
@@ -141,7 +141,7 @@ export default function ContactClient() {
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                 placeholder="How can the AuraMind team assist you today?"
                 className="input-field"
-                style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid var(--border-default)", backgroundColor: "var(--bg-surface)", color: "#FFFFFF", resize: "vertical" }}
+                style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid var(--border-default)", backgroundColor: "var(--bg-surface)", color: "var(--text)", resize: "vertical" }}
               />
             </div>
 
@@ -170,7 +170,7 @@ export default function ContactClient() {
         >
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
             <span style={{ fontSize: "1.5rem" }}>🤖</span>
-            <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#FFFFFF", margin: 0 }}>
+            <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text)", margin: 0 }}>
               Instant AI Assistant (24/7)
             </h3>
           </div>
@@ -193,7 +193,7 @@ export default function ContactClient() {
         >
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
             <span style={{ fontSize: "1.5rem" }}>💬</span>
-            <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#FFFFFF", margin: 0 }}>
+            <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text)", margin: 0 }}>
               Live Community World Chat
             </h3>
           </div>
@@ -216,7 +216,7 @@ export default function ContactClient() {
         >
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
             <span style={{ fontSize: "1.5rem" }}>🛡️</span>
-            <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#FFFFFF", margin: 0 }}>
+            <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text)", margin: 0 }}>
               Platform Source &amp; Bug Reports
             </h3>
           </div>

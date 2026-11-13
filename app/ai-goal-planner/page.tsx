@@ -26,7 +26,7 @@ export default function AiGoalPlannerPage() {
   ]);
 
   return (
-    <div style={{ backgroundColor: "#080808", color: "#FFFFFF", minHeight: "100vh" }}>
+    <div style={{ backgroundColor: "var(--bg)", color: "var(--text)", minHeight: "100vh" }}>
       <JsonLd data={breadcrumbs} />
 
       {/* 1. HERO HEADER */}
@@ -97,7 +97,7 @@ export default function AiGoalPlannerPage() {
               }}
             >
               <div style={{ fontSize: "1.8rem", marginBottom: "12px" }}>🌫️</div>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "8px", color: "#FFFFFF" }}>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "8px", color: "var(--text)" }}>
                 Cognitive Ambiguity
               </h3>
               <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.6, margin: 0 }}>
@@ -115,7 +115,7 @@ export default function AiGoalPlannerPage() {
               }}
             >
               <div style={{ fontSize: "1.8rem", marginBottom: "12px" }}>⚖️</div>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "8px", color: "#FFFFFF" }}>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "8px", color: "var(--text)" }}>
                 Unrealistic Scheduling
               </h3>
               <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.6, margin: 0 }}>
@@ -133,7 +133,7 @@ export default function AiGoalPlannerPage() {
               }}
             >
               <div style={{ fontSize: "1.8rem", marginBottom: "12px" }}>💥</div>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "8px", color: "#FFFFFF" }}>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "8px", color: "var(--text)" }}>
                 Brittle Rigidity
               </h3>
               <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.6, margin: 0 }}>
@@ -192,7 +192,7 @@ export default function AiGoalPlannerPage() {
                 01
               </div>
               <div>
-                <h3 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "8px", color: "#FFFFFF" }}>
+                <h3 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "8px", color: "var(--text)" }}>
                   Multi-Factor Goal Ingestion &amp; Constraint Mapping
                 </h3>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", lineHeight: 1.6, marginBottom: "16px" }}>
@@ -240,7 +240,7 @@ export default function AiGoalPlannerPage() {
                 02
               </div>
               <div>
-                <h3 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "8px", color: "#FFFFFF" }}>
+                <h3 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "8px", color: "var(--text)" }}>
                   Hierarchical Task Decomposition (Deliberate Practice)
                 </h3>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", lineHeight: 1.6, marginBottom: "16px" }}>
@@ -299,7 +299,7 @@ export default function AiGoalPlannerPage() {
                 03
               </div>
               <div>
-                <h3 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "8px", color: "#FFFFFF" }}>
+                <h3 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "8px", color: "var(--text)" }}>
                   Generation of the 30-Day Timetable
                 </h3>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", lineHeight: 1.6, marginBottom: "16px" }}>
@@ -307,8 +307,8 @@ export default function AiGoalPlannerPage() {
                 </p>
                 <div style={{ padding: "16px", borderRadius: "10px", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-default)", fontFamily: "monospace", fontSize: "0.85rem" }}>
                   <div style={{ color: "var(--accent-primary)", fontWeight: 700, marginBottom: "6px" }}>DAY 7 • FOCUS: RESTful API Architecture</div>
-                  <div style={{ color: "#FFFFFF", marginBottom: "4px" }}>• Task 1 (45m): Construct 3 CRUD endpoints in Express using TypeScript types.</div>
-                  <div style={{ color: "#FFFFFF", marginBottom: "4px" }}>• Task 2 (45m): Write unit tests covering 400 Bad Request and 404 Not Found errors.</div>
+                  <div style={{ color: "var(--text)", marginBottom: "4px" }}>• Task 1 (45m): Construct 3 CRUD endpoints in Express using TypeScript types.</div>
+                  <div style={{ color: "var(--text)", marginBottom: "4px" }}>• Task 2 (45m): Write unit tests covering 400 Bad Request and 404 Not Found errors.</div>
                   <div style={{ color: "var(--text-muted)" }}>• Deliverable: Push working repository commit with passing npm test suite.</div>
                 </div>
               </div>
@@ -346,7 +346,7 @@ export default function AiGoalPlannerPage() {
                 04
               </div>
               <div>
-                <h3 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "8px", color: "#FFFFFF" }}>
+                <h3 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "8px", color: "var(--text)" }}>
                   Day 1 Immediate-Launch &amp; Progress Monitoring
                 </h3>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", lineHeight: 1.6, marginBottom: "12px" }}>
@@ -393,7 +393,7 @@ export default function AiGoalPlannerPage() {
                 05
               </div>
               <div>
-                <h3 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "8px", color: "#FFFFFF" }}>
+                <h3 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: "8px", color: "var(--text)" }}>
                   Adaptive Rescheduling Without Guilt
                 </h3>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", lineHeight: 1.6, margin: 0 }}>
@@ -422,7 +422,7 @@ export default function AiGoalPlannerPage() {
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
                 <span className="badge badge-yellow" style={{ fontSize: "0.7rem" }}>Coding &amp; Software</span>
               </div>
-              <h3 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "10px", color: "#FFFFFF" }}>
+              <h3 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "10px", color: "var(--text)" }}>
                 Full-Stack Next.js Developer
               </h3>
               <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", lineHeight: 1.6, marginBottom: "14px" }}>
@@ -437,7 +437,7 @@ export default function AiGoalPlannerPage() {
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
                 <span className="badge badge-yellow" style={{ fontSize: "0.7rem" }}>Academics &amp; Exams</span>
               </div>
-              <h3 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "10px", color: "#FFFFFF" }}>
+              <h3 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "10px", color: "var(--text)" }}>
                 Data Structures &amp; Algorithms Mastery
               </h3>
               <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", lineHeight: 1.6, marginBottom: "14px" }}>

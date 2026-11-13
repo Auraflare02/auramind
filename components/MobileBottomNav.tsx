@@ -164,8 +164,8 @@ export default function MobileBottomNav() {
                     position: "absolute",
                     top: "-4px",
                     right: "-8px",
-                    backgroundColor: "var(--accent-primary)",
-                    color: "#000000",
+                    backgroundColor: "var(--accent)",
+                    color: "var(--on-accent)",
                     fontSize: "0.62rem",
                     fontWeight: 800,
                     borderRadius: "9999px",
@@ -188,8 +188,8 @@ export default function MobileBottomNav() {
                     width: "7px",
                     height: "7px",
                     borderRadius: "50%",
-                    backgroundColor: "#10B981",
-                    boxShadow: "0 0 8px #10B981",
+                    backgroundColor: "var(--success)",
+                    boxShadow: "0 0 8px var(--success)",
                   }}
                 />
               )}

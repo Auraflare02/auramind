@@ -101,7 +101,7 @@ export default function CheckoutClient() {
   };
 
   return (
-    <div style={{ backgroundColor: "#080808", color: "#FFFFFF", minHeight: "100vh", paddingTop: "40px", paddingBottom: "96px" }}>
+    <div style={{ backgroundColor: "var(--bg)", color: "var(--text)", minHeight: "100vh", paddingTop: "40px", paddingBottom: "96px" }}>
       <div className="container" style={{ maxWidth: "1140px" }}>
         
         {/* TOP BREADCRUMB & HEADER */}
@@ -116,7 +116,7 @@ export default function CheckoutClient() {
 
           <div className="flex-between" style={{ flexWrap: "wrap", gap: "16px" }}>
             <div>
-              <h1 style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.4rem)", fontWeight: 800, margin: 0, color: "#FFFFFF" }}>
+              <h1 style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.4rem)", fontWeight: 800, margin: 0, color: "var(--text)" }}>
                 Secure Subscription Checkout
               </h1>
               <p style={{ margin: "4px 0 0", fontSize: "0.95rem", color: "var(--text-secondary)" }}>
@@ -128,7 +128,7 @@ export default function CheckoutClient() {
             <div
               style={{
                 display: "inline-flex",
-                backgroundColor: "#161616",
+                backgroundColor: "var(--card)",
                 padding: "4px",
                 borderRadius: "9999px",
                 border: "1px solid var(--border-default)",
@@ -145,7 +145,7 @@ export default function CheckoutClient() {
                   border: "none",
                   cursor: "pointer",
                   backgroundColor: billingCycle === "monthly" ? "var(--accent-primary)" : "transparent",
-                  color: billingCycle === "monthly" ? "#000000" : "var(--text-secondary)",
+                  color: billingCycle === "monthly" ? "var(--on-accent)" : "var(--text-secondary)",
                   transition: "all var(--transition-fast)",
                 }}
               >
@@ -162,11 +162,11 @@ export default function CheckoutClient() {
                   border: "none",
                   cursor: "pointer",
                   backgroundColor: billingCycle === "annual" ? "var(--accent-primary)" : "transparent",
-                  color: billingCycle === "annual" ? "#000000" : "var(--text-secondary)",
+                  color: billingCycle === "annual" ? "var(--on-accent)" : "var(--text-secondary)",
                   transition: "all var(--transition-fast)",
                 }}
               >
-                Annual <span style={{ color: billingCycle === "annual" ? "#000000" : "#10B981", fontSize: "0.74rem" }}>(Save 30%)</span>
+                Annual <span style={{ color: billingCycle === "annual" ? "var(--on-accent)" : "var(--success)", fontSize: "0.74rem" }}>(Save 30%)</span>
               </button>
             </div>
           </div>
@@ -230,9 +230,9 @@ export default function CheckoutClient() {
                       style={{
                         padding: "16px",
                         borderRadius: "12px",
-                        backgroundColor: isSelected ? "#1C1C1C" : "var(--bg-elevated)",
+                        backgroundColor: isSelected ? "var(--border)" : "var(--card)",
                         border: isSelected
-                          ? `2px solid ${t === "diamond" ? "#38BDF8" : "var(--accent-primary)"}`
+                          ? `2px solid ${t === "diamond" ? "var(--tier-diamond)" : "var(--accent-primary)"}`
                           : "1px solid var(--border-default)",
                         cursor: "pointer",
                         position: "relative",
@@ -240,20 +240,20 @@ export default function CheckoutClient() {
                       }}
                     >
                       <div className="flex-between" style={{ marginBottom: "6px" }}>
-                        <span style={{ fontWeight: 800, fontSize: "1rem", color: "#FFFFFF" }}>{p.name}</span>
+                        <span style={{ fontWeight: 800, fontSize: "1rem", color: "var(--text)" }}>{p.name}</span>
                         {p.popular && (
-                          <span style={{ fontSize: "0.65rem", fontWeight: 800, backgroundColor: "var(--accent-primary)", color: "#000", padding: "1px 6px", borderRadius: "9999px" }}>
+                          <span style={{ fontSize: "0.65rem", fontWeight: 800, backgroundColor: "var(--accent-primary)", color: "var(--on-accent)", padding: "1px 6px", borderRadius: "9999px" }}>
                             Popular
                           </span>
                         )}
                         {t === "diamond" && (
-                          <span style={{ fontSize: "0.65rem", fontWeight: 800, backgroundColor: "#38BDF8", color: "#000", padding: "1px 6px", borderRadius: "9999px" }}>
+                          <span style={{ fontSize: "0.65rem", fontWeight: 800, backgroundColor: "var(--tier-diamond)", color: "var(--on-accent)", padding: "1px 6px", borderRadius: "9999px" }}>
                             Pro Max
                           </span>
                         )}
                       </div>
 
-                      <div style={{ fontSize: "1.4rem", fontWeight: 900, color: t === "diamond" ? "#38BDF8" : "var(--accent-primary)" }}>
+                      <div style={{ fontSize: "1.4rem", fontWeight: 900, color: t === "diamond" ? "var(--tier-diamond)" : "var(--accent-primary)" }}>
                         ₹{price}
                         <span style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--text-muted)" }}>/mo</span>
                       </div>
@@ -281,7 +281,7 @@ export default function CheckoutClient() {
                   flexDirection: "column",
                   alignItems: "center",
                   padding: "20px",
-                  backgroundColor: "#0A0A0A",
+                  backgroundColor: "var(--bg)",
                   borderRadius: "14px",
                   border: "1px solid var(--border-default)",
                   marginBottom: "20px",
@@ -290,7 +290,7 @@ export default function CheckoutClient() {
                 {/* QR CODE CONTAINER */}
                 <div
                   style={{
-                    backgroundColor: "#FFFFFF",
+                    backgroundColor: "var(--on-accent)",
                     padding: "16px",
                     borderRadius: "16px",
                     boxShadow: "0 8px 30px rgba(0, 0, 0, 0.6)",
@@ -318,7 +318,7 @@ export default function CheckoutClient() {
                     style={{
                       fontSize: "2.2rem",
                       fontWeight: 900,
-                      color: selectedTier === "diamond" ? "#38BDF8" : "var(--accent-primary)",
+                      color: selectedTier === "diamond" ? "var(--tier-diamond)" : "var(--accent-primary)",
                       letterSpacing: "-0.02em",
                       margin: "2px 0",
                     }}
@@ -333,11 +333,11 @@ export default function CheckoutClient() {
 
               {/* PAYMENT INSTRUCTIONS */}
               <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: 1.6, marginBottom: "20px" }}>
-                <strong style={{ color: "#FFFFFF" }}>How to complete your payment:</strong>
+                <strong style={{ color: "var(--text)" }}>How to complete your payment:</strong>
                 <ol style={{ paddingLeft: "20px", margin: "6px 0 0", display: "flex", flexDirection: "column", gap: "4px" }}>
                   <li>Open your preferred UPI app on your smartphone.</li>
                   <li>Scan the Google Pay UPI QR code above.</li>
-                  <li>Enter the exact amount: <strong style={{ color: "#FFFFFF" }}>₹{payableAmount}</strong> and confirm the transfer.</li>
+                  <li>Enter the exact amount: <strong style={{ color: "var(--text)" }}>₹{payableAmount}</strong> and confirm the transfer.</li>
                   <li>Copy your <strong>12-digit UPI Transaction ID / UTR</strong> number from your payment confirmation screen and paste it below.</li>
                 </ol>
               </div>
@@ -345,8 +345,8 @@ export default function CheckoutClient() {
               {/* 3. SUBMIT TRANSACTION ID FORM */}
               <form onSubmit={handleSubmitPayment}>
                 <div style={{ marginBottom: "16px" }}>
-                  <label htmlFor="txId" style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "#FFFFFF", marginBottom: "6px" }}>
-                    12-Digit UPI Transaction ID / UTR <span style={{ color: "#EF4444" }}>*</span>
+                  <label htmlFor="txId" style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--text)", marginBottom: "6px" }}>
+                    12-Digit UPI Transaction ID / UTR <span style={{ color: "var(--error)" }}>*</span>
                   </label>
                   <input
                     id="txId"
@@ -399,9 +399,9 @@ export default function CheckoutClient() {
                     justifyContent: "center",
                     fontWeight: 800,
                     fontSize: "1rem",
-                    backgroundColor: selectedTier === "diamond" ? "#38BDF8" : "var(--accent-primary)",
-                    borderColor: selectedTier === "diamond" ? "#38BDF8" : "var(--accent-primary)",
-                    color: "#000000",
+                    backgroundColor: selectedTier === "diamond" ? "var(--tier-diamond)" : "var(--accent-primary)",
+                    borderColor: selectedTier === "diamond" ? "var(--tier-diamond)" : "var(--accent-primary)",
+                    color: "var(--on-accent)",
                   }}
                 >
                   {isSubmitting ? "Submitting Payment Proof..." : `Submit Proof & Activate ${plan.name} \u2192`}
@@ -435,13 +435,13 @@ export default function CheckoutClient() {
             
             {/* ORDER SUMMARY CARD */}
             <div className="card" style={{ padding: "24px", backgroundColor: "var(--bg-card)", borderRadius: "16px" }}>
-              <h2 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#FFFFFF", margin: "0 0 16px" }}>
+              <h2 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text)", margin: "0 0 16px" }}>
                 Order Summary
               </h2>
 
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "14px", borderBottom: "1px solid var(--border-subtle)", marginBottom: "14px" }}>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "#FFFFFF" }}>
+                  <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--text)" }}>
                     {plan.name}
                   </div>
                   <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
@@ -449,11 +449,11 @@ export default function CheckoutClient() {
                   </div>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <div style={{ fontWeight: 800, fontSize: "1.1rem", color: "#FFFFFF" }}>
+                  <div style={{ fontWeight: 800, fontSize: "1.1rem", color: "var(--text)" }}>
                     ₹{payableAmount}
                   </div>
                   {billingCycle === "annual" && (
-                    <div style={{ fontSize: "0.72rem", color: "#10B981" }}>
+                    <div style={{ fontSize: "0.72rem", color: "var(--success)" }}>
                       ₹{monthlyEquivalent}/mo equivalent
                     </div>
                   )}
@@ -468,7 +468,7 @@ export default function CheckoutClient() {
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <span>Platform &amp; Gateway Fees</span>
-                  <span style={{ color: "#10B981" }}>₹0 (Covered by AuraMind)</span>
+                  <span style={{ color: "var(--success)" }}>₹0 (Covered by AuraMind)</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <span>GST / Indian Taxes</span>
@@ -477,14 +477,14 @@ export default function CheckoutClient() {
               </div>
 
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "14px", borderTop: "1px solid var(--border-default)", marginBottom: "20px" }}>
-                <span style={{ fontWeight: 800, fontSize: "1.05rem", color: "#FFFFFF" }}>Total Payable</span>
-                <span style={{ fontWeight: 900, fontSize: "1.45rem", color: selectedTier === "diamond" ? "#38BDF8" : "var(--accent-primary)" }}>
+                <span style={{ fontWeight: 800, fontSize: "1.05rem", color: "var(--text)" }}>Total Payable</span>
+                <span style={{ fontWeight: 900, fontSize: "1.45rem", color: selectedTier === "diamond" ? "var(--tier-diamond)" : "var(--accent-primary)" }}>
                   ₹{payableAmount}
                 </span>
               </div>
 
               {/* INCLUDED IN YOUR PLAN */}
-              <div style={{ backgroundColor: "#111111", padding: "16px", borderRadius: "12px", border: "1px solid var(--border-subtle)" }}>
+              <div style={{ backgroundColor: "var(--card)", padding: "16px", borderRadius: "12px", border: "1px solid var(--border-subtle)" }}>
                 <div style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 700, color: "var(--text-muted)", marginBottom: "10px" }}>
                   Included with {plan.name}:
                 </div>
@@ -520,21 +520,21 @@ export default function CheckoutClient() {
                 <div style={{ display: "flex", gap: "10px" }}>
                   <span style={{ fontSize: "1.1rem" }}>⚡</span>
                   <div>
-                    <strong style={{ color: "#FFFFFF" }}>6-Hour Activation Turnaround</strong>
+                    <strong style={{ color: "var(--text)" }}>6-Hour Activation Turnaround</strong>
                     <div>Bank reconciliation confirms your payment and activates tier quotas within 6 hours.</div>
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: "10px" }}>
                   <span style={{ fontSize: "1.1rem" }}>🔒</span>
                   <div>
-                    <strong style={{ color: "#FFFFFF" }}>Zero-Compromise Security</strong>
+                    <strong style={{ color: "var(--text)" }}>Zero-Compromise Security</strong>
                     <div>Direct bank-to-bank UPI payment without exposing credit card details or bank logins.</div>
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: "10px" }}>
                   <span style={{ fontSize: "1.1rem" }}>📄</span>
                   <div>
-                    <strong style={{ color: "#FFFFFF" }}>Transparent Cancellation &amp; Refunds</strong>
+                    <strong style={{ color: "var(--text)" }}>Transparent Cancellation &amp; Refunds</strong>
                     <div>Cancel anytime in Settings. Full refund if activation SLA exceeds 24 hours.</div>
                   </div>
                 </div>

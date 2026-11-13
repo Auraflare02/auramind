@@ -26,7 +26,7 @@ export default function AiAccountabilityPage() {
   ]);
 
   return (
-    <div style={{ backgroundColor: "#080808", color: "#FFFFFF", minHeight: "100vh" }}>
+    <div style={{ backgroundColor: "var(--bg)", color: "var(--text)", minHeight: "100vh" }}>
       <JsonLd data={breadcrumbs} />
 
       {/* 1. HERO SECTION */}
@@ -89,25 +89,25 @@ export default function AiAccountabilityPage() {
           >
             <div style={{ padding: "24px", borderRadius: "12px", backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", textAlign: "center" }}>
               <div style={{ fontSize: "2.4rem", fontWeight: 800, color: "var(--text-muted)", marginBottom: "8px" }}>10%</div>
-              <div style={{ fontWeight: 700, color: "#FFFFFF", marginBottom: "6px" }}>Having an Idea</div>
+              <div style={{ fontWeight: 700, color: "var(--text)", marginBottom: "6px" }}>Having an Idea</div>
               <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Thinking &ldquo;I should learn this skill&rdquo; without committing to a timeline.</div>
             </div>
 
             <div style={{ padding: "24px", borderRadius: "12px", backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", textAlign: "center" }}>
               <div style={{ fontSize: "2.4rem", fontWeight: 800, color: "var(--text-muted)", marginBottom: "8px" }}>40%</div>
-              <div style={{ fontWeight: 700, color: "#FFFFFF", marginBottom: "6px" }}>Setting a Deadline</div>
+              <div style={{ fontWeight: 700, color: "var(--text)", marginBottom: "6px" }}>Setting a Deadline</div>
               <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Writing down a target date without daily operational support.</div>
             </div>
 
             <div style={{ padding: "24px", borderRadius: "12px", backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)", textAlign: "center" }}>
               <div style={{ fontSize: "2.4rem", fontWeight: 800, color: "var(--text-secondary)", marginBottom: "8px" }}>65%</div>
-              <div style={{ fontWeight: 700, color: "#FFFFFF", marginBottom: "6px" }}>Public Commitment</div>
+              <div style={{ fontWeight: 700, color: "var(--text)", marginBottom: "6px" }}>Public Commitment</div>
               <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Telling a friend or family member about your ambition.</div>
             </div>
 
             <div style={{ padding: "24px", borderRadius: "12px", backgroundColor: "rgba(255, 214, 0, 0.08)", border: "1px solid rgba(255, 214, 0, 0.4)", textAlign: "center" }}>
               <div style={{ fontSize: "2.4rem", fontWeight: 800, color: "var(--accent-primary)", marginBottom: "8px" }}>95%</div>
-              <div style={{ fontWeight: 700, color: "#FFFFFF", marginBottom: "6px" }}>AuraMind Accountability</div>
+              <div style={{ fontWeight: 700, color: "var(--text)", marginBottom: "6px" }}>AuraMind Accountability</div>
               <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Proactive hourly check-ins, WhatsApp prompts, and AI calling appointments.</div>
             </div>
           </div>
@@ -148,7 +148,7 @@ export default function AiAccountabilityPage() {
                 <span className="badge badge-yellow" style={{ fontSize: "0.75rem", marginBottom: "12px" }}>
                   Gold &bull; Platinum &bull; Diamond
                 </span>
-                <h3 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#FFFFFF", marginBottom: "12px" }}>
+                <h3 style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--text)", marginBottom: "12px" }}>
                   1. Hourly Productivity Check-ins
                 </h3>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", lineHeight: 1.6, marginBottom: "16px" }}>
@@ -172,7 +172,7 @@ export default function AiAccountabilityPage() {
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-                  <span style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "#10B981" }} />
+                  <span style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "var(--success)" }} />
                   <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>AuraMind Check-in System</span>
                   <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginLeft: "auto" }}>14:00</span>
                 </div>
@@ -180,7 +180,7 @@ export default function AiAccountabilityPage() {
                   Scheduled Focus Block: <strong>Data Structures Tree Traversal (Day 8)</strong>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                  <div style={{ padding: "10px", borderRadius: "8px", backgroundColor: "rgba(16, 185, 129, 0.15)", border: "1px solid rgba(16, 185, 129, 0.4)", color: "#10B981", textAlign: "center", fontWeight: 700 }}>
+                  <div style={{ padding: "10px", borderRadius: "8px", backgroundColor: "rgba(16, 185, 129, 0.15)", border: "1px solid rgba(16, 185, 129, 0.4)", color: "var(--success)", textAlign: "center", fontWeight: 700 }}>
                     Completed (+50 XP)
                   </div>
                   <div style={{ padding: "10px", borderRadius: "8px", backgroundColor: "var(--bg-surface)", border: "1px solid var(--border-subtle)", color: "var(--text-muted)", textAlign: "center" }}>
@@ -208,27 +208,27 @@ export default function AiAccountabilityPage() {
                 style={{
                   padding: "24px",
                   borderRadius: "12px",
-                  backgroundColor: "#0B141A",
+                  backgroundColor: "var(--bg)",
                   border: "1px solid rgba(16, 185, 129, 0.3)",
                   fontFamily: "sans-serif",
                   fontSize: "0.85rem",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px", borderBottom: "1px solid #202C33", paddingBottom: "10px" }}>
-                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: "var(--accent-primary)", display: "flex", alignItems: "center", justifyContent: "center", color: "#000000", fontWeight: 800 }}>AM</div>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px", borderBottom: "1px solid var(--border)", paddingBottom: "10px" }}>
+                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: "var(--accent-primary)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--on-accent)", fontWeight: 800 }}>AM</div>
                   <div>
-                    <div style={{ fontWeight: 700, color: "#E9EDEF" }}>AuraMind AI Accountability</div>
-                    <div style={{ fontSize: "0.7rem", color: "#10B981" }}>Official Verified Partner</div>
+                    <div style={{ fontWeight: 700, color: "var(--text)" }}>AuraMind AI Accountability</div>
+                    <div style={{ fontSize: "0.7rem", color: "var(--success)" }}>Official Verified Partner</div>
                   </div>
                 </div>
-                <div style={{ padding: "12px", borderRadius: "8px", backgroundColor: "#005C4B", color: "#E9EDEF", marginBottom: "10px", maxWidth: "85%" }}>
+                <div style={{ padding: "12px", borderRadius: "8px", backgroundColor: "var(--card)", color: "var(--text)", marginBottom: "10px", maxWidth: "85%" }}>
                   🌅 <strong>Morning Briefing (Day 14)</strong><br />
                   Good morning! Today you have 2 scheduled focus blocks (2.5h total):<br />
                   • 09:00 AM: Docker Containerization Module<br />
                   • 04:30 PM: Compose File Practice<br />
                   Ready to conquer Day 14? Reply <strong>READY</strong> to activate your sprint!
                 </div>
-                <div style={{ padding: "12px", borderRadius: "8px", backgroundColor: "#202C33", color: "#E9EDEF", marginLeft: "auto", maxWidth: "60%", textAlign: "right" }}>
+                <div style={{ padding: "12px", borderRadius: "8px", backgroundColor: "var(--card)", color: "var(--text)", marginLeft: "auto", maxWidth: "60%", textAlign: "right" }}>
                   READY! Let&rsquo;s do it.
                 </div>
               </div>
@@ -237,7 +237,7 @@ export default function AiAccountabilityPage() {
                 <span className="badge badge-yellow" style={{ fontSize: "0.75rem", marginBottom: "12px" }}>
                   Platinum &bull; Diamond Exclusive
                 </span>
-                <h3 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#FFFFFF", marginBottom: "12px" }}>
+                <h3 style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--text)", marginBottom: "12px" }}>
                   2. WhatsApp Check-in Messaging
                 </h3>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", lineHeight: 1.6, marginBottom: "16px" }}>
@@ -269,7 +269,7 @@ export default function AiAccountabilityPage() {
                 <span className="badge badge-yellow" style={{ fontSize: "0.75rem", marginBottom: "12px" }}>
                   Platinum (60 calls) &bull; Diamond (450 calls)
                 </span>
-                <h3 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#FFFFFF", marginBottom: "12px" }}>
+                <h3 style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--text)", marginBottom: "12px" }}>
                   3. Conversational AI Calling Agent (Hindi &amp; English)
                 </h3>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", lineHeight: 1.6, marginBottom: "16px" }}>
@@ -295,7 +295,7 @@ export default function AiAccountabilityPage() {
                 <div style={{ width: "64px", height: "64px", borderRadius: "50%", backgroundColor: "rgba(255, 214, 0, 0.15)", border: "2px solid var(--accent-primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.8rem", margin: "0 auto 16px" }}>
                   📞
                 </div>
-                <div style={{ fontWeight: 800, color: "#FFFFFF", fontSize: "1.1rem", marginBottom: "4px" }}>
+                <div style={{ fontWeight: 800, color: "var(--text)", fontSize: "1.1rem", marginBottom: "4px" }}>
                   Incoming Accountability Call
                 </div>
                 <div style={{ fontSize: "0.85rem", color: "var(--accent-primary)", marginBottom: "16px" }}>
@@ -325,7 +325,7 @@ export default function AiAccountabilityPage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px" }}>
             <div style={{ padding: "24px", borderRadius: "12px", backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)" }}>
               <div style={{ fontSize: "1.8rem", marginBottom: "10px" }}>📈</div>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#FFFFFF", marginBottom: "8px" }}>Daily Productivity Recap</h3>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text)", marginBottom: "8px" }}>Daily Productivity Recap</h3>
               <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", lineHeight: 1.6, margin: 0 }}>
                 Every evening, view your completed focus sprints, uninterrupted minutes, and net XP accrued.
               </p>
@@ -333,7 +333,7 @@ export default function AiAccountabilityPage() {
 
             <div style={{ padding: "24px", borderRadius: "12px", backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)" }}>
               <div style={{ fontSize: "1.8rem", marginBottom: "10px" }}>📊</div>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#FFFFFF", marginBottom: "8px" }}>Weekly Retrospectives</h3>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text)", marginBottom: "8px" }}>Weekly Retrospectives</h3>
               <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", lineHeight: 1.6, margin: 0 }}>
                 Audit planned vs. executed deliberate practice hours, identify distraction patterns, and adjust next week&rsquo;s pacing.
               </p>
@@ -341,7 +341,7 @@ export default function AiAccountabilityPage() {
 
             <div style={{ padding: "24px", borderRadius: "12px", backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)" }}>
               <div style={{ fontSize: "1.8rem", marginBottom: "10px" }}>💎</div>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#FFFFFF", marginBottom: "8px" }}>Monthly Strategic Audits</h3>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--text)", marginBottom: "8px" }}>Monthly Strategic Audits</h3>
               <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", lineHeight: 1.6, margin: 0 }}>
                 For Diamond members, receive full multi-goal progress statistics, completion percentages, and long-term behavioral insights.
               </p>

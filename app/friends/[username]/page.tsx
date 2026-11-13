@@ -295,7 +295,7 @@ function FriendProfileContent() {
                   onClick={() => handleAction("block")}
                   disabled={isBusy}
                   className="btn btn-ghost btn-sm"
-                  style={{ color: "#EF4444" }}
+                  style={{ color: "var(--error)" }}
                   title="Block this member"
                 >
                   Block
@@ -334,7 +334,7 @@ function FriendProfileContent() {
               </div>
             ) : friendshipStatus === "blocked" ? (
               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                <span className="badge badge-neutral" style={{ color: "#EF4444", borderColor: "#EF4444" }}>
+                <span className="badge badge-neutral" style={{ color: "var(--error)", borderColor: "var(--error)" }}>
                   Blocked
                 </span>
                 <button
@@ -363,7 +363,7 @@ function FriendProfileContent() {
                   onClick={() => handleAction("block")}
                   disabled={isBusy}
                   className="btn btn-ghost btn-sm"
-                  style={{ color: "#EF4444" }}
+                  style={{ color: "var(--error)" }}
                   title="Block this member"
                 >
                   Block

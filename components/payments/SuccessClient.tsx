@@ -34,14 +34,14 @@ export default function SuccessClient() {
   const planConfig = subData?.plan;
 
   return (
-    <div style={{ backgroundColor: "#080808", color: "#FFFFFF", minHeight: "100vh", paddingTop: "60px", paddingBottom: "96px" }}>
+    <div style={{ backgroundColor: "var(--bg)", color: "var(--text)", minHeight: "100vh", paddingTop: "60px", paddingBottom: "96px" }}>
       <div className="container" style={{ maxWidth: "680px" }}>
         
         <div
           className="card"
           style={{
             padding: "40px 32px",
-            backgroundColor: "#111111",
+            backgroundColor: "var(--card)",
             borderRadius: "20px",
             border: "1px solid rgba(16, 185, 129, 0.4)",
             boxShadow: "0 12px 40px rgba(0, 0, 0, 0.7)",
@@ -55,7 +55,7 @@ export default function SuccessClient() {
               height: "72px",
               borderRadius: "50%",
               backgroundColor: "rgba(16, 185, 129, 0.15)",
-              color: "#10B981",
+              color: "var(--success)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -75,7 +75,7 @@ export default function SuccessClient() {
                 textTransform: "uppercase",
                 letterSpacing: "0.08em",
                 backgroundColor: "rgba(16, 185, 129, 0.15)",
-                color: "#10B981",
+                color: "var(--success)",
                 padding: "3px 12px",
                 borderRadius: "9999px",
                 border: "1px solid rgba(16, 185, 129, 0.3)",
@@ -85,7 +85,7 @@ export default function SuccessClient() {
             </span>
           </div>
 
-          <h1 style={{ fontSize: "2rem", fontWeight: 800, margin: "0 0 10px", color: "#FFFFFF" }}>
+          <h1 style={{ fontSize: "2rem", fontWeight: 800, margin: "0 0 10px", color: "var(--text)" }}>
             Welcome to AuraMind {planName}!
           </h1>
 
@@ -96,7 +96,7 @@ export default function SuccessClient() {
           {/* UNLOCKED FEATURES SUMMARY */}
           <div
             style={{
-              backgroundColor: "#161616",
+              backgroundColor: "var(--card)",
               borderRadius: "14px",
               padding: "20px 24px",
               textAlign: "left",
@@ -111,7 +111,7 @@ export default function SuccessClient() {
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.88rem" }}>
               <div className="flex-between">
                 <span style={{ color: "var(--text-secondary)" }}>Plan Tier:</span>
-                <span style={{ fontWeight: 800, color: "#FFFFFF" }}>{planName} Plan</span>
+                <span style={{ fontWeight: 800, color: "var(--text)" }}>{planName} Plan</span>
               </div>
               <div className="flex-between">
                 <span style={{ color: "var(--text-secondary)" }}>Active Goals Allowed:</span>
@@ -127,13 +127,13 @@ export default function SuccessClient() {
               </div>
               <div className="flex-between">
                 <span style={{ color: "var(--text-secondary)" }}>WhatsApp Check-ins:</span>
-                <span style={{ color: "#10B981", fontWeight: 700 }}>
+                <span style={{ color: "var(--success)", fontWeight: 700 }}>
                   {activeTier === "gold" ? "Not Included (App Only)" : "✓ Enabled"}
                 </span>
               </div>
               <div className="flex-between">
                 <span style={{ color: "var(--text-secondary)" }}>AI Voice Calling Agent:</span>
-                <span style={{ color: "#10B981", fontWeight: 700 }}>
+                <span style={{ color: "var(--success)", fontWeight: 700 }}>
                   {activeTier === "diamond"
                     ? "✓ 450 Calls/Month"
                     : activeTier === "platinum"

@@ -62,8 +62,8 @@ export function AuraMindLogo({
             alignItems: "center",
           }}
         >
-          <span style={{ color: "var(--text-primary, #FFFFFF)" }}>AURA</span>
-          <span style={{ color: "var(--accent-primary, #FFD600)" }}>MIND</span>
+          <span style={{ color: "var(--text)" }}>AURA</span>
+          <span style={{ color: "var(--accent)" }}>MIND</span>
         </span>
       )}
     </div>

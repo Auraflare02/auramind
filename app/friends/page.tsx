@@ -505,7 +505,7 @@ function FriendsContent() {
             <span
               style={{
                 backgroundColor: "var(--accent-primary)",
-                color: "#0A0A0A",
+                color: "var(--on-accent)",
                 fontWeight: 800,
                 fontSize: "0.72rem",
                 borderRadius: "9999px",
@@ -558,7 +558,7 @@ function FriendsContent() {
           {(data?.stats.blockedCount || 0) > 0 && (
             <span
               className="badge badge-neutral"
-              style={{ fontSize: "0.7rem", padding: "1px 6px", color: "#EF4444", borderColor: "#EF4444" }}
+              style={{ fontSize: "0.7rem", padding: "1px 6px", color: "var(--error)", borderColor: "var(--error)" }}
             >
               {data?.stats.blockedCount}
             </span>
@@ -603,7 +603,7 @@ function FriendsContent() {
                     height: "42px",
                     borderRadius: "50%",
                     backgroundColor: "var(--accent-primary)",
-                    color: "#000",
+                    color: "var(--on-accent)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -614,7 +614,7 @@ function FriendsContent() {
                   👋
                 </div>
                 <div>
-                  <div style={{ fontWeight: 800, color: "#FFFFFF", fontSize: "1rem", letterSpacing: "-0.01em" }}>
+                  <div style={{ fontWeight: 800, color: "var(--text)", fontSize: "1rem", letterSpacing: "-0.01em" }}>
                     You have {data.incomingRequests.length} pending friend request{data.incomingRequests.length > 1 ? "s" : ""}!
                   </div>
                   <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "2px" }}>
@@ -945,7 +945,7 @@ function FriendsContent() {
                         })
                       }
                       className="btn btn-ghost btn-sm"
-                      style={{ color: "#EF4444", fontSize: "0.78rem" }}
+                      style={{ color: "var(--error)", fontSize: "0.78rem" }}
                       title="Block this member"
                     >
                       Block
@@ -1707,7 +1707,7 @@ function FriendsContent() {
                 type="button"
                 onClick={() => handleRelationshipAction(confirmModal.type, confirmModal.targetUserId, confirmModal.targetName)}
                 className="btn btn-primary"
-                style={{ backgroundColor: "#EF4444", borderColor: "#EF4444", color: "#FFFFFF" }}
+                style={{ backgroundColor: "var(--error)", borderColor: "var(--error)", color: "var(--text)" }}
               >
                 {confirmModal.type === "remove" ? "Yes, Unfriend" : "Yes, Block User"}
               </button>

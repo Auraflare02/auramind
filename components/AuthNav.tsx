@@ -126,8 +126,8 @@ export default function AuthNav() {
           {pendingRequests > 0 && (
             <span
               style={{
-                backgroundColor: "var(--accent-primary)",
-                color: "#000000",
+                backgroundColor: "var(--accent)",
+                color: "var(--on-accent)",
                 fontSize: "0.68rem",
                 fontWeight: 800,
                 borderRadius: "9999px",

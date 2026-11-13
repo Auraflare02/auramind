@@ -77,7 +77,7 @@ export default function BetaCheckoutClient() {
   };
 
   return (
-    <div style={{ backgroundColor: "#080808", color: "#FFFFFF", minHeight: "100vh", paddingBottom: "80px" }}>
+    <div style={{ backgroundColor: "var(--bg)", color: "var(--text)", minHeight: "100vh", paddingBottom: "80px" }}>
       {/* HEADER BAR */}
       <div
         style={{
@@ -192,9 +192,9 @@ export default function BetaCheckoutClient() {
           >
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <span style={{ fontSize: "1.1rem" }}>✓</span>
-              <span style={{ fontSize: "0.88rem", color: "#A7F3D0" }}>
+              <span style={{ fontSize: "0.88rem", color: "var(--success)" }}>
                 Activating beta pass for:{" "}
-                <strong style={{ color: "#FFFFFF" }}>{userProfile.full_name || userProfile.email}</strong>{" "}
+                <strong style={{ color: "var(--text)" }}>{userProfile.full_name || userProfile.email}</strong>{" "}
                 ({userProfile.email})
               </span>
             </div>
@@ -228,7 +228,7 @@ export default function BetaCheckoutClient() {
                   height: "28px",
                   borderRadius: "50%",
                   backgroundColor: "var(--accent-primary)",
-                  color: "#000000",
+                  color: "var(--on-accent)",
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -246,7 +246,7 @@ export default function BetaCheckoutClient() {
             {/* QR CODE DISPLAY */}
             <div
               style={{
-                backgroundColor: "#0F0F0F",
+                backgroundColor: "var(--bg)",
                 border: "1px solid var(--border-default)",
                 borderRadius: "14px",
                 padding: "20px",
@@ -258,7 +258,7 @@ export default function BetaCheckoutClient() {
                 style={{
                   display: "inline-block",
                   padding: "12px",
-                  backgroundColor: "#FFFFFF",
+                  backgroundColor: "var(--on-accent)",
                   borderRadius: "10px",
                   marginBottom: "14px",
                 }}
@@ -305,7 +305,7 @@ export default function BetaCheckoutClient() {
                     height: "28px",
                     borderRadius: "50%",
                     backgroundColor: "var(--accent-primary)",
-                    color: "#000000",
+                    color: "var(--on-accent)",
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -325,7 +325,7 @@ export default function BetaCheckoutClient() {
                   style={{
                     backgroundColor: "rgba(239, 68, 68, 0.12)",
                     border: "1px solid rgba(239, 68, 68, 0.4)",
-                    color: "#FCA5A5",
+                    color: "var(--error)",
                     padding: "12px 14px",
                     borderRadius: "8px",
                     fontSize: "0.85rem",
@@ -341,7 +341,7 @@ export default function BetaCheckoutClient() {
                   htmlFor="transactionId"
                   style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, marginBottom: "6px" }}
                 >
-                  12-Digit UPI Transaction ID / UTR <span style={{ color: "#EF4444" }}>*</span>
+                  12-Digit UPI Transaction ID / UTR <span style={{ color: "var(--error)" }}>*</span>
                 </label>
                 <input
                   id="transactionId"
@@ -353,10 +353,10 @@ export default function BetaCheckoutClient() {
                   style={{
                     width: "100%",
                     padding: "12px 14px",
-                    backgroundColor: "#141414",
+                    backgroundColor: "var(--card)",
                     border: "1px solid var(--border-default)",
                     borderRadius: "8px",
-                    color: "#FFFFFF",
+                    color: "var(--text)",
                     fontSize: "1rem",
                     fontFamily: "monospace",
                     letterSpacing: "0.04em",
@@ -383,10 +383,10 @@ export default function BetaCheckoutClient() {
                   style={{
                     width: "100%",
                     padding: "10px 14px",
-                    backgroundColor: "#141414",
+                    backgroundColor: "var(--card)",
                     border: "1px solid var(--border-default)",
                     borderRadius: "8px",
-                    color: "#FFFFFF",
+                    color: "var(--text)",
                     fontSize: "0.9rem",
                   }}
                 />
@@ -503,19 +503,19 @@ export default function BetaCheckoutClient() {
 
               <div style={{ display: "flex", flexDirection: "column", gap: "12px", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
                 <div>
-                  <strong style={{ color: "#FFFFFF" }}>How long does verification take?</strong>
+                  <strong style={{ color: "var(--text)" }}>How long does verification take?</strong>
                   <p style={{ margin: "2px 0 0", color: "var(--text-muted)" }}>
                     Our team manually validates each UPI transaction within 6 hours. You will receive an in-app confirmation once active.
                   </p>
                 </div>
                 <div>
-                  <strong style={{ color: "#FFFFFF" }}>Will my card or account be auto-debited?</strong>
+                  <strong style={{ color: "var(--text)" }}>Will my card or account be auto-debited?</strong>
                   <p style={{ margin: "2px 0 0", color: "var(--text-muted)" }}>
                     Never. This is a one-time direct bank transfer of ₹99 via UPI. There is zero automatic renewal or recurring fee.
                   </p>
                 </div>
                 <div>
-                  <strong style={{ color: "#FFFFFF" }}>How do I report issues during the beta?</strong>
+                  <strong style={{ color: "var(--text)" }}>How do I report issues during the beta?</strong>
                   <p style={{ margin: "2px 0 0", color: "var(--text-muted)" }}>
                     Beta users get an exclusive &ldquo;Submit Feedback&rdquo; button directly on the dashboard to report bugs and suggest improvements.
                   </p>

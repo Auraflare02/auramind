@@ -9,14 +9,14 @@ export default function FailedClient() {
   const reason = searchParams.get("reason") || "The submitted UTR number could not be matched against incoming bank credits.";
 
   return (
-    <div style={{ backgroundColor: "#080808", color: "#FFFFFF", minHeight: "100vh", paddingTop: "60px", paddingBottom: "96px" }}>
+    <div style={{ backgroundColor: "var(--bg)", color: "var(--text)", minHeight: "100vh", paddingTop: "60px", paddingBottom: "96px" }}>
       <div className="container" style={{ maxWidth: "680px" }}>
         
         <div
           className="card"
           style={{
             padding: "40px 32px",
-            backgroundColor: "#111111",
+            backgroundColor: "var(--card)",
             borderRadius: "20px",
             border: "1px solid rgba(239, 68, 68, 0.4)",
             boxShadow: "0 12px 40px rgba(0, 0, 0, 0.7)",
@@ -30,7 +30,7 @@ export default function FailedClient() {
               height: "72px",
               borderRadius: "50%",
               backgroundColor: "rgba(239, 68, 68, 0.15)",
-              color: "#EF4444",
+              color: "var(--error)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -50,7 +50,7 @@ export default function FailedClient() {
                 textTransform: "uppercase",
                 letterSpacing: "0.08em",
                 backgroundColor: "rgba(239, 68, 68, 0.15)",
-                color: "#EF4444",
+                color: "var(--error)",
                 padding: "3px 12px",
                 borderRadius: "9999px",
                 border: "1px solid rgba(239, 68, 68, 0.3)",
@@ -60,7 +60,7 @@ export default function FailedClient() {
             </span>
           </div>
 
-          <h1 style={{ fontSize: "1.9rem", fontWeight: 800, margin: "0 0 10px", color: "#FFFFFF" }}>
+          <h1 style={{ fontSize: "1.9rem", fontWeight: 800, margin: "0 0 10px", color: "var(--text)" }}>
             Payment Could Not Be Verified
           </h1>
 
@@ -71,7 +71,7 @@ export default function FailedClient() {
           {/* REASON BOX */}
           <div
             style={{
-              backgroundColor: "#181818",
+              backgroundColor: "var(--card)",
               borderRadius: "14px",
               padding: "20px 24px",
               textAlign: "left",
@@ -82,7 +82,7 @@ export default function FailedClient() {
             <div style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-muted)", fontWeight: 700, marginBottom: "8px" }}>
               Reported Reason
             </div>
-            <p style={{ margin: 0, fontSize: "0.9rem", color: "#FFFFFF", lineHeight: 1.5 }}>
+            <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--text)", lineHeight: 1.5 }}>
               {reason}
             </p>
             {reqId && (
@@ -94,7 +94,7 @@ export default function FailedClient() {
 
           {/* NEXT STEPS */}
           <div style={{ textAlign: "left", marginBottom: "32px", fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: 1.6 }}>
-            <strong style={{ color: "#FFFFFF" }}>Common reasons for verification failure:</strong>
+            <strong style={{ color: "var(--text)" }}>Common reasons for verification failure:</strong>
             <ul style={{ paddingLeft: "20px", margin: "6px 0 0", display: "flex", flexDirection: "column", gap: "4px" }}>
               <li>Typo in the 12-digit UPI UTR number entered.</li>
               <li>Bank transfer is still in &ldquo;Pending&rdquo; status on your UPI app.</li>

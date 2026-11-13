@@ -510,6 +510,55 @@ test("Financial Controls - ₹30,000 Global Beta Budget Ceiling & Shark Tank Met
   assert.ok(dashData.costPerParticipant <= 300);
 });
 
+// 10. Theme System & Token Verification
+import fs from "fs";
+
+test("Theme System - CSS Tokens and Reduced Motion Transition Rules", () => {
+  const css = fs.readFileSync("app/globals.css", "utf8");
+
+  // Midnight Theme Tokens
+  assert.ok(css.includes("--bg: #0A0A0F"));
+  assert.ok(css.includes("--card: #14141C"));
+  assert.ok(css.includes("--border: #2A2A38"));
+  assert.ok(css.includes("--text: #F4F4F8"));
+  assert.ok(css.includes("--text-muted: #9A9AB0"));
+  assert.ok(css.includes("--accent: #7C5CFF"));
+  assert.ok(css.includes("--on-accent: #FFFFFF"));
+  assert.ok(css.includes("--success: #34D399"));
+  assert.ok(css.includes("--xp: #7C5CFF"));
+
+  // Forest Theme Tokens
+  assert.ok(css.includes('[data-theme="forest"]'));
+  assert.ok(css.includes("--bg: #0F1A14"));
+  assert.ok(css.includes("--card: #16251D"));
+  assert.ok(css.includes("--border: #27392F"));
+  assert.ok(css.includes("--text: #ECF3EE"));
+  assert.ok(css.includes("--text-muted: #8FA89A"));
+  assert.ok(css.includes("--accent: #A3E635"));
+  assert.ok(css.includes("--on-accent: #0F1A14"));
+
+  // Plan Tier Badges Constant Colors (Requirement 9)
+  assert.ok(css.includes("--tier-gold: #E5B84B"));
+  assert.ok(css.includes("--tier-platinum: #A8B3C7"));
+  assert.ok(css.includes("--tier-diamond: #67E8F9"));
+  assert.ok(css.includes("--tier-dark-text: #0A0A0F"));
+
+  // 200ms Transition & Prefers Reduced Motion (Requirement 6)
+  assert.ok(css.includes("transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease"));
+  assert.ok(css.includes("prefers-reduced-motion: reduce"));
+});
+
+test("Theme System - ThemeToggle Key and Inline Head Script", () => {
+  const toggleCode = fs.readFileSync("components/ThemeToggle.tsx", "utf8");
+  assert.ok(toggleCode.includes("auramind-theme"));
+  assert.ok(toggleCode.includes('aria-label="Switch theme"'));
+  assert.ok(toggleCode.includes("aria-pressed"));
+
+  const layoutCode = fs.readFileSync("app/layout.tsx", "utf8");
+  assert.ok(layoutCode.includes("auramind-theme"));
+  assert.ok(layoutCode.includes('data-theme="midnight"'));
+});
+
 process.on("beforeExit", () => {
   console.log("==================================================");
   console.log(`TEST SUMMARY: ${testsPassed} PASSED, ${testsFailed} FAILED`);

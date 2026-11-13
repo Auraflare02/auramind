@@ -26,7 +26,7 @@ export default function BlogIndexPage() {
   ]);
 
   return (
-    <div style={{ backgroundColor: "#080808", color: "#FFFFFF", minHeight: "100vh" }}>
+    <div style={{ backgroundColor: "var(--bg)", color: "var(--text)", minHeight: "100vh" }}>
       <JsonLd data={breadcrumbs} />
 
       {/* 1. HERO HEADER */}
@@ -107,7 +107,7 @@ export default function BlogIndexPage() {
                   <h2 style={{ fontSize: "1.35rem", fontWeight: 700, lineHeight: 1.4, marginBottom: "12px" }}>
                     <Link
                       href={`/blog/${post.slug}`}
-                      style={{ color: "#FFFFFF", textDecoration: "none", transition: "color 0.2s ease" }}
+                      style={{ color: "var(--text)", textDecoration: "none", transition: "color 0.2s ease" }}
                     >
                       {post.title}
                     </Link>

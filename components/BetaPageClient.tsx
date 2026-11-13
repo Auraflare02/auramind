@@ -5,7 +5,7 @@ import { AuraMindLogo, AuraMindSymbol } from "@/components/AuraMindBrand";
 
 export default function BetaPageClient() {
   return (
-    <div style={{ backgroundColor: "#080808", color: "#FFFFFF", minHeight: "100vh" }}>
+    <div style={{ backgroundColor: "var(--bg)", color: "var(--text)", minHeight: "100vh" }}>
       {/* 1. HERO SECTION */}
       <section
         style={{
@@ -68,7 +68,7 @@ export default function BetaPageClient() {
               <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
                 Included Plan Tier
               </div>
-              <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#FFFFFF" }}>
+              <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text)" }}>
                 Full Platinum Tier
               </div>
             </div>
@@ -77,7 +77,7 @@ export default function BetaPageClient() {
               <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
                 Cohort Cap
               </div>
-              <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#FFFFFF" }}>
+              <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text)" }}>
                 100 Users Maximum
               </div>
             </div>
@@ -86,7 +86,7 @@ export default function BetaPageClient() {
               <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
                 Renewal Policy
               </div>
-              <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#10B981" }}>
+              <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--success)" }}>
                 Zero Auto-Renewals
               </div>
             </div>
@@ -139,7 +139,7 @@ export default function BetaPageClient() {
             <div
               className="card"
               style={{
-                backgroundColor: "#121212",
+                backgroundColor: "var(--card)",
                 border: "1px solid var(--border-default)",
                 padding: "28px",
                 borderRadius: "16px",
@@ -162,7 +162,7 @@ export default function BetaPageClient() {
               >
                 1
               </div>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "8px", color: "#FFFFFF" }}>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "8px", color: "var(--text)" }}>
                 AI Goal Planning
               </h3>
               <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.6, margin: 0 }}>
@@ -174,7 +174,7 @@ export default function BetaPageClient() {
             <div
               className="card"
               style={{
-                backgroundColor: "#121212",
+                backgroundColor: "var(--card)",
                 border: "1px solid var(--border-default)",
                 padding: "28px",
                 borderRadius: "16px",
@@ -197,7 +197,7 @@ export default function BetaPageClient() {
               >
                 2
               </div>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "8px", color: "#FFFFFF" }}>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "8px", color: "var(--text)" }}>
                 30-Day Daily Timetable
               </h3>
               <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.6, margin: 0 }}>
@@ -209,7 +209,7 @@ export default function BetaPageClient() {
             <div
               className="card"
               style={{
-                backgroundColor: "#121212",
+                backgroundColor: "var(--card)",
                 border: "1px solid var(--border-default)",
                 padding: "28px",
                 borderRadius: "16px",
@@ -232,7 +232,7 @@ export default function BetaPageClient() {
               >
                 3
               </div>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "8px", color: "#FFFFFF" }}>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "8px", color: "var(--text)" }}>
                 Hourly Check-ins &amp; Recovery
               </h3>
               <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.6, margin: 0 }}>
@@ -244,7 +244,7 @@ export default function BetaPageClient() {
       </section>
 
       {/* 3. WHAT'S INCLUDED IN THE ₹99 BETA */}
-      <section style={{ padding: "80px 0", backgroundColor: "#0C0C0C", borderBottom: "1px solid var(--border-default)" }}>
+      <section style={{ padding: "80px 0", backgroundColor: "var(--bg)", borderBottom: "1px solid var(--border-default)" }}>
         <div className="container" style={{ maxWidth: "900px" }}>
           <div style={{ textAlign: "center", marginBottom: "40px" }}>
             <span className="badge badge-yellow" style={{ marginBottom: "8px" }}>
@@ -260,7 +260,7 @@ export default function BetaPageClient() {
 
           <div
             style={{
-              backgroundColor: "#141414",
+              backgroundColor: "var(--card)",
               border: "1px solid var(--border-default)",
               borderRadius: "16px",
               padding: "36px",
@@ -327,7 +327,7 @@ export default function BetaPageClient() {
                 <div key={idx} style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
                   <span style={{ fontSize: "1.4rem", lineHeight: 1.2 }}>{item.icon}</span>
                   <div>
-                    <h4 style={{ fontSize: "1rem", fontWeight: 700, margin: "0 0 4px", color: "#FFFFFF" }}>
+                    <h4 style={{ fontSize: "1rem", fontWeight: 700, margin: "0 0 4px", color: "var(--text)" }}>
                       {item.title}
                     </h4>
                     <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", margin: 0, lineHeight: 1.5 }}>
@@ -342,7 +342,7 @@ export default function BetaPageClient() {
       </section>
 
       {/* 3.5 TARGET AUDIENCE COHORTS */}
-      <section style={{ padding: "80px 0", borderBottom: "1px solid var(--border-default)", backgroundColor: "#0A0A0A" }}>
+      <section style={{ padding: "80px 0", borderBottom: "1px solid var(--border-default)", backgroundColor: "var(--bg)" }}>
         <div className="container" style={{ maxWidth: "1000px" }}>
           <div style={{ textAlign: "center", marginBottom: "48px" }}>
             <span className="badge badge-yellow" style={{ marginBottom: "12px" }}>
@@ -386,7 +386,7 @@ export default function BetaPageClient() {
               <div
                 key={idx}
                 style={{
-                  backgroundColor: "#121212",
+                  backgroundColor: "var(--card)",
                   border: "1px solid var(--border-default)",
                   borderRadius: "14px",
                   padding: "28px 24px",
@@ -396,7 +396,7 @@ export default function BetaPageClient() {
                 }}
               >
                 <div style={{ fontSize: "2rem" }}>{cohort.icon}</div>
-                <h3 style={{ fontSize: "1.15rem", fontWeight: 800, margin: 0, color: "#FFFFFF" }}>
+                <h3 style={{ fontSize: "1.15rem", fontWeight: 800, margin: 0, color: "var(--text)" }}>
                   {cohort.title}
                 </h3>
                 <div style={{ fontSize: "0.8rem", color: "var(--accent-primary)", fontWeight: 700 }}>
@@ -426,7 +426,7 @@ export default function BetaPageClient() {
 
           <div
             style={{
-              backgroundColor: "#161616",
+              backgroundColor: "var(--card)",
               border: "1px solid var(--border-default)",
               borderRadius: "12px",
               padding: "24px",
@@ -488,13 +488,13 @@ export default function BetaPageClient() {
               <div
                 key={idx}
                 style={{
-                  backgroundColor: "#121212",
+                  backgroundColor: "var(--card)",
                   border: "1px solid var(--border-default)",
                   borderRadius: "12px",
                   padding: "20px 24px",
                 }}
               >
-                <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "#FFFFFF", marginBottom: "8px" }}>
+                <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--text)", marginBottom: "8px" }}>
                   {faq.q}
                 </div>
                 <div style={{ fontSize: "0.875rem", color: "var(--text-secondary)", lineHeight: 1.6 }}>

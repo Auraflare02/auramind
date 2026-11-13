@@ -123,7 +123,7 @@ export default function PricingClient() {
   const pendingRequest = userPaymentRequests.find((r) => r.status === "pending");
 
   return (
-    <div style={{ backgroundColor: "#080808", color: "#FFFFFF", minHeight: "100vh" }}>
+    <div style={{ backgroundColor: "var(--bg)", color: "var(--text)", minHeight: "100vh" }}>
       {/* 1. HERO HEADER */}
       <section
         style={{
@@ -159,7 +159,7 @@ export default function PricingClient() {
                     Payment Verification Pending ({SUBSCRIPTION_PLANS[pendingRequest.tier as SubscriptionTier]?.name || pendingRequest.tier})
                   </div>
                   <div style={{ fontSize: "0.825rem", color: "var(--text-secondary)" }}>
-                    Transaction ID: <strong style={{ color: "#FFFFFF", fontFamily: "monospace" }}>#{pendingRequest.transactionId}</strong> &bull; Amount: ₹{pendingRequest.amount} &bull; Admin turnaround: within 6 hours.
+                    Transaction ID: <strong style={{ color: "var(--text)", fontFamily: "monospace" }}>#{pendingRequest.transactionId}</strong> &bull; Amount: ₹{pendingRequest.amount} &bull; Admin turnaround: within 6 hours.
                   </div>
                 </div>
               </div>
@@ -208,7 +208,7 @@ export default function PricingClient() {
             style={{
               display: "inline-flex",
               alignItems: "center",
-              backgroundColor: "#161616",
+              backgroundColor: "var(--card)",
               padding: "4px",
               borderRadius: "9999px",
               border: "1px solid var(--border-default)",
@@ -227,7 +227,7 @@ export default function PricingClient() {
                 cursor: "pointer",
                 transition: "all 0.2s ease",
                 backgroundColor: billingCycle === "monthly" ? "var(--accent-primary)" : "transparent",
-                color: billingCycle === "monthly" ? "#000" : "var(--text-secondary)",
+                color: billingCycle === "monthly" ? "var(--on-accent)" : "var(--text-secondary)",
               }}
             >
               Monthly Billing
@@ -244,7 +244,7 @@ export default function PricingClient() {
                 cursor: "pointer",
                 transition: "all 0.2s ease",
                 backgroundColor: billingCycle === "annual" ? "var(--accent-primary)" : "transparent",
-                color: billingCycle === "annual" ? "#000" : "var(--text-secondary)",
+                color: billingCycle === "annual" ? "var(--on-accent)" : "var(--text-secondary)",
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "6px",
@@ -254,7 +254,7 @@ export default function PricingClient() {
               <span
                 style={{
                   fontSize: "0.7rem",
-                  backgroundColor: billingCycle === "annual" ? "#000" : "rgba(255, 214, 0, 0.2)",
+                  backgroundColor: billingCycle === "annual" ? "var(--on-accent)" : "var(--accent-muted)",
                   color: billingCycle === "annual" ? "var(--accent-primary)" : "var(--accent-primary)",
                   padding: "1px 6px",
                   borderRadius: "9999px",
@@ -316,7 +316,7 @@ export default function PricingClient() {
       <section
         style={{
           padding: "64px 0",
-          backgroundColor: "#0D0D0D",
+          backgroundColor: "var(--bg)",
           borderTop: "1px solid var(--border-default)",
           borderBottom: "1px solid var(--border-default)",
         }}
@@ -345,7 +345,7 @@ export default function PricingClient() {
               <div
                 key={lvl.tier}
                 style={{
-                  backgroundColor: "#141414",
+                  backgroundColor: "var(--card)",
                   border: `1px solid ${
                     lvl.tier === "platinum"
                       ? "rgba(255, 214, 0, 0.4)"
@@ -372,14 +372,14 @@ export default function PricingClient() {
                         lvl.tier === "platinum"
                           ? "var(--accent-primary)"
                           : lvl.tier === "diamond"
-                          ? "#38BDF8"
-                          : "#EAB308",
+                          ? "var(--tier-diamond)"
+                          : "var(--tier-gold)",
                       marginBottom: "4px",
                     }}
                   >
                     {lvl.title}
                   </div>
-                  <h3 style={{ fontSize: "1.3rem", fontWeight: 800, margin: "0 0 12px", color: "#FFFFFF" }}>
+                  <h3 style={{ fontSize: "1.3rem", fontWeight: 800, margin: "0 0 12px", color: "var(--text)" }}>
                     {lvl.subtitle}
                   </h3>
                   <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.6, margin: 0 }}>
@@ -420,7 +420,7 @@ export default function PricingClient() {
           <div
             style={{
               overflowX: "auto",
-              backgroundColor: "#111111",
+              backgroundColor: "var(--card)",
               borderRadius: "16px",
               border: "1px solid var(--border-default)",
               boxShadow: "0 10px 30px rgba(0, 0, 0, 0.4)",
@@ -435,11 +435,11 @@ export default function PricingClient() {
               }}
             >
               <thead>
-                <tr style={{ borderBottom: "1px solid var(--border-default)", backgroundColor: "#181818" }}>
+                <tr style={{ borderBottom: "1px solid var(--border-default)", backgroundColor: "var(--card)" }}>
                   <th style={{ padding: "18px 24px", color: "var(--text-secondary)", fontWeight: 600, width: "35%" }}>
                     Features & Allowances
                   </th>
-                  <th style={{ padding: "18px 20px", fontWeight: 800, color: "#EAB308", textAlign: "center", width: "21%" }}>
+                  <th style={{ padding: "18px 20px", fontWeight: 800, color: "var(--tier-gold)", textAlign: "center", width: "21%" }}>
                     <div>🥇 GOLD</div>
                     <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 500, marginTop: "2px" }}>
                       Essential
@@ -463,7 +463,7 @@ export default function PricingClient() {
                         left: "50%",
                         transform: "translateX(-50%)",
                         backgroundColor: "var(--accent-primary)",
-                        color: "#000",
+                        color: "var(--on-accent)",
                         fontSize: "0.65rem",
                         fontWeight: 900,
                         padding: "2px 8px",
@@ -477,7 +477,7 @@ export default function PricingClient() {
                       Smart AI
                     </div>
                   </th>
-                  <th style={{ padding: "18px 20px", fontWeight: 800, color: "#38BDF8", textAlign: "center", width: "22%" }}>
+                  <th style={{ padding: "18px 20px", fontWeight: 800, color: "var(--tier-diamond)", textAlign: "center", width: "22%" }}>
                     <div>💎 DIAMOND</div>
                     <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 500, marginTop: "2px" }}>
                       Complete
@@ -498,7 +498,7 @@ export default function PricingClient() {
                       style={{
                         padding: "14px 24px",
                         fontWeight: row.highlight ? 700 : 500,
-                        color: row.highlight ? "#FFFFFF" : "var(--text-secondary)",
+                        color: row.highlight ? "var(--text)" : "var(--text-secondary)",
                       }}
                     >
                       {row.feature}
@@ -558,7 +558,7 @@ export default function PricingClient() {
       <section
         style={{
           padding: "48px 0",
-          backgroundColor: "#0F0F0F",
+          backgroundColor: "var(--bg)",
           borderTop: "1px solid var(--border-default)",
           borderBottom: "1px solid var(--border-default)",
         }}
@@ -610,7 +610,7 @@ export default function PricingClient() {
             style={{
               maxWidth: "520px",
               width: "100%",
-              backgroundColor: "#121212",
+              backgroundColor: "var(--card)",
               border: "1px solid var(--border-default)",
               borderRadius: "20px",
               padding: "28px 24px",
@@ -648,8 +648,8 @@ export default function PricingClient() {
                     height: "64px",
                     borderRadius: "50%",
                     backgroundColor: "rgba(16, 185, 129, 0.15)",
-                    border: "2px solid #10B981",
-                    color: "#10B981",
+                    border: "2px solid var(--success)",
+                    color: "var(--success)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -666,7 +666,7 @@ export default function PricingClient() {
                   </span>
                 </div>
 
-                <h2 style={{ fontSize: "1.6rem", fontWeight: 800, margin: "0 0 8px", color: "#FFFFFF" }}>
+                <h2 style={{ fontSize: "1.6rem", fontWeight: 800, margin: "0 0 8px", color: "var(--text)" }}>
                   Payment Under Review!
                 </h2>
 
@@ -676,7 +676,7 @@ export default function PricingClient() {
 
                 <div
                   style={{
-                    backgroundColor: "#1A1A1A",
+                    backgroundColor: "var(--card)",
                     padding: "16px",
                     borderRadius: "12px",
                     border: "1px solid var(--border-subtle)",
@@ -695,11 +695,11 @@ export default function PricingClient() {
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
                     <span style={{ color: "var(--text-muted)" }}>Transaction ID / UTR:</span>
-                    <strong style={{ color: "#FFFFFF", fontFamily: "monospace" }}>#{transactionId}</strong>
+                    <strong style={{ color: "var(--text)", fontFamily: "monospace" }}>#{transactionId}</strong>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
                     <span style={{ color: "var(--text-muted)" }}>Turnaround SLA:</span>
-                    <span style={{ color: "#10B981", fontWeight: 700 }}>Within 6 hours</span>
+                    <span style={{ color: "var(--success)", fontWeight: 700 }}>Within 6 hours</span>
                   </div>
                 </div>
 
@@ -733,7 +733,7 @@ export default function PricingClient() {
                   </span>
                 </div>
 
-                <h2 style={{ fontSize: "1.5rem", fontWeight: 800, margin: "0 0 4px", color: "#FFFFFF" }}>
+                <h2 style={{ fontSize: "1.5rem", fontWeight: 800, margin: "0 0 4px", color: "var(--text)" }}>
                   Get {planConfig.name} &bull; ₹{payableAmount}
                 </h2>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", margin: "0 0 16px" }}>
@@ -743,7 +743,7 @@ export default function PricingClient() {
                 {/* QR CODE CARD */}
                 <div
                   style={{
-                    backgroundColor: "#181818",
+                    backgroundColor: "var(--card)",
                     padding: "20px 16px",
                     borderRadius: "16px",
                     border: "1px solid var(--border-default)",
@@ -759,7 +759,7 @@ export default function PricingClient() {
                   <div
                     style={{
                       display: "inline-block",
-                      backgroundColor: "#FFFFFF",
+                      backgroundColor: "var(--on-accent)",
                       padding: "10px",
                       borderRadius: "14px",
                       boxShadow: "0 8px 24px rgba(0, 0, 0, 0.4)",
@@ -789,11 +789,11 @@ export default function PricingClient() {
                   </div>
 
                   <div style={{ display: "flex", justifyContent: "center", gap: "6px", flexWrap: "wrap", fontSize: "0.7rem", color: "var(--text-secondary)" }}>
-                    <span style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "#222222" }}>Google Pay</span>
-                    <span style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "#222222" }}>PhonePe</span>
-                    <span style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "#222222" }}>Paytm</span>
-                    <span style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "#222222" }}>BHIM UPI</span>
-                    <span style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "#222222" }}>Cred</span>
+                    <span style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--card)" }}>Google Pay</span>
+                    <span style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--card)" }}>PhonePe</span>
+                    <span style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--card)" }}>Paytm</span>
+                    <span style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--card)" }}>BHIM UPI</span>
+                    <span style={{ padding: "2px 6px", borderRadius: "4px", backgroundColor: "var(--card)" }}>Cred</span>
                   </div>
                 </div>
 
@@ -813,9 +813,9 @@ export default function PricingClient() {
                         width: "100%",
                         padding: "10px 14px",
                         borderRadius: "8px",
-                        backgroundColor: "#1A1A1A",
+                        backgroundColor: "var(--card)",
                         border: "1px solid var(--border-default)",
-                        color: "#FFFFFF",
+                        color: "var(--text)",
                         fontFamily: "monospace",
                         fontSize: "0.95rem",
                       }}
@@ -838,9 +838,9 @@ export default function PricingClient() {
                         width: "100%",
                         padding: "10px 14px",
                         borderRadius: "8px",
-                        backgroundColor: "#1A1A1A",
+                        backgroundColor: "var(--card)",
                         border: "1px solid var(--border-default)",
-                        color: "#FFFFFF",
+                        color: "var(--text)",
                         fontSize: "0.85rem",
                       }}
                     />
@@ -955,7 +955,7 @@ function PlanCard({
     <div
       className="card"
       style={{
-        backgroundColor: "#111111",
+        backgroundColor: "var(--card)",
         borderRadius: "20px",
         padding: "36px 28px",
         display: "flex",
@@ -964,7 +964,7 @@ function PlanCard({
         border: featured
           ? "2px solid var(--accent-primary)"
           : diamondGlow
-          ? "2px solid #38BDF8"
+          ? "2px solid var(--tier-diamond)"
           : "1px solid var(--border-default)",
         boxShadow: featured
           ? "0 0 35px rgba(255, 214, 0, 0.15)"
@@ -982,7 +982,7 @@ function PlanCard({
             left: "50%",
             transform: "translateX(-50%)",
             backgroundColor: "var(--accent-primary)",
-            color: "#000000",
+            color: "var(--on-accent)",
             fontSize: "0.75rem",
             fontWeight: 900,
             letterSpacing: "0.06em",
@@ -1003,8 +1003,8 @@ function PlanCard({
             top: "-13px",
             left: "50%",
             transform: "translateX(-50%)",
-            backgroundColor: "#38BDF8",
-            color: "#000000",
+            backgroundColor: "var(--tier-diamond)",
+            color: "var(--on-accent)",
             fontSize: "0.75rem",
             fontWeight: 900,
             letterSpacing: "0.06em",
@@ -1033,7 +1033,7 @@ function PlanCard({
           >
             {plan.name}
           </div>
-          <h3 style={{ fontSize: "1.45rem", fontWeight: 800, margin: "0 0 6px", color: "#FFFFFF" }}>
+          <h3 style={{ fontSize: "1.45rem", fontWeight: 800, margin: "0 0 6px", color: "var(--text)" }}>
             {plan.tagline}
           </h3>
           <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", margin: 0, minHeight: "38px" }}>
@@ -1044,7 +1044,7 @@ function PlanCard({
         {/* Pricing Display */}
         <div style={{ padding: "18px 0", borderTop: "1px solid var(--border-subtle)", borderBottom: "1px solid var(--border-subtle)", marginBottom: "24px" }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
-            <span style={{ fontSize: "2.8rem", fontWeight: 900, color: "#FFFFFF", letterSpacing: "-0.03em" }}>
+            <span style={{ fontSize: "2.8rem", fontWeight: 900, color: "var(--text)", letterSpacing: "-0.03em" }}>
               ₹{price}
             </span>
             <span style={{ color: "var(--text-muted)", fontSize: "0.95rem" }}>/month</span>
@@ -1075,7 +1075,7 @@ function PlanCard({
         >
           <div
             style={{
-              backgroundColor: "#161616",
+              backgroundColor: "var(--card)",
               padding: "10px 14px",
               borderRadius: "10px",
               border: "1px solid var(--border-default)",
@@ -1088,7 +1088,7 @@ function PlanCard({
           </div>
           <div
             style={{
-              backgroundColor: "#161616",
+              backgroundColor: "var(--card)",
               padding: "10px 14px",
               borderRadius: "10px",
               border: "1px solid var(--border-default)",
@@ -1153,7 +1153,7 @@ function PlanDeepDiveSection({ plan }: { plan: any }) {
   return (
     <div
       style={{
-        backgroundColor: "#111111",
+        backgroundColor: "var(--card)",
         borderRadius: "18px",
         border: "1px solid var(--border-default)",
         padding: "36px 32px",
@@ -1186,8 +1186,8 @@ function PlanDeepDiveSection({ plan }: { plan: any }) {
         }}
       >
         {plan.sections.map((section: any, idx: number) => (
-          <div key={idx} style={{ backgroundColor: "#161616", padding: "20px", borderRadius: "12px", border: "1px solid var(--border-subtle)" }}>
-            <h4 style={{ fontSize: "0.95rem", fontWeight: 700, margin: "0 0 12px", color: "#FFFFFF" }}>
+          <div key={idx} style={{ backgroundColor: "var(--card)", padding: "20px", borderRadius: "12px", border: "1px solid var(--border-subtle)" }}>
+            <h4 style={{ fontSize: "0.95rem", fontWeight: 700, margin: "0 0 12px", color: "var(--text)" }}>
               {section.title}
             </h4>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -1196,14 +1196,14 @@ function PlanDeepDiveSection({ plan }: { plan: any }) {
                   key={itemIdx}
                   style={{
                     fontSize: "0.83rem",
-                    color: item.startsWith("Important:") ? "#EF4444" : "var(--text-secondary)",
+                    color: item.startsWith("Important:") ? "var(--error)" : "var(--text-secondary)",
                     lineHeight: 1.45,
                     display: "flex",
                     alignItems: "flex-start",
                     gap: "8px",
                   }}
                 >
-                  <span style={{ color: item.startsWith("Important:") ? "#EF4444" : "var(--accent-primary)", flexShrink: 0 }}>
+                  <span style={{ color: item.startsWith("Important:") ? "var(--error)" : "var(--accent)", flexShrink: 0 }}>
                     &bull;
                   </span>
                   <span>{item}</span>
@@ -1219,10 +1219,10 @@ function PlanDeepDiveSection({ plan }: { plan: any }) {
 
 function renderCellContent(value: any) {
   if (value === true) {
-    return <span style={{ color: "#10B981", fontWeight: 800, fontSize: "1.1rem" }}>✓</span>;
+    return <span style={{ color: "var(--success)", fontWeight: 800, fontSize: "1.1rem" }}>✓</span>;
   }
   if (value === false) {
-    return <span style={{ color: "#6B7280", fontWeight: 700, fontSize: "0.95rem" }}>—</span>;
+    return <span style={{ color: "var(--text-muted)", fontWeight: 700, fontSize: "0.95rem" }}>—</span>;
   }
-  return <span style={{ fontWeight: 700, color: "#FFFFFF" }}>{value}</span>;
+  return <span style={{ fontWeight: 700, color: "var(--text)" }}>{value}</span>;
 }

@@ -24,7 +24,7 @@ export default function RefundPolicyPage() {
   ]);
 
   return (
-    <div style={{ backgroundColor: "#080808", color: "#FFFFFF", minHeight: "100vh" }}>
+    <div style={{ backgroundColor: "var(--bg)", color: "var(--text)", minHeight: "100vh" }}>
       <JsonLd data={breadcrumbs} />
 
       {/* HERO SECTION */}
@@ -97,7 +97,7 @@ export default function RefundPolicyPage() {
                 margin: "14px 0",
               }}
             >
-              <strong style={{ color: "#FFFFFF" }}>Our 6-Hour Activation Guarantee:</strong>
+              <strong style={{ color: "var(--text)" }}>Our 6-Hour Activation Guarantee:</strong>
               <div style={{ marginTop: "4px" }}>
                 Once your payment proof is submitted with a valid UTR, our verification desk reconciles incoming bank credits and activates your tier features within <strong>6 hours</strong>. If your payment is received but activation exceeds 6 hours, you may request an immediate refund or receive a 7-day complimentary extension on your subscription.
               </div>
@@ -179,7 +179,7 @@ export default function RefundPolicyPage() {
                 marginTop: "12px",
               }}
             >
-              <div style={{ fontWeight: 800, color: "#FFFFFF", marginBottom: "8px" }}>
+              <div style={{ fontWeight: 800, color: "var(--text)", marginBottom: "8px" }}>
                 AuraMind Billing &amp; Consumer Support
               </div>
               <div style={{ fontSize: "0.9rem" }}>Application: <strong>AuraMind</strong> (https://theauramind.dpdns.org)</div>

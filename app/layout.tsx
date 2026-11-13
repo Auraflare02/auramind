@@ -49,15 +49,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" data-theme="midnight" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#0A0A0A" />
+        <meta name="theme-color" content="var(--bg)" />
         <meta name="google-site-verification" content="google8a203efe90ab4162" />
         <JsonLd data={[getOrganizationSchema(), getWebSiteSchema(), getSoftwareApplicationSchema()]} />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var s=localStorage.getItem('auramind_theme')||'dark';document.documentElement.setAttribute('data-theme',s);document.documentElement.classList.add(s);var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',s==='light'?'#FAFAFA':'#0A0A0A');}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('auramind-theme');if(t!=='forest'&&t!=='midnight'){t='midnight';}document.documentElement.setAttribute('data-theme',t);var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',t==='forest'?'rgb(15, 26, 20)':'rgb(10, 10, 15)');}catch(e){document.documentElement.setAttribute('data-theme','midnight');}})();`,
           }}
         />
       </head>

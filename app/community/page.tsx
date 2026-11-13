@@ -444,7 +444,7 @@ function CommunityChatContent() {
                 width: "8px",
                 height: "8px",
                 borderRadius: "50%",
-                backgroundColor: "#10B981",
+                backgroundColor: "var(--success)",
                 display: "inline-block",
               }}
             />
@@ -462,7 +462,7 @@ function CommunityChatContent() {
               <span
                 style={{
                   backgroundColor: "var(--accent-primary)",
-                  color: "#000000",
+                  color: "var(--on-accent)",
                   fontSize: "0.68rem",
                   fontWeight: 800,
                   borderRadius: "9999px",
@@ -513,7 +513,7 @@ function CommunityChatContent() {
             <div style={{ padding: "14px", borderRadius: "10px", backgroundColor: "var(--bg-surface)", border: "1px solid rgba(239, 68, 68, 0.3)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
                 <span style={{ fontSize: "1.1rem" }}>🚫</span>
-                <strong style={{ fontSize: "0.88rem", color: "#EF4444" }}>Rule 1: Zero Social Media Sharing</strong>
+                <strong style={{ fontSize: "0.88rem", color: "var(--error)" }}>Rule 1: Zero Social Media Sharing</strong>
               </div>
               <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.45 }}>
                 Sharing Instagram, Snapchat, Discord, Telegram, Twitter/X, TikTok, WhatsApp links or handles, phone numbers, or external chat invitations is strictly blocked in both World & Private chats.
@@ -1047,7 +1047,7 @@ function CommunityChatContent() {
                             <span
                               style={{
                                 backgroundColor: "var(--accent-primary)",
-                                color: "#000000",
+                                color: "var(--on-accent)",
                                 fontSize: "0.65rem",
                                 fontWeight: 800,
                                 borderRadius: "9999px",
@@ -1220,7 +1220,7 @@ function CommunityChatContent() {
                               padding: "10px 14px",
                               borderRadius: isMe ? "14px 14px 2px 14px" : "14px 14px 14px 2px",
                               backgroundColor: isMe ? "var(--accent-primary)" : "var(--bg-card)",
-                              color: isMe ? "#0A0A0A" : "var(--text-primary)",
+                              color: isMe ? "var(--on-accent)" : "var(--text)",
                               border: isMe ? "none" : "1px solid var(--border-default)",
                               boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
                             }}

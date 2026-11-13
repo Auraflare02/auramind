@@ -232,7 +232,7 @@ export default function FeaturesPage() {
   ];
 
   return (
-    <div style={{ backgroundColor: "#080808", color: "#FFFFFF", minHeight: "100vh" }}>
+    <div style={{ backgroundColor: "var(--bg)", color: "var(--text)", minHeight: "100vh" }}>
       <JsonLd data={breadcrumbs} />
 
       {/* 1. HERO SECTION */}
@@ -282,7 +282,7 @@ export default function FeaturesPage() {
                     {suite.suiteBadge}
                   </span>
                 </div>
-                <h2 style={{ fontSize: "1.8rem", fontWeight: 800, color: "#FFFFFF", marginBottom: "8px" }}>
+                <h2 style={{ fontSize: "1.8rem", fontWeight: 800, color: "var(--text)", marginBottom: "8px" }}>
                   {suite.suiteTitle}
                 </h2>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", maxWidth: "700px", margin: 0 }}>
@@ -324,7 +324,7 @@ export default function FeaturesPage() {
                           flexWrap: "wrap",
                         }}
                       >
-                        <h3 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0, color: "#FFFFFF" }}>
+                        <h3 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0, color: "var(--text)" }}>
                           {feat.title}
                         </h3>
                         <span

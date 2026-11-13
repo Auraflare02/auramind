@@ -266,7 +266,7 @@ export default function PrivacyPolicyPage() {
               <div style={{ fontWeight: 700, color: "var(--accent-primary)", marginBottom: "8px", fontSize: "1rem" }}>
                 Google API Services User Data Policy Compliance Statement
               </div>
-              <p style={{ margin: "0 0 10px", lineHeight: 1.6, color: "#FFFFFF" }}>
+              <p style={{ margin: "0 0 10px", lineHeight: 1.6, color: "var(--text)" }}>
                 AuraMind&rsquo;s use and transfer to any other app of information received from Google APIs will adhere to the{" "}
                 <a
                   href="https://developers.google.com/terms/api-services-user-data-policy"

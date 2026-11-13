@@ -246,12 +246,12 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
                           : "rgba(234, 179, 8, 0.15)",
                       color:
                         subData.tier === "beta" || subData.tier === "platinum_beta"
-                          ? subData.status === "expired" ? "#F87171" : "#34D399"
+                          ? subData.status === "expired" ? "var(--error)" : "var(--success)"
                           : subData.tier === "diamond"
-                          ? "#38BDF8"
+                          ? "var(--tier-diamond)"
                           : subData.tier === "platinum"
                           ? "var(--accent-primary)"
-                          : "#EAB308",
+                          : "var(--tier-gold)",
                       border: `1px solid ${
                         subData.tier === "beta" || subData.tier === "platinum_beta"
                           ? subData.status === "expired" ? "rgba(239, 68, 68, 0.4)" : "rgba(16, 185, 129, 0.4)"
@@ -326,7 +326,7 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
               <span
                 style={{
                   backgroundColor: "var(--accent-primary)",
-                  color: "#000000",
+                  color: "var(--on-accent)",
                   fontSize: "0.7rem",
                   fontWeight: 800,
                   borderRadius: "9999px",
@@ -399,7 +399,7 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
           <div className="text-xs text-muted" style={{ textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 700 }}>
             Daily Check-ins
           </div>
-          <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "#10B981", margin: "8px 0 6px" }}>
+          <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--success)", margin: "8px 0 6px" }}>
             In-App Active
           </div>
           <div className="text-xs text-secondary">Hourly schedule prompts active</div>
@@ -441,7 +441,7 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
                     Day {primaryDay} of 30 &bull; {primaryGoal.started_at ? "In Progress" : "Ready to Start"}
                   </span>
                 </div>
-                <h3 style={{ fontSize: "1.3rem", fontWeight: 800, margin: "0 0 6px", color: "#FFFFFF" }}>
+                <h3 style={{ fontSize: "1.3rem", fontWeight: 800, margin: "0 0 6px", color: "var(--text)" }}>
                   {primaryGoal.context?.goal || "Your Active Goal"}
                 </h3>
                 <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>
@@ -761,7 +761,7 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
                   height: "36px",
                   borderRadius: "10px",
                   backgroundColor: "rgba(16, 185, 129, 0.12)",
-                  color: "#10B981",
+                  color: "var(--success)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -805,7 +805,7 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
                   height: "36px",
                   borderRadius: "10px",
                   backgroundColor: "rgba(56, 189, 248, 0.12)",
-                  color: "#38BDF8",
+                  color: "var(--tier-diamond)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -849,7 +849,7 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
                   height: "36px",
                   borderRadius: "10px",
                   backgroundColor: "rgba(168, 85, 247, 0.12)",
-                  color: "#A855F7",
+                  color: "var(--accent)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -879,7 +879,7 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
           className="card"
           style={{
             padding: "24px 28px",
-            backgroundColor: "#111111",
+            backgroundColor: "var(--card)",
             border: "1px solid rgba(255, 214, 0, 0.2)",
             borderRadius: "14px",
             display: "flex",
@@ -901,7 +901,7 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
                 margin: "0 0 10px 0",
                 fontSize: "1.05rem",
                 fontWeight: 700,
-                color: "#FFFFFF",
+                color: "var(--text)",
                 fontStyle: "italic",
                 lineHeight: 1.5,
               }}
@@ -935,7 +935,7 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem" }}>
               <span style={{ color: "var(--text-secondary)" }}>Platform Version:</span>
-              <span style={{ color: "#FFFFFF", fontWeight: 700 }}>AuraMind v2.4</span>
+              <span style={{ color: "var(--text)", fontWeight: 700 }}>AuraMind v2.4</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem" }}>
               <span style={{ color: "var(--text-secondary)" }}>AI Synthesis:</span>
@@ -943,11 +943,11 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem" }}>
               <span style={{ color: "var(--text-secondary)" }}>Security Bot:</span>
-              <span style={{ color: "#10B981", fontWeight: 700 }}>AuraSentinel Active</span>
+              <span style={{ color: "var(--success)", fontWeight: 700 }}>AuraSentinel Active</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem" }}>
               <span style={{ color: "var(--text-secondary)" }}>Data Privacy:</span>
-              <span style={{ color: "#FFFFFF", fontWeight: 700 }}>End-to-End Encrypted</span>
+              <span style={{ color: "var(--text)", fontWeight: 700 }}>End-to-End Encrypted</span>
             </div>
           </div>
         </div>

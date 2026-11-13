@@ -57,7 +57,7 @@ export default function BlogPostPage({ params }: Props) {
   const otherPosts = BLOG_POSTS.filter((p) => p.slug !== post.slug).slice(0, 3);
 
   return (
-    <div style={{ backgroundColor: "#080808", color: "#FFFFFF", minHeight: "100vh" }}>
+    <div style={{ backgroundColor: "var(--bg)", color: "var(--text)", minHeight: "100vh" }}>
       <JsonLd data={[breadcrumbs, articleSchema]} />
 
       {/* ARTICLE HEADER */}
@@ -108,7 +108,7 @@ export default function BlogPostPage({ params }: Props) {
               fontSize: "clamp(2rem, 3.8vw, 3rem)",
               lineHeight: 1.25,
               marginBottom: "20px",
-              color: "#FFFFFF",
+              color: "var(--text)",
             }}
           >
             {post.title}
@@ -152,7 +152,7 @@ export default function BlogPostPage({ params }: Props) {
             style={{
               fontSize: "1.05rem",
               lineHeight: 1.85,
-              color: "#E2E8F0",
+              color: "var(--text)",
             }}
           >
             {/* Simple Markdown Parser for clean headings, lists, bold, and links */}
@@ -168,7 +168,7 @@ export default function BlogPostPage({ params }: Props) {
                       style={{
                         fontSize: "1.75rem",
                         fontWeight: 800,
-                        color: "#FFFFFF",
+                        color: "var(--text)",
                         marginTop: "48px",
                         marginBottom: "18px",
                         letterSpacing: "-0.02em",
@@ -209,9 +209,9 @@ export default function BlogPostPage({ params }: Props) {
                             style={{ marginBottom: "10px" }}
                             dangerouslySetInnerHTML={{
                               __html: cleanItem
-                                .replace(/\*\*(.*?)\*\*/g, "<strong style='color:#FFFFFF'>$1</strong>")
+                                .replace(/\*\*(.*?)\*\*/g, "<strong style='color: var(--text)'>$1</strong>")
                                 .replace(/\*(.*?)\*/g, "<em>$1</em>")
-                                .replace(/\[(.*?)\]\((.*?)\)/g, "<a href='$2' style='color:var(--accent-primary);text-decoration:underline;'>$1</a>"),
+                                .replace(/\[(.*?)\]\((.*?)\)/g, "<a href='$2' style='color:var(--accent);text-decoration:underline;'>$1</a>"),
                             }}
                           />
                         );
@@ -225,9 +225,9 @@ export default function BlogPostPage({ params }: Props) {
                     style={{ marginBottom: "22px" }}
                     dangerouslySetInnerHTML={{
                       __html: trimmed
-                        .replace(/\*\*(.*?)\*\*/g, "<strong style='color:#FFFFFF'>$1</strong>")
+                        .replace(/\*\*(.*?)\*\*/g, "<strong style='color: var(--text)'>$1</strong>")
                         .replace(/\*(.*?)\*/g, "<em>$1</em>")
-                        .replace(/\[(.*?)\]\((.*?)\)/g, "<a href='$2' style='color:var(--accent-primary);text-decoration:underline;'>$1</a>"),
+                        .replace(/\[(.*?)\]\((.*?)\)/g, "<a href='$2' style='color:var(--accent);text-decoration:underline;'>$1</a>"),
                     }}
                   />
                 );
@@ -245,7 +245,7 @@ export default function BlogPostPage({ params }: Props) {
               textAlign: "center",
             }}
           >
-            <h3 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#FFFFFF", marginBottom: "8px" }}>
+            <h3 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text)", marginBottom: "8px" }}>
               Put This Strategy Into Practice in 60 Seconds
             </h3>
             <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", maxWidth: "600px", margin: "0 auto 20px" }}>
@@ -264,7 +264,7 @@ export default function BlogPostPage({ params }: Props) {
           {/* RELATED GUIDES */}
           {otherPosts.length > 0 && (
             <div style={{ marginTop: "64px", paddingTop: "40px", borderTop: "1px solid var(--border-default)" }}>
-              <h3 style={{ fontSize: "1.3rem", fontWeight: 700, color: "#FFFFFF", marginBottom: "20px" }}>
+              <h3 style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--text)", marginBottom: "20px" }}>
                 Related Productivity Guides
               </h3>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "18px" }}>
@@ -285,7 +285,7 @@ export default function BlogPostPage({ params }: Props) {
                     <div style={{ fontSize: "0.75rem", color: "var(--accent-primary)", fontWeight: 700, marginBottom: "6px" }}>
                       {related.tags[0]}
                     </div>
-                    <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "#FFFFFF", lineHeight: 1.4 }}>
+                    <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--text)", lineHeight: 1.4 }}>
                       {related.title}
                     </div>
                   </Link>

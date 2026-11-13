@@ -79,7 +79,7 @@ export default function FaqPage() {
   ];
 
   return (
-    <div style={{ backgroundColor: "#080808", color: "#FFFFFF", minHeight: "100vh" }}>
+    <div style={{ backgroundColor: "var(--bg)", color: "var(--text)", minHeight: "100vh" }}>
       <JsonLd data={breadcrumbs} />
 
       {/* HERO SECTION */}
@@ -151,7 +151,7 @@ export default function FaqPage() {
                     {item.category}
                   </span>
                 </div>
-                <h2 style={{ fontSize: "1.18rem", fontWeight: 700, margin: "0 0 10px", color: "#FFFFFF" }}>
+                <h2 style={{ fontSize: "1.18rem", fontWeight: 700, margin: "0 0 10px", color: "var(--text)" }}>
                   {item.q}
                 </h2>
                 <p style={{ margin: 0, fontSize: "0.925rem", color: "var(--text-secondary)", lineHeight: 1.65 }}>
@@ -168,12 +168,12 @@ export default function FaqPage() {
               marginTop: "48px",
               padding: "32px",
               textAlign: "center",
-              backgroundColor: "#111111",
+              backgroundColor: "var(--card)",
               border: "1px solid rgba(255, 214, 0, 0.3)",
               borderRadius: "16px",
             }}
           >
-            <h3 style={{ fontSize: "1.25rem", fontWeight: 800, color: "#FFFFFF", marginBottom: "8px" }}>
+            <h3 style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--text)", marginBottom: "8px" }}>
               Still have questions?
             </h3>
             <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", margin: "0 auto 20px", maxWidth: "520px" }}>

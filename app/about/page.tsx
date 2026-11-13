@@ -26,7 +26,7 @@ export default function AboutPage() {
   ]);
 
   return (
-    <div style={{ backgroundColor: "#080808", color: "#FFFFFF", minHeight: "100vh" }}>
+    <div style={{ backgroundColor: "var(--bg)", color: "var(--text)", minHeight: "100vh" }}>
       <JsonLd data={breadcrumbs} />
 
       {/* 1. HERO HEADER */}
@@ -72,7 +72,7 @@ export default function AboutPage() {
             <span className="badge badge-yellow" style={{ fontSize: "0.75rem", marginBottom: "12px" }}>
               The Problem We Saw
             </span>
-            <h2 style={{ fontSize: "2.2rem", fontWeight: 800, color: "#FFFFFF", marginBottom: "16px" }}>
+            <h2 style={{ fontSize: "2.2rem", fontWeight: 800, color: "var(--text)", marginBottom: "16px" }}>
               The Flaw of the &ldquo;Perfect Day&rdquo; Trap
             </h2>
             <p style={{ color: "var(--text-secondary)", fontSize: "1.05rem", lineHeight: 1.8, marginBottom: "20px" }}>
@@ -108,7 +108,7 @@ export default function AboutPage() {
             <span className="badge badge-yellow" style={{ fontSize: "0.75rem", marginBottom: "12px" }}>
               Our Approach
             </span>
-            <h2 style={{ fontSize: "2rem", fontWeight: 800, color: "#FFFFFF", marginBottom: "16px" }}>
+            <h2 style={{ fontSize: "2rem", fontWeight: 800, color: "var(--text)", marginBottom: "16px" }}>
               Proactive Behavioral Architecture
             </h2>
             <p style={{ color: "var(--text-secondary)", fontSize: "1.05rem", lineHeight: 1.8, marginBottom: "20px" }}>
@@ -141,7 +141,7 @@ export default function AboutPage() {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "24px" }}>
             <div style={{ padding: "28px", borderRadius: "12px", backgroundColor: "var(--bg-card)", border: "1px solid var(--border-default)" }}>
-              <div style={{ color: "#10B981", fontWeight: 700, fontSize: "1.1rem", marginBottom: "12px" }}>
+              <div style={{ color: "var(--success)", fontWeight: 700, fontSize: "1.1rem", marginBottom: "12px" }}>
                 ✓ What AuraMind Is
               </div>
               <ul style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.8, paddingLeft: "18px", margin: 0 }}>

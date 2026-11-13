@@ -234,7 +234,7 @@ export default function Navbar() {
                   width: "7px",
                   height: "7px",
                   borderRadius: "50%",
-                  backgroundColor: "#10B981",
+                  backgroundColor: "var(--success)",
                   display: "inline-block",
                 }}
               />
@@ -266,13 +266,13 @@ export default function Navbar() {
             <Link
               href="/beta"
               style={{
-                color: "#000000",
+                color: "var(--on-accent)",
                 textDecoration: "none",
                 fontSize: "0.825rem",
                 fontWeight: 800,
                 padding: "6px 16px",
                 borderRadius: "9999px",
-                backgroundColor: "var(--accent-primary)",
+                backgroundColor: "var(--accent)",
                 border: "1px solid var(--accent-primary)",
                 boxShadow: "0 2px 10px rgba(255, 214, 0, 0.25)",
                 display: "inline-flex",
@@ -321,8 +321,8 @@ export default function Navbar() {
                   width: "7px",
                   height: "7px",
                   borderRadius: "50%",
-                  backgroundColor: "#10B981",
-                  border: "1px solid var(--bg-surface)",
+                  backgroundColor: "var(--success)",
+                  border: "1px solid var(--bg)",
                 }}
               />
             </Link>
@@ -379,7 +379,7 @@ export default function Navbar() {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: "rgba(10, 10, 10, 0.96)",
+            backgroundColor: "var(--bg)",
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
             zIndex: 99,
@@ -560,7 +560,7 @@ export default function Navbar() {
                 <span>Live Community Chat</span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#10B981" }} />
+                <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--success)" }} />
                 <span className="badge badge-success" style={{ fontSize: "0.68rem" }}>Live</span>
               </div>
             </Link>
@@ -858,9 +858,9 @@ export default function Navbar() {
                 justifyContent: "space-between",
                 padding: "14px 16px",
                 borderRadius: "10px",
-                backgroundColor: "rgba(255, 214, 0, 0.12)",
-                border: "1px solid var(--accent-primary)",
-                color: "#FFFFFF",
+                backgroundColor: "var(--accent-muted)",
+                border: "1px solid var(--accent)",
+                color: "var(--text)",
                 textDecoration: "none",
                 fontWeight: 700,
                 fontSize: "0.92rem",
@@ -872,6 +872,12 @@ export default function Navbar() {
               </div>
               <span style={{ color: "var(--accent-primary)", fontSize: "0.85rem", fontWeight: 800 }}>&rarr;</span>
             </Link>
+
+            {/* Mobile Drawer Theme Switcher */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderRadius: "10px", backgroundColor: "var(--card)", border: "1px solid var(--border)", marginTop: "10px" }}>
+              <span style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--text)" }}>Theme</span>
+              <ThemeToggle />
+            </div>
           </div>
 
           {/* Sign Out Action Button at Bottom if logged in */}

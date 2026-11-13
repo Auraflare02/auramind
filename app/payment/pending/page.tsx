@@ -15,7 +15,7 @@ export default function PaymentPendingPage() {
   return (
     <Suspense
       fallback={
-        <div style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#080808" }}>
+        <div style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--bg)" }}>
           <p style={{ color: "var(--text-muted)" }}>Loading verification status...</p>
         </div>
       }
