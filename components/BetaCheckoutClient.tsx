@@ -52,7 +52,7 @@ export default function BetaCheckoutClient() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tier: "beta",
+          tier: "platinum_beta",
           billingCycle: "monthly",
           amount: 99,
           transactionId: cleanTx,
@@ -68,7 +68,7 @@ export default function BetaCheckoutClient() {
 
       const reqId = data.request?.id || `pay_${Date.now()}`;
       router.push(
-        `/payment/pending?id=${encodeURIComponent(reqId)}&tier=beta&amount=99&tx=${encodeURIComponent(cleanTx)}`
+        `/payment/pending?id=${encodeURIComponent(reqId)}&tier=platinum_beta&amount=99&tx=${encodeURIComponent(cleanTx)}`
       );
     } catch (err: any) {
       setSubmitError(err.message || "An unexpected error occurred. Please try again or email ridhx02@gmail.com.");
@@ -132,10 +132,10 @@ export default function BetaCheckoutClient() {
             </span>
           </div>
           <h1 style={{ fontSize: "clamp(1.8rem, 4vw, 2.6rem)", fontWeight: 900, margin: "0 0 10px", letterSpacing: "-0.02em" }}>
-            Reserve Your AuraMind Beta Slot
+            GET 20 DAYS OF AURAMIND PLATINUM FOR JUST ₹99.
           </h1>
           <p style={{ color: "var(--text-secondary)", fontSize: "1rem", maxWidth: "600px", margin: "0 auto" }}>
-            One-time ₹99 fee for 20 days of complete access to our AI accountability engine, 30-day timetable generator, and hourly check-ins.
+            One-time ₹99 fee for 20 days of complete AuraMind Platinum access: 3 active goals, 15 friends, hourly WhatsApp check-ins, 60 AI phone calls (preview), and Google Calendar.
           </p>
         </div>
 
@@ -442,7 +442,7 @@ export default function BetaCheckoutClient() {
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
                 <span className="badge badge-yellow" style={{ fontSize: "0.78rem", fontWeight: 800 }}>
-                  20 DAYS FULL ACCESS
+                  20 DAYS PLATINUM ACCESS
                 </span>
                 <span style={{ fontSize: "1.4rem", fontWeight: 900, color: "var(--accent-primary)" }}>
                   ₹99
@@ -450,19 +450,21 @@ export default function BetaCheckoutClient() {
               </div>
 
               <h3 style={{ fontSize: "1.2rem", fontWeight: 800, margin: "0 0 12px" }}>
-                What&apos;s Included in Your Beta Pass
+                Included Platinum Features (20 Days)
               </h3>
 
               <ul style={{ listStyle: "none", padding: 0, margin: "0 0 18px", display: "flex", flexDirection: "column", gap: "10px" }}>
                 {[
-                  "Complete AI Goal Research & Structured Milestones",
-                  "Personalized 30-Day Step-by-Step Timetable",
-                  "Hourly In-App Accountability Check-ins",
-                  "Productivity Timer with Focus XP & Streaks",
-                  "Missed-Task Recovery Assistance",
-                  "Daily & Weekly Progress Reports",
-                  "Add up to 5 Friends for Mutual Encouragement",
-                  "Direct Feedback Channel to the Engineering Team",
+                  "Up to 3 Active Goals with AI Planning & 30-Day Timetables",
+                  "Hourly WhatsApp Check-ins & In-App Alerts",
+                  "AI Calling Agent (Up to 60 calls in Hindi/English, preview)",
+                  "Up to 15 Accountability Friends & Moderated World Chat",
+                  "Basic Google Calendar Activity Scheduling",
+                  "Focus Timer with Distraction Logging, XP Levels & Streaks",
+                  "Missed-Task Adaptive Timetable Recovery",
+                  "Daily & Advanced Weekly Progress Reports",
+                  "Direct Engineering Priority Feedback Channel",
+                  "Zero Auto-Renewals — Automatically expires in 20 days",
                 ].map((item, idx) => (
                   <li key={idx} style={{ display: "flex", alignItems: "flex-start", gap: "8px", fontSize: "0.88rem", color: "var(--text-secondary)" }}>
                     <span style={{ color: "var(--accent-primary)", fontWeight: 900 }}>✓</span>
@@ -481,7 +483,7 @@ export default function BetaCheckoutClient() {
                   color: "var(--text-muted)",
                 }}
               >
-                <strong>Transparent Notice:</strong> WhatsApp reminders and Bland AI voice calls are currently in private developer testing/carrier approval and are not operational in this beta tier.
+                <strong>Beta vs Diamond Notice:</strong> Beta unlocks the complete Platinum tier (3 goals, 15 friends, 60 calls). Diamond-exclusive benefits (25 goals, 50 friends, 450 calls) are reserved for Diamond subscribers.
               </div>
             </div>
 

@@ -647,7 +647,7 @@ export default function AdminPage() {
                             padding: "4px 10px",
                             borderRadius: "6px",
                             backgroundColor:
-                              p.tier === "beta"
+                              p.tier === "beta" || p.tier === "platinum_beta"
                                 ? "rgba(16, 185, 129, 0.15)"
                                 : p.tier === "diamond"
                                 ? "rgba(168, 85, 247, 0.15)"
@@ -655,7 +655,7 @@ export default function AdminPage() {
                                 ? "rgba(59, 130, 246, 0.15)"
                                 : "rgba(255, 214, 0, 0.15)",
                             color:
-                              p.tier === "beta"
+                              p.tier === "beta" || p.tier === "platinum_beta"
                                 ? "#34D399"
                                 : p.tier === "diamond"
                                 ? "#C084FC"
@@ -665,7 +665,7 @@ export default function AdminPage() {
                             border: "1px solid currentColor",
                           }}
                         >
-                          {p.tier === "beta" ? "BETA 20-DAY PASS" : `${p.tier.toUpperCase()} PLAN`} &bull; ₹{p.amount}
+                          {p.tier === "beta" || p.tier === "platinum_beta" ? "PLATINUM BETA (20 DAYS)" : `${p.tier.toUpperCase()} PLAN`} &bull; ₹{p.amount}
                         </span>
 
                         <span

@@ -237,24 +237,24 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
                       padding: "2px 8px",
                       borderRadius: "9999px",
                       backgroundColor:
-                        subData.tier === "beta"
-                          ? "rgba(16, 185, 129, 0.15)"
+                        subData.tier === "beta" || subData.tier === "platinum_beta"
+                          ? subData.status === "expired" ? "rgba(239, 68, 68, 0.15)" : "rgba(16, 185, 129, 0.15)"
                           : subData.tier === "diamond"
                           ? "rgba(56, 189, 248, 0.15)"
                           : subData.tier === "platinum"
                           ? "rgba(255, 214, 0, 0.15)"
                           : "rgba(234, 179, 8, 0.15)",
                       color:
-                        subData.tier === "beta"
-                          ? "#34D399"
+                        subData.tier === "beta" || subData.tier === "platinum_beta"
+                          ? subData.status === "expired" ? "#F87171" : "#34D399"
                           : subData.tier === "diamond"
                           ? "#38BDF8"
                           : subData.tier === "platinum"
                           ? "var(--accent-primary)"
                           : "#EAB308",
                       border: `1px solid ${
-                        subData.tier === "beta"
-                          ? "rgba(16, 185, 129, 0.4)"
+                        subData.tier === "beta" || subData.tier === "platinum_beta"
+                          ? subData.status === "expired" ? "rgba(239, 68, 68, 0.4)" : "rgba(16, 185, 129, 0.4)"
                           : subData.tier === "diamond"
                           ? "rgba(56, 189, 248, 0.4)"
                           : subData.tier === "platinum"
@@ -263,8 +263,10 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
                       }`,
                     }}
                   >
-                    {subData.tier === "beta"
-                      ? "🚀 Beta Pass (20 Days)"
+                    {subData.tier === "beta" || subData.tier === "platinum_beta"
+                      ? subData.status === "expired"
+                        ? "🚀 Platinum Beta (Expired)"
+                        : "🚀 Platinum Beta (20 Days)"
                       : subData.tier === "diamond"
                       ? "💎 Diamond Plan"
                       : subData.tier === "platinum"

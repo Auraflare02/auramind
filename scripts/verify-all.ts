@@ -13,9 +13,22 @@ console.log("==================================================");
 let testsPassed = 0;
 let testsFailed = 0;
 
-function test(name: string, fn: () => void) {
+function test(name: string, fn: () => void | Promise<void>) {
   try {
-    fn();
+    const res = fn();
+    if (res instanceof Promise) {
+      res
+        .then(() => {
+          console.log(`\x1b[32m✓ PASS\x1b[0m: ${name}`);
+          testsPassed++;
+        })
+        .catch((err) => {
+          console.error(`\x1b[31m✗ FAIL\x1b[0m: ${name}`);
+          console.error(`  Error: ${err.message}`);
+          testsFailed++;
+        });
+      return;
+    }
     console.log(`\x1b[32m✓ PASS\x1b[0m: ${name}`);
     testsPassed++;
   } catch (err: any) {
@@ -300,10 +313,82 @@ test("Timer Session Input Validation", () => {
   assert.ok(parsed.success);
 });
 
-console.log("==================================================");
-console.log(`TEST SUMMARY: ${testsPassed} PASSED, ${testsFailed} FAILED`);
-console.log("==================================================");
+// 8. Platinum-Level Beta Access Verification
+import { SUBSCRIPTION_PLANS, BETA_PROGRAM_CONFIG, AI_CALLING_CONFIG } from "../lib/subscription/config";
+import { activatePlatinumBeta, getUserSubscription, checkGoalLimit } from "../lib/subscription/client";
 
-if (testsFailed > 0) {
-  process.exit(1);
-}
+test("Platinum Beta Plan - Full Platinum Quotas for 20 Days", () => {
+  const pBeta = SUBSCRIPTION_PLANS.platinum_beta;
+  const beta = SUBSCRIPTION_PLANS.beta;
+  const platinum = SUBSCRIPTION_PLANS.platinum;
+
+  assert.strictEqual(pBeta.maxGoals, 3);
+  assert.strictEqual(pBeta.maxFriends, 15);
+  assert.strictEqual(pBeta.aiCallsPerMonth, 60);
+  assert.strictEqual(pBeta.whatsAppCheckins, true);
+  assert.strictEqual(pBeta.googleCalendar, "basic");
+  assert.strictEqual(pBeta.monthlyPriceIntro, 99);
+
+  // Both platinum_beta and beta should provide the identical Platinum experience
+  assert.strictEqual(beta.maxGoals, platinum.maxGoals);
+  assert.strictEqual(beta.maxFriends, platinum.maxFriends);
+  assert.strictEqual(beta.aiCallsPerMonth, platinum.aiCallsPerMonth);
+  assert.strictEqual(beta.whatsAppCheckins, platinum.whatsAppCheckins);
+  assert.strictEqual(beta.googleCalendar, platinum.googleCalendar);
+});
+
+test("Beta vs Diamond Strict Feature Boundary", () => {
+  const pBeta = SUBSCRIPTION_PLANS.platinum_beta;
+  const diamond = SUBSCRIPTION_PLANS.diamond;
+
+  // Beta gets Platinum features only, NOT Diamond
+  assert.strictEqual(pBeta.maxGoals, 3);
+  assert.strictEqual(diamond.maxGoals, 25);
+  assert.notStrictEqual(pBeta.maxGoals, diamond.maxGoals);
+
+  assert.strictEqual(pBeta.maxFriends, 15);
+  assert.strictEqual(diamond.maxFriends, 50);
+  assert.notStrictEqual(pBeta.maxFriends, diamond.maxFriends);
+
+  assert.strictEqual(pBeta.aiCallsPerMonth, 60);
+  assert.strictEqual(diamond.aiCallsPerMonth, 450);
+  assert.notStrictEqual(pBeta.aiCallsPerMonth, diamond.aiCallsPerMonth);
+
+  assert.strictEqual(pBeta.googleCalendar, "basic");
+  assert.strictEqual(diamond.googleCalendar, "full");
+});
+
+test("Platinum Beta Activation & 20-Day Expiry Storage", async () => {
+  const testUserId = "user-test-beta-12345";
+  const { record } = await activatePlatinumBeta(testUserId, "approved");
+
+  assert.strictEqual(record.userId, testUserId);
+  assert.strictEqual(record.maxActiveGoals, 3);
+  assert.strictEqual(record.maxFriends, 15);
+  assert.strictEqual(record.aiCallAllowance, 60);
+  assert.strictEqual(record.whatsAppEligibility, true);
+  assert.strictEqual(record.calendarEligibility, true);
+  assert.strictEqual(record.isExpired, false);
+  assert.strictEqual(record.daysRemaining, 20);
+
+  const sub = await getUserSubscription(testUserId);
+  assert.strictEqual(sub.tier, "platinum_beta");
+  assert.strictEqual(sub.status, "active");
+  assert.strictEqual(sub.plan.maxGoals, 3);
+  assert.strictEqual(sub.plan.maxFriends, 15);
+  assert.strictEqual(sub.plan.aiCallsPerMonth, 60);
+
+  const goalCheck = await checkGoalLimit(testUserId);
+  assert.strictEqual(goalCheck.maxAllowed, 3);
+  assert.strictEqual(goalCheck.allowed, true);
+});
+
+process.on("beforeExit", () => {
+  console.log("==================================================");
+  console.log(`TEST SUMMARY: ${testsPassed} PASSED, ${testsFailed} FAILED`);
+  console.log("==================================================");
+
+  if (testsFailed > 0) {
+    process.exit(1);
+  }
+});

@@ -1,5 +1,5 @@
 import { getAdminClient } from "@/lib/supabase/admin";
-import { updateUserSubscription } from "@/lib/subscription/client";
+import { updateUserSubscription, activatePlatinumBeta } from "@/lib/subscription/client";
 import { SubscriptionTier, BillingCycle } from "@/lib/subscription/types";
 import { SUBSCRIPTION_PLANS } from "@/lib/subscription/config";
 
@@ -52,8 +52,9 @@ export async function submitPaymentRequest(params: {
 
   const plan = SUBSCRIPTION_PLANS[tier];
   const billingCycle = params.billingCycle || "monthly";
+  const isBeta = tier === "beta" || tier === "platinum_beta";
   const defaultAmount =
-    tier === "beta"
+    isBeta
       ? 99
       : billingCycle === "annual"
       ? plan.annualPriceMonthly * 12
@@ -61,13 +62,13 @@ export async function submitPaymentRequest(params: {
   const amount = params.amount && params.amount > 0 ? params.amount : defaultAmount;
 
   // Enforce server-side 100-user limit for Beta Programme
-  if (tier === "beta") {
+  if (isBeta) {
     let betaCount = 0;
     try {
       const { count } = await admin
         .from("payment_requests")
         .select("id", { count: "exact", head: true })
-        .eq("tier", "beta")
+        .in("tier", ["beta", "platinum_beta"])
         .in("status", ["pending", "approved"]);
       betaCount = count || 0;
     } catch {
@@ -75,7 +76,7 @@ export async function submitPaymentRequest(params: {
     }
 
     for (const item of Array.from(inMemoryPaymentRequests.values())) {
-      if (item.tier === "beta" && (item.status === "pending" || item.status === "approved")) {
+      if ((item.tier === "beta" || item.tier === "platinum_beta") && (item.status === "pending" || item.status === "approved")) {
         betaCount++;
       }
     }
@@ -83,7 +84,7 @@ export async function submitPaymentRequest(params: {
     const maxBetaUsers = 100;
     if (betaCount >= maxBetaUsers) {
       throw new Error(
-        `The AuraMind 100-User Beta Programme has reached maximum capacity (${maxBetaUsers}/${maxBetaUsers} slots reserved). Please select a standard subscription plan or contact support.`
+        `The AuraMind 100-User Platinum Beta Programme has reached maximum capacity (${maxBetaUsers}/${maxBetaUsers} slots reserved). Please select Gold, Platinum, or Diamond.`
       );
     }
   }
@@ -356,7 +357,12 @@ export async function approvePaymentRequest(
   }
 
   // 1. Activate the subscription for the user
-  await updateUserSubscription(req.userId, req.tier, req.billingCycle);
+  const isBeta = req.tier === "beta" || req.tier === "platinum_beta";
+  if (isBeta) {
+    await activatePlatinumBeta(req.userId, "approved");
+  } else {
+    await updateUserSubscription(req.userId, req.tier, req.billingCycle);
+  }
 
   // 2. Mark payment request as approved in database & memory
   req.status = "approved";
@@ -379,10 +385,14 @@ export async function approvePaymentRequest(
     console.warn("[payment] Error updating payment status in DB:", err);
   }
 
+  const successMessage = isBeta
+    ? `Platinum Beta activated! User ${req.userEmail} has 20 days of complete Platinum access (up to 3 goals, 15 friends, 60 AI calls, WhatsApp check-ins, and Google Calendar).`
+    : `Plan activated successfully! User ${req.userEmail} upgraded to ${SUBSCRIPTION_PLANS[req.tier].name}.`;
+
   return {
     ok: true,
     request: req,
-    message: `Plan activated successfully! User ${req.userEmail} upgraded to ${SUBSCRIPTION_PLANS[req.tier].name}.`,
+    message: successMessage,
   };
 }
 

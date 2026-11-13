@@ -22,22 +22,22 @@ export default function BetaPageClient() {
               className="badge badge-yellow"
               style={{ fontSize: "0.85rem", padding: "6px 14px", fontWeight: 800, letterSpacing: "0.04em" }}
             >
-              🚀 LIMITED TO FIRST 100 BETA USERS • 20 DAYS ACCESS
+              🚀 LIMITED TO FIRST 100 BETA USERS • 20 DAYS PLATINUM ACCESS
             </span>
           </div>
 
           <h1
             className="display-title"
-            style={{ fontSize: "clamp(2.2rem, 5vw, 3.6rem)", fontWeight: 900, marginBottom: "20px", lineHeight: 1.15 }}
+            style={{ fontSize: "clamp(2rem, 4.5vw, 3.4rem)", fontWeight: 900, marginBottom: "20px", lineHeight: 1.15 }}
           >
-            AuraMind 100-User Beta Programme
+            GET 20 DAYS OF AURAMIND PLATINUM FOR JUST ₹99.
           </h1>
 
           <p
             className="lead"
-            style={{ maxWidth: "700px", margin: "0 auto 32px", color: "var(--text-secondary)", fontSize: "1.15rem", lineHeight: 1.6 }}
+            style={{ maxWidth: "760px", margin: "0 auto 32px", color: "var(--text-secondary)", fontSize: "1.15rem", lineHeight: 1.6 }}
           >
-            Experience our core AI goal planning and daily accountability system. Get a personalized 30-day timetable, hourly task check-ins, focus tracking, and missed-task recovery for a one-time ₹99 participation fee.
+            Unlock the complete AuraMind Platinum experience for 20 days: manage up to 3 concurrent goals, connect with 15 friends, receive hourly WhatsApp check-ins, AI calling agent (developer preview), Google Calendar integration, and advanced productivity reports.
           </p>
 
           {/* Pricing Highlight Box */}
@@ -66,10 +66,19 @@ export default function BetaPageClient() {
             <div style={{ height: "36px", width: "1px", backgroundColor: "var(--border-default)" }} />
             <div style={{ textAlign: "left" }}>
               <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
-                Availability
+                Included Plan Tier
               </div>
               <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#FFFFFF" }}>
-                100 Pioneer Slots Only
+                Full Platinum Tier
+              </div>
+            </div>
+            <div style={{ height: "36px", width: "1px", backgroundColor: "var(--border-default)" }} />
+            <div style={{ textAlign: "left" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
+                Cohort Cap
+              </div>
+              <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#FFFFFF" }}>
+                100 Users Maximum
               </div>
             </div>
             <div style={{ height: "36px", width: "1px", backgroundColor: "var(--border-default)" }} />
@@ -261,53 +270,58 @@ export default function BetaPageClient() {
               {[
                 {
                   icon: "🎯",
-                  title: "1 Active Goal with Deep AI Research",
-                  desc: "Deconstruct your chosen skill or project into 4 structured phases with milestone checkpoints.",
+                  title: "Up to 3 Active Goals with Deep AI Research",
+                  desc: "Deconstruct up to 3 projects or skills into structured phases with daily task breakdown and milestone checkpoints.",
                 },
                 {
                   icon: "📅",
-                  title: "Personalized 30-Day Timetable",
-                  desc: "Daily activities with time allocations, task descriptions, and clear deliverables saved to your profile.",
+                  title: "Personalised 30-Day Daily Timetables",
+                  desc: "Daily activities with start/end allocations, task descriptions, and clear deliverables saved securely to Supabase.",
                 },
                 {
-                  icon: "🚀",
-                  title: "Start Goal System",
-                  desc: "One-click activation that kicks off Day 1 with initial XP bonus and progress tracking.",
+                  icon: "💬",
+                  title: "Hourly WhatsApp Check-ins & Alerts",
+                  desc: "Proactive WhatsApp messages delivered during scheduled focus blocks to track task execution and prompt check-ins.",
+                },
+                {
+                  icon: "📞",
+                  title: "AI Calling Agent (Up to 60 Calls, Preview)",
+                  desc: "Up to 60 conversational AI phone calls in Hindi & English to ask about completed tasks, friction, and next steps.",
+                },
+                {
+                  icon: "📅",
+                  title: "Basic Google Calendar Integration",
+                  desc: "Sync your 30-day goal timetable activities directly to Google Calendar so you never miss scheduled focus blocks.",
+                },
+                {
+                  icon: "🤝",
+                  title: "Up to 15 Accountability Friends & World Chat",
+                  desc: "Connect with up to 15 friends, exchange private messages, and participate in World Chat with AuraSentinel security moderation.",
                 },
                 {
                   icon: "⏱️",
                   title: "Focus Timer with Distraction Logging",
-                  desc: "Built-in 25m, 50m, 90m deep-work timer that logs focused minutes and earns progression XP.",
-                },
-                {
-                  icon: "🔔",
-                  title: "Application Check-ins & Prompts",
-                  desc: "In-app check-ins during your active focus hours to log task completion, partial progress, or friction.",
+                  desc: "Integrated Pomodoro timer (25m, 50m, 90m) that tracks verified focus minutes, logs distractions, and earns progression XP.",
                 },
                 {
                   icon: "🔄",
-                  title: "Missed-Task Adaptive Recovery",
-                  desc: "Never fall off the wagon. If you miss days, AI dynamically recalculates future days so you catch up.",
+                  title: "Missed-Task Adaptive Timetable Recovery",
+                  desc: "Life happens. If you miss days, AI dynamically recalculates upcoming days to keep you moving forward without backlog guilt.",
                 },
                 {
                   icon: "📊",
-                  title: "Daily & Weekly Progress Reports",
-                  desc: "Real database-backed summaries of focus minutes, tasks completed, obstacles, and next-day suggestions.",
+                  title: "Daily & Advanced Weekly Productivity Reports",
+                  desc: "Verified database-backed summaries of focus minutes, task completion percentages, and personalized next-step suggestions.",
                 },
                 {
-                  icon: "🤝",
-                  title: "Add Up to 5 Accountability Friends",
-                  desc: "Connect with up to 5 friends, exchange private messages, and celebrate daily consistency together.",
-                },
-                {
-                  icon: "💬",
-                  title: "Priority Engineering Feedback Channel",
-                  desc: "Direct feedback form to the engineering team. Report bugs, suggest features, and shape the final product.",
+                  icon: "🔒",
+                  title: "Platinum Limits (Beta vs Diamond Notice)",
+                  desc: "Beta includes full Platinum quotas (3 goals, 15 friends, 60 calls). Diamond-exclusive limits (25 goals, 50 friends, 450 calls) are not unlocked.",
                 },
                 {
                   icon: "🛡️",
-                  title: "Zero Hidden Charges or Auto-Renewals",
-                  desc: "One-time ₹99 payment. No surprise charges. Your data stays safe and accessible after beta.",
+                  title: "Zero Hidden Charges & Automatic 20-Day Expiry",
+                  desc: "One-time ₹99 payment with zero recurring billing. Your beta access expires automatically after 20 days.",
                 },
               ].map((item, idx) => (
                 <div key={idx} style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
@@ -381,16 +395,20 @@ export default function BetaPageClient() {
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             {[
               {
+                q: "What features are included in the ₹99 Beta Programme?",
+                a: "Every approved beta participant receives the complete AuraMind Platinum experience for 20 days: up to 3 concurrent active goals, up to 15 accountability friends, hourly WhatsApp check-ins, AI voice calling agent (up to 60 calls in Hindi/English, developer preview), basic Google Calendar scheduling, focus timer with distraction logging, XP levels, and advanced weekly reports. Access does not include Diamond-level quotas (25 goals, 50 friends, 450 calls).",
+              },
+              {
                 q: "What happens after the 20 days are over?",
-                a: "There are no recurring charges. After 20 days, your beta period concludes. Your goals, check-in history, and progress records remain permanently saved in your account. You can optionally upgrade to Gold, Platinum, or Diamond if you wish to continue.",
+                a: "There are zero auto-renewals or unexpected charges. After 20 days, your Platinum Beta access expires automatically. Your goal history, check-in logs, and progression records remain safely stored in your account. You can choose to upgrade to Gold (₹249/mo), Platinum (₹699/mo), or Diamond (₹1,299/mo) whenever you are ready.",
               },
               {
                 q: "How does payment verification work?",
-                a: "You scan our official Google Pay UPI QR code and submit the 12-digit transaction reference (UTR). Our administrative team verifies the reference against incoming bank credits within 6 hours and immediately activates your beta status.",
+                a: "You scan our official Google Pay UPI QR code for ₹99 and submit your 12-digit UPI Transaction ID (UTR). Our administrative team verifies the bank credit within 6 hours and immediately activates your 20-day Platinum Beta access.",
               },
               {
-                q: "Is WhatsApp and phone calling included in this ₹99 beta?",
-                a: "This beta focuses on the core AI accountability system: 30-day timetable generation, app check-ins, focus tracking, and recovery. WhatsApp and voice calling integrations are being tested in controlled batches with separate carrier approval.",
+                q: "What is the status of AI voice calling and WhatsApp check-ins?",
+                a: "WhatsApp check-in integration is operational for beta cohorts with connected phone numbers. AI Voice Calling is currently in private developer testing with Bland AI enterprise carrier approval; beta participants are allocated 60 calls which activate under strict 5-minute caps upon carrier clearance.",
               },
               {
                 q: "What if I encounter an error or confusing feature?",

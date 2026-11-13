@@ -1,5 +1,21 @@
-export type SubscriptionTier = "gold" | "platinum" | "diamond" | "beta";
+export type SubscriptionTier = "gold" | "platinum" | "diamond" | "beta" | "platinum_beta";
+export type SubscriptionStatus = "active" | "trialing" | "past_due" | "canceled" | "expired";
 export type BillingCycle = "monthly" | "annual";
+
+export interface PlatinumBetaRecord {
+  userId: string;
+  paymentStatus: "approved" | "pending" | "rejected";
+  betaActivationDate: string;
+  betaExpiryDate: string;
+  maxActiveGoals: number; // 3
+  maxFriends: number; // 15
+  aiCallAllowance: number; // 60
+  aiCallsConsumed: number;
+  whatsAppEligibility: boolean;
+  calendarEligibility: boolean;
+  isExpired: boolean;
+  daysRemaining: number;
+}
 
 export interface PlanConfig {
   id: SubscriptionTier;
@@ -37,11 +53,12 @@ export interface PlanConfig {
 export interface UserSubscription {
   userId: string;
   tier: SubscriptionTier;
-  status: "active" | "trialing" | "past_due" | "canceled";
+  status: SubscriptionStatus;
   billingCycle: BillingCycle;
   startedAt: string;
   renewsAt: string;
   plan: PlanConfig;
+  platinumBeta?: PlatinumBetaRecord;
   usage: {
     activeGoals: number;
     maxGoals: number;
