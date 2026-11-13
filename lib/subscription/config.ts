@@ -332,6 +332,26 @@ export const BETA_PROGRAM_CONFIG = {
   ],
 };
 
+/**
+ * Backend Feature Flags & Hard Usage Limits for AI Telephony Calling.
+ * Calling limits (60/mo Platinum, 450/mo Diamond) are strictly capped.
+ */
+export const AI_CALLING_CONFIG = {
+  // Global feature flag: whether live telephony calling is operational
+  enabled: process.env.ENABLE_AI_VOICE_CALLS === "true",
+  // Status note for UI transparency
+  statusNote: "Carrier AI telephony is currently in private developer testing and carrier approval.",
+  // Hard per-call duration cap (minutes) to protect against runaway telephony costs
+  maxCallDurationMinutes: 5,
+  // Hard limits per tier
+  tierLimits: {
+    gold: 0,
+    platinum: 60,
+    diamond: 450,
+    beta: 0,
+  },
+};
+
 export const COMPARISON_TABLE_ROWS = [
   { feature: "Monthly Subscription Price", gold: "₹249/mo", platinum: "₹699/mo", diamond: "₹1,299/mo", highlight: true },
   { feature: "Active Goals", gold: "1", platinum: "3", diamond: "25", highlight: true },

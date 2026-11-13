@@ -263,6 +263,42 @@ export const GET = guard(async (req) => {
     return J({ error: "Goal request not found. Check the code and try again." }, 404);
   }
 
+  // Enforce Authenticated Access for Private Goals
+  if (r.user_id) {
+    try {
+      const supabaseServer = createServerClient();
+      const {
+        data: { user },
+      } = await supabaseServer.auth.getUser();
+
+      if (!user || user.id !== r.user_id) {
+        let isFriendShared = false;
+        if (user?.id && r.is_shared_with_friends) {
+          try {
+            const { data: friendship } = await client
+              .from("friendships")
+              .select("id")
+              .or(`and(user_id.eq.${r.user_id},friend_id.eq.${user.id}),and(user_id.eq.${user.id},friend_id.eq.${r.user_id})`)
+              .eq("status", "accepted")
+              .maybeSingle();
+            if (friendship) isFriendShared = true;
+          } catch {
+            isFriendShared = false;
+          }
+        }
+
+        if (!isFriendShared) {
+          return J(
+            { error: "Access denied. This goal is private to its account owner. Please sign in to access your goal hub." },
+            403
+          );
+        }
+      }
+    } catch {
+      return J({ error: "Authentication check failed. Please sign in." }, 401);
+    }
+  }
+
   return J({
     id: r.id,
     request_code: r.request_code,

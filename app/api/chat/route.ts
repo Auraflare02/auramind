@@ -3,6 +3,7 @@ import { J, guard, isUuid } from "@/lib/http";
 import { ChatInput, Ctx } from "@/lib/schemas";
 import { chatWithAuraMindAI } from "@/lib/gemini";
 import { ChatMessageRecord } from "@/lib/types";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 
 export const POST = guard(async (req) => {
   const body = await req.json().catch(() => null);
@@ -24,12 +25,27 @@ export const POST = guard(async (req) => {
     try {
       const rRes = await client
         .from("requests")
-        .select("id, status, category, current_level, target_level, started_at, context, plan")
+        .select("id, status, category, current_level, target_level, started_at, context, plan, user_id")
         .eq("id", request_id)
         .maybeSingle();
 
       const r = maybeOk(rRes);
       if (r) {
+        if (r.user_id) {
+          try {
+            const supabaseServer = createServerClient();
+            const {
+              data: { user },
+            } = await supabaseServer.auth.getUser();
+
+            if (!user || user.id !== r.user_id) {
+              return J({ error: "Access denied: Unauthorized access to goal chat." }, 403);
+            }
+          } catch {
+            return J({ error: "Authentication check failed." }, 401);
+          }
+        }
+
         let currentDay = 1;
         if (r.started_at) {
           currentDay = Math.min(30, Math.max(1, Math.floor((Date.now() - Date.parse(r.started_at)) / 864e5) + 1));

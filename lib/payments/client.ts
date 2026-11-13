@@ -60,6 +60,34 @@ export async function submitPaymentRequest(params: {
       : plan.monthlyPriceIntro || plan.monthlyPriceRegular;
   const amount = params.amount && params.amount > 0 ? params.amount : defaultAmount;
 
+  // Enforce server-side 100-user limit for Beta Programme
+  if (tier === "beta") {
+    let betaCount = 0;
+    try {
+      const { count } = await admin
+        .from("payment_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("tier", "beta")
+        .in("status", ["pending", "approved"]);
+      betaCount = count || 0;
+    } catch {
+      betaCount = 0;
+    }
+
+    for (const item of Array.from(inMemoryPaymentRequests.values())) {
+      if (item.tier === "beta" && (item.status === "pending" || item.status === "approved")) {
+        betaCount++;
+      }
+    }
+
+    const maxBetaUsers = 100;
+    if (betaCount >= maxBetaUsers) {
+      throw new Error(
+        `The AuraMind 100-User Beta Programme has reached maximum capacity (${maxBetaUsers}/${maxBetaUsers} slots reserved). Please select a standard subscription plan or contact support.`
+      );
+    }
+  }
+
   // Resolve user profile info
   let userName = "";
   let username = "";

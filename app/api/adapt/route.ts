@@ -3,6 +3,7 @@ import { J, guard, isUuid } from "@/lib/http";
 import { Ctx, Plan } from "@/lib/schemas";
 import { generateAdaptiveSchedule } from "@/lib/gemini";
 import { CheckinRecord } from "@/lib/types";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 
 export const POST = guard(async (req) => {
   const body = await req.json().catch(() => ({}));
@@ -17,13 +18,29 @@ export const POST = guard(async (req) => {
   // 1. Fetch current request & timetable
   const rRes = await client
     .from("requests")
-    .select("id, context, plan")
+    .select("id, context, plan, user_id")
     .eq("id", request_id)
     .maybeSingle();
 
   const r = maybeOk(rRes);
   if (!r || !r.plan) {
     return J({ error: "Plan not found for this goal." }, 404);
+  }
+
+  // Security check: verify owner
+  if (r.user_id) {
+    try {
+      const supabaseServer = createServerClient();
+      const {
+        data: { user },
+      } = await supabaseServer.auth.getUser();
+
+      if (!user || user.id !== r.user_id) {
+        return J({ error: "Access denied: You cannot adapt a schedule belonging to another user." }, 403);
+      }
+    } catch {
+      return J({ error: "Authentication check failed." }, 401);
+    }
   }
 
   const ctx = Ctx.parse(r.context);

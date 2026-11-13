@@ -4,6 +4,7 @@ import { Checkin, Ctx } from "@/lib/schemas";
 import { calculateDailyMetrics, calculateWeeklyMetrics } from "@/lib/analysis";
 import { generateCheckinCoaching } from "@/lib/gemini";
 import { CheckinRecord } from "@/lib/types";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 
 export const POST = guard(async (req) => {
   const body = await req.json().catch(() => null);
@@ -24,13 +25,29 @@ export const POST = guard(async (req) => {
   // Verify request is active
   const rRes = await client
     .from("requests")
-    .select("id, status, started_at, context")
+    .select("id, status, started_at, context, user_id")
     .eq("id", requestId)
     .maybeSingle();
 
   const r = maybeOk(rRes);
   if (!r) {
     return J({ error: "Goal not found." }, 404);
+  }
+
+  // Security check: verify owner
+  if (r.user_id) {
+    try {
+      const supabaseServer = createServerClient();
+      const {
+        data: { user },
+      } = await supabaseServer.auth.getUser();
+
+      if (!user || user.id !== r.user_id) {
+        return J({ error: "Access denied: You cannot record check-ins for another user's goal." }, 403);
+      }
+    } catch {
+      return J({ error: "Authentication check failed." }, 401);
+    }
   }
 
   if (!r.started_at) {
@@ -115,6 +132,32 @@ export const GET = guard(async (req) => {
 
   const day = dayParam ? Number(dayParam) : 1;
   const client = db();
+
+  const rRes = await client
+    .from("requests")
+    .select("id, user_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  const r = maybeOk(rRes);
+  if (!r) {
+    return J({ error: "Goal not found." }, 404);
+  }
+
+  if (r.user_id) {
+    try {
+      const supabaseServer = createServerClient();
+      const {
+        data: { user },
+      } = await supabaseServer.auth.getUser();
+
+      if (!user || user.id !== r.user_id) {
+        return J({ error: "Access denied: Private goal check-ins." }, 403);
+      }
+    } catch {
+      return J({ error: "Authentication check failed." }, 401);
+    }
+  }
 
   const res = await client
     .from("checkins")

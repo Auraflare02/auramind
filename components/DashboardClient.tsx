@@ -31,6 +31,29 @@ interface GoalRequest {
     goal_summary?: string;
     phases?: any[];
     weekly_focus?: any[];
+    days?: Array<{
+      day?: number;
+      day_number?: number;
+      day_label?: string;
+      calendar_date?: string;
+      phase?: string;
+      theme?: string;
+      blocks?: Array<{
+        start?: string;
+        end?: string;
+        time?: string;
+        activity?: string;
+        task?: string;
+        category?: string;
+        reason?: string;
+        duration_minutes?: number;
+        priority?: string;
+        deliverable?: string;
+        [key: string]: any;
+      }>;
+      [key: string]: any;
+    }>;
+    [key: string]: any;
   };
   created_at: string;
   started_at: string | null;
@@ -357,41 +380,130 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
           <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--text-primary)", margin: "4px 0" }}>
             {stats.totalFocusMin}m
           </div>
-          <div className="text-xs text-secondary">Logged in focus telemetry</div>
+          <div className="text-xs text-secondary">Logged across focus sessions</div>
         </div>
 
         <div className="card" style={{ padding: "20px" }}>
           <div className="text-xs text-muted" style={{ textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 700 }}>
-            Mastery XP
+            Consistency Level
           </div>
           <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--accent-primary)", margin: "4px 0" }}>
-            {stats.totalXp}
+            Level {Math.floor(stats.totalXp / 100) + 1}
           </div>
-          <div className="text-xs text-secondary">Earned from completed sessions</div>
+          <div className="text-xs text-secondary">{stats.totalXp} XP earned from sessions</div>
         </div>
 
         <div className="card" style={{ padding: "20px" }}>
           <div className="text-xs text-muted" style={{ textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 700 }}>
-            AI Assistant
+            Daily Check-ins
           </div>
-          <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text-primary)", margin: "8px 0 6px" }}>
-            Gemini Flash
+          <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "#10B981", margin: "8px 0 6px" }}>
+            In-App Active
           </div>
-          <Link href="/chat" style={{ fontSize: "0.78rem", color: "var(--accent-primary)", textDecoration: "none", fontWeight: 600 }}>
-            Open Consultation &rarr;
-          </Link>
+          <div className="text-xs text-secondary">Hourly schedule prompts active</div>
         </div>
       </div>
+
+      {/* 2.5 NEXT ACTION SPOTLIGHT CARD */}
+      {goals.length > 0 ? (
+        (() => {
+          const primaryGoal = goals.find((g) => g.status !== "completed" && g.status !== "archived") || goals[0];
+          const primaryDay = primaryGoal.started_at
+            ? Math.min(30, Math.max(1, Math.floor((Date.now() - Date.parse(primaryGoal.started_at)) / 864e5) + 1))
+            : 1;
+          const primaryDayBlocks = primaryGoal.plan?.days?.[primaryDay - 1]?.blocks || [];
+
+          return (
+            <div
+              className="card"
+              style={{
+                padding: "24px 28px",
+                marginBottom: "28px",
+                backgroundColor: "rgba(255, 214, 0, 0.04)",
+                border: "1px solid var(--accent-primary)",
+                borderRadius: "16px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "20px",
+                boxShadow: "0 0 20px rgba(255, 214, 0, 0.06)",
+              }}
+            >
+              <div style={{ maxWidth: "640px" }}>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                  <span className="badge badge-yellow" style={{ fontSize: "0.75rem", fontWeight: 800 }}>
+                    🎯 RECOMMENDED NEXT ACTION FOR TODAY
+                  </span>
+                  <span style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
+                    Day {primaryDay} of 30 &bull; {primaryGoal.started_at ? "In Progress" : "Ready to Start"}
+                  </span>
+                </div>
+                <h3 style={{ fontSize: "1.3rem", fontWeight: 800, margin: "0 0 6px", color: "#FFFFFF" }}>
+                  {primaryGoal.context?.goal || "Your Active Goal"}
+                </h3>
+                <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+                  {primaryDayBlocks.length > 0
+                    ? `Today's planned task: ${primaryDayBlocks[0].activity || primaryDayBlocks[0].task || "Scheduled Session"}${primaryDayBlocks[0].start && primaryDayBlocks[0].end ? ` (${primaryDayBlocks[0].start} - ${primaryDayBlocks[0].end})` : ""}`
+                    : primaryGoal.started_at
+                    ? `Your Day ${primaryDay} schedule is active. Launch your focus timer or record your check-in.`
+                    : "You haven't activated Day 1 yet. Click below to begin your 30-day journey!"}
+                </p>
+              </div>
+              <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+                <Link
+                  href={`/goal/${primaryGoal.id}`}
+                  className="btn btn-primary"
+                  style={{ padding: "12px 24px", fontWeight: 800, fontSize: "0.95rem" }}
+                >
+                  {primaryGoal.started_at ? "Open Today's Timetable \u2192" : "Start Day 1 Now \u2192"}
+                </Link>
+              </div>
+            </div>
+          );
+        })()
+      ) : (
+        <div
+          className="card"
+          style={{
+            padding: "24px 28px",
+            marginBottom: "28px",
+            backgroundColor: "rgba(255, 214, 0, 0.04)",
+            border: "1px solid var(--accent-primary)",
+            borderRadius: "16px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "20px",
+          }}
+        >
+          <div>
+            <span className="badge badge-yellow" style={{ fontSize: "0.75rem", fontWeight: 800, marginBottom: "8px", display: "inline-block" }}>
+              🚀 GET STARTED
+            </span>
+            <h3 style={{ fontSize: "1.25rem", fontWeight: 800, margin: "0 0 6px" }}>
+              Create Your First AI 30-Day Timetable
+            </h3>
+            <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--text-secondary)" }}>
+              Submit a goal to receive a personalized day-by-day plan and daily accountability check-ins.
+            </p>
+          </div>
+          <Link href="/#create-goal" className="btn btn-primary" style={{ padding: "12px 24px", fontWeight: 800 }}>
+            + Create New Goal &rarr;
+          </Link>
+        </div>
+      )}
 
       {/* 3. USER GOALS LIST */}
       <div>
         <div className="flex-between" style={{ marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
           <div>
             <h2 style={{ fontSize: "1.4rem", fontWeight: 800, margin: 0, color: "var(--text-primary)" }}>
-              Your 30-Day Trajectories
+              Your 30-Day Goal Plans
             </h2>
             <p style={{ margin: "2px 0 0", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-              Deliberate practice schedules and daily telemetry connected to your account.
+              Personalized 30-day schedules and daily accountability check-ins connected to your account.
             </p>
           </div>
 
@@ -442,9 +554,9 @@ export default function DashboardClient({ profile, goals, stats }: DashboardClie
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
             </div>
-            <h3 style={{ fontSize: "1.15rem", marginBottom: "6px" }}>No Trajectories Yet</h3>
+            <h3 style={{ fontSize: "1.15rem", marginBottom: "6px" }}>No Active Goals Yet</h3>
             <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", maxWidth: "460px", margin: "0 auto 20px" }}>
-              Transform your ambitions into structured, research-backed deliberate practice with daily telemetry.
+              Transform your ambitions into structured 30-day daily schedules with hourly accountability check-ins.
             </p>
             <Link href="/#create-goal" className="btn btn-primary">
               Create Your First Goal &rarr;

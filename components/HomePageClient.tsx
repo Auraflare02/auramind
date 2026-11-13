@@ -225,26 +225,34 @@ export default function HomePageClient() {
               className="badge badge-yellow"
               style={{
                 marginBottom: "20px",
-                padding: "6px 12px",
-                fontSize: "0.8rem",
+                padding: "6px 14px",
+                fontSize: "0.82rem",
+                fontWeight: 700,
               }}
             >
               <span className="badge-dot" />
-              <span>AuraMind AI &bull; Personal AI Productivity &amp; Accountability Assistant</span>
+              <span>AuraMind &bull; Your Personal AI Accountability Assistant</span>
             </div>
 
-            <h1 className="display-title" style={{ marginBottom: "20px" }}>
+            <h1 className="display-title" style={{ marginBottom: "16px" }}>
               Your Personal AI Accountability Assistant.
             </h1>
 
-            <p className="lead" style={{ maxWidth: "680px", marginBottom: "36px" }}>
-              Discover AuraMind, an AI-powered productivity and accountability platform that helps you set goals, create personalised 30-day schedules, track progress in real time, and stay consistent with hourly check-ins and AI calling.
+            <p style={{ maxWidth: "760px", marginBottom: "18px", fontSize: "1.35rem", color: "#FFFFFF", fontWeight: 700, lineHeight: 1.4 }}>
+              &ldquo;Stop setting goals and abandoning them. Start following through with AI-powered accountability.&rdquo;
+            </p>
+
+            <p className="lead" style={{ maxWidth: "700px", marginBottom: "32px", fontSize: "1.05rem", color: "var(--text-secondary)", lineHeight: 1.6 }}>
+              Most productivity apps are just passive to-do lists. AuraMind doesn&apos;t just help you create goals — it researches your goal with AI, builds a personalized 30-day timetable, sends scheduled hourly check-ins, tracks your focus time, and helps you recover whenever you fall behind.
             </p>
 
             <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", alignItems: "center" }}>
               <Link href="/beta" className="btn btn-primary btn-lg" style={{ fontWeight: 800 }}>
                 🚀 JOIN THE ₹99 BETA
               </Link>
+              <a href="#how-it-works" className="btn btn-secondary btn-lg">
+                See How It Works &darr;
+              </a>
               <a href="#create-goal" className="btn btn-secondary btn-lg">
                 Create 30-Day Plan &rarr;
               </a>
@@ -320,7 +328,7 @@ export default function HomePageClient() {
                     <div>
                       <h3 style={{ margin: 0, fontSize: "1.05rem" }}>Today&rsquo;s Scheduled Blocks &bull; Day 1</h3>
                       <p style={{ margin: "2px 0 0", fontSize: "0.825rem" }}>
-                        Hardest deliberate cognitive load scheduled inside your 07:00 &ndash; 11:00 morning focus window.
+                        Scheduled during your preferred 07:00 &ndash; 11:00 morning focus window.
                       </p>
                     </div>
                     <span className="badge badge-neutral">3 Blocks &bull; 2.5h Total</span>
@@ -340,7 +348,7 @@ export default function HomePageClient() {
                         Core Runtime Mechanics: Event Loops &amp; Memory Models
                       </strong>
                       <div className="text-xs text-secondary" style={{ marginTop: "4px" }}>
-                        Pedagogical goal: Construct mental models of async execution before writing complex distributed code.
+                        Goal: Understand core async execution and build confidence with clean, working code.
                       </div>
                     </div>
 
@@ -356,7 +364,7 @@ export default function HomePageClient() {
                         Guided Implementation Drills: Concurrency Benchmarking
                       </strong>
                       <div className="text-xs text-secondary" style={{ marginTop: "4px" }}>
-                        Immediate active practice to wire neural pathways through deliberate coding rather than passive reading.
+                        Goal: Hands-on exercises and practical drills to apply what you learned.
                       </div>
                     </div>
 
@@ -372,7 +380,7 @@ export default function HomePageClient() {
                         Active Retrieval &amp; Check-In Reflection
                       </strong>
                       <div className="text-xs text-secondary" style={{ marginTop: "4px" }}>
-                        Explain concepts without notes to verify retention and diagnose cognitive fatigue.
+                        Goal: Quick review and hourly check-in to confirm today&apos;s progress.
                       </div>
                     </div>
                   </div>
@@ -474,20 +482,143 @@ export default function HomePageClient() {
         </div>
       </section>
 
-      {/* 2. THE 7 CORE ARCHITECTURAL PILLARS - BENTO 2-3-2 ARCHITECTURE */}
+      {/* 2. THE 6-STEP ACCOUNTABILITY USER JOURNEY */}
+      <section id="how-it-works" style={{ padding: "80px 0", borderTop: "1px solid var(--border-default)", backgroundColor: "#0C0C0C" }}>
+        <div className="container" style={{ maxWidth: "1080px" }}>
+          <div style={{ textAlign: "center", maxWidth: "760px", margin: "0 auto 52px" }}>
+            <span className="badge badge-yellow" style={{ marginBottom: "12px" }}>
+              HOW AURAMIND WORKS
+            </span>
+            <h2 style={{ fontSize: "2.4rem", fontWeight: 800, margin: "0 0 14px", letterSpacing: "-0.02em" }}>
+              The 6-Step Daily Accountability Loop
+            </h2>
+            <p style={{ color: "var(--text-secondary)", fontSize: "1.05rem", lineHeight: 1.6, margin: 0 }}>
+              AuraMind doesn&apos;t just help you create goals. It keeps you accountable every single day until you finish them.
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(310px, 1fr))",
+              gap: "24px",
+            }}
+          >
+            {[
+              {
+                step: "01",
+                title: "Submit Your Goal",
+                desc: "Tell AuraMind what you want to achieve, your current experience level, and how much daily time you have.",
+                icon: "🎯",
+              },
+              {
+                step: "02",
+                title: "Get a Personalised 30-Day Plan",
+                desc: "Our AI breaks down your goal into achievable, step-by-step daily activities calibrated to your schedule.",
+                icon: "📅",
+              },
+              {
+                step: "03",
+                title: "Start Your Goal",
+                desc: "Activate your plan with one click to initialize progress tracking and open your Day 1 schedule.",
+                icon: "🚀",
+              },
+              {
+                step: "04",
+                title: "Receive Scheduled Check-ins",
+                desc: "In-app notifications and scheduled reminders prompt you during your focus window so you never lose momentum.",
+                icon: "⏰",
+              },
+              {
+                step: "05",
+                title: "Track Your Focus Time",
+                desc: "Use the built-in focus timer, log completed blocks, earn XP, and review your daily consistency reports.",
+                icon: "⚡",
+              },
+              {
+                step: "06",
+                title: "Recover When You Miss a Task",
+                desc: "Life happens. When you fall behind, AuraMind suggests a recovery plan and rebalances future days without guilt.",
+                icon: "🔄",
+              },
+            ].map((s) => (
+              <div
+                key={s.step}
+                className="card"
+                style={{
+                  padding: "28px",
+                  backgroundColor: "var(--bg-card)",
+                  border: "1px solid var(--border-default)",
+                  borderRadius: "16px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "1.8rem" }}>{s.icon}</span>
+                  <span
+                    style={{
+                      fontFamily: "monospace",
+                      fontSize: "0.85rem",
+                      fontWeight: 800,
+                      color: "var(--accent-primary)",
+                      backgroundColor: "rgba(255, 214, 0, 0.08)",
+                      padding: "2px 8px",
+                      borderRadius: "6px",
+                    }}
+                  >
+                    STEP {s.step}
+                  </span>
+                </div>
+                <h3 style={{ fontSize: "1.15rem", fontWeight: 800, margin: 0, color: "#FFFFFF" }}>
+                  {s.title}
+                </h3>
+                <p style={{ margin: 0, fontSize: "0.88rem", color: "var(--text-secondary)", lineHeight: 1.55 }}>
+                  {s.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Central Differentiator Callout Box */}
+          <div
+            style={{
+              marginTop: "48px",
+              padding: "28px 32px",
+              backgroundColor: "rgba(255, 214, 0, 0.05)",
+              border: "1px solid var(--accent-primary)",
+              borderRadius: "16px",
+              textAlign: "center",
+            }}
+          >
+            <div style={{ fontSize: "0.82rem", fontWeight: 800, color: "var(--accent-primary)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "8px" }}>
+              THE AURAMIND DIFFERENCE
+            </div>
+            <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#FFFFFF", maxWidth: "800px", margin: "0 auto 8px" }}>
+              &ldquo;AuraMind doesn&apos;t just help users create goals. It helps them stay accountable while working towards them.&rdquo;
+            </div>
+            <p style={{ color: "var(--text-secondary)", fontSize: "0.92rem", margin: 0 }}>
+              No fake metrics. No overwhelming dashboards. Just real daily progress and follow-through.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. CORE PRODUCT CAPABILITIES - BENTO 2-3-2 ARCHITECTURE */}
       <section className="futuristic-rings-container" style={{ padding: "96px 0", borderTop: "1px solid var(--border-default)" }}>
         <div className="futuristic-rings" aria-hidden="true" />
         <div className="container" style={{ position: "relative", zIndex: 1 }}>
           <div style={{ maxWidth: "780px", marginBottom: "56px" }}>
             <div className="badge badge-yellow" style={{ marginBottom: "16px", textTransform: "uppercase", letterSpacing: "0.08em" }}>
               <span className="badge-dot" />
-              <span>System Architecture</span>
+              <span>Core Features</span>
             </div>
             <h2 style={{ fontSize: "2.5rem", fontWeight: 800, letterSpacing: "-0.03em", marginBottom: "16px", color: "var(--text-primary)" }}>
-              Engineered for Sustained Progress
+              Engineered for Real Follow-Through
             </h2>
             <p className="lead" style={{ fontSize: "1.05rem", color: "var(--text-secondary)", lineHeight: 1.6, maxWidth: "700px" }}>
-              Traditional goal systems collapse because they rely on unbroken willpower. AuraMind treats missed sessions as diagnostic data to recalibrate your schedule.
+              Traditional productivity tools rely entirely on unbroken willpower. AuraMind combines structured daily planning with proactive check-ins to make consistency automatic.
             </p>
           </div>
 
@@ -497,7 +628,7 @@ export default function HomePageClient() {
               <div className="bento-card">
                 <div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
-                    <span className="bento-card-tag" style={{ margin: 0 }}>01 / DIAGNOSTIC RESEARCH</span>
+                    <span className="bento-card-tag" style={{ margin: 0 }}>01 / SMART GOAL BREAKDOWN</span>
                     <div className="dot-matrix" aria-hidden="true">
                       <span className="dot-matrix-dot" />
                       <span className="dot-matrix-dot" />
@@ -515,11 +646,11 @@ export default function HomePageClient() {
                         <line x1="8" y1="11" x2="14" y2="11" />
                       </svg>
                     </div>
-                    <h3 className="bento-card-title" style={{ margin: "4px 0 0" }}>Prerequisites &amp; Failure Modes</h3>
+                    <h3 className="bento-card-title" style={{ margin: "4px 0 0" }}>From Overwhelmed to Clear Steps</h3>
                   </div>
                 </div>
                 <p className="bento-card-desc" style={{ margin: 0 }}>
-                  Before writing a schedule, AuraMind analyzes the specific progression curve from your current baseline to your target standard, mapping common drop-off points and cognitive bottlenecks.
+                  Before writing your schedule, AuraMind analyzes your current level and daily available hours to break complex ambitions into achievable daily tasks.
                 </p>
               </div>
 
@@ -545,11 +676,11 @@ export default function HomePageClient() {
                         <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" />
                       </svg>
                     </div>
-                    <h3 className="bento-card-title" style={{ margin: "4px 0 0" }}>Deliberate Practice Architecture</h3>
+                    <h3 className="bento-card-title" style={{ margin: "4px 0 0" }}>Personalized Daily Schedule</h3>
                   </div>
                 </div>
                 <p className="bento-card-desc" style={{ margin: 0 }}>
-                  Generates an exact 30-day curriculum divided into 4 structured phases: Foundation, Deliberate Practice, Real-world Application, and Consolidation, respecting your peak focus windows.
+                  Generates an exact 30-day schedule divided into 4 clear stages: Foundation, Skill Building, Practical Application, and Final Milestone, calibrated to your preferred focus window.
                 </p>
               </div>
             </div>
@@ -559,7 +690,7 @@ export default function HomePageClient() {
               <div className="bento-card">
                 <div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
-                    <span className="bento-card-tag" style={{ margin: 0 }}>03 / FOCUS WORKSPACE</span>
+                    <span className="bento-card-tag" style={{ margin: 0 }}>03 / FOCUS TIMER</span>
                     <div className="dot-matrix" aria-hidden="true">
                       <span className="dot-matrix-dot" />
                       <span className="dot-matrix-dot" />
@@ -577,18 +708,18 @@ export default function HomePageClient() {
                         <path d="M12 2v3M9 2h6" />
                       </svg>
                     </div>
-                    <h3 className="bento-card-title" style={{ margin: "4px 0 0" }}>Dedicated Telemetry Timer</h3>
+                    <h3 className="bento-card-title" style={{ margin: "4px 0 0" }}>Distraction-Free Focus</h3>
                   </div>
                 </div>
                 <p className="bento-card-desc" style={{ margin: 0 }}>
-                  Distraction-free focus timer supporting 25m, 50m, 90m, and custom intervals. Tracks deep-work duration and awards XP upon completion.
+                  Built-in productivity timer supporting 25m, 50m, 90m, and custom intervals. Tracks deep-work minutes and awards XP upon completion.
                 </p>
               </div>
 
               <div className="bento-card">
                 <div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
-                    <span className="bento-card-tag" style={{ margin: 0 }}>04 / HOURLY LOGS</span>
+                    <span className="bento-card-tag" style={{ margin: 0 }}>04 / HOURLY CHECK-INS</span>
                     <div className="dot-matrix" aria-hidden="true">
                       <span className="dot-matrix-dot" />
                       <span className="dot-matrix-dot" />
@@ -605,18 +736,18 @@ export default function HomePageClient() {
                         <path d="M9 14l2 2 4-4" />
                       </svg>
                     </div>
-                    <h3 className="bento-card-title" style={{ margin: "4px 0 0" }}>Friction Signal Capture</h3>
+                    <h3 className="bento-card-title" style={{ margin: "4px 0 0" }}>Real-Time Accountability</h3>
                   </div>
                 </div>
                 <p className="bento-card-desc" style={{ margin: 0 }}>
-                  Log what actually happened. If fatigue or distractions derailed a block, AuraMind records the diagnostic cause to adjust subsequent workload.
+                  Log what you actually completed. If you get distracted or tired, AuraMind records the reason and helps you get back on track without judgment.
                 </p>
               </div>
 
               <div className="bento-card">
                 <div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
-                    <span className="bento-card-tag" style={{ margin: 0 }}>05 / AI COACHING</span>
+                    <span className="bento-card-tag" style={{ margin: 0 }}>05 / 24/7 AI COACH</span>
                     <div className="dot-matrix" aria-hidden="true">
                       <span className="dot-matrix-dot" />
                       <span className="dot-matrix-dot" />
@@ -632,11 +763,11 @@ export default function HomePageClient() {
                         <path d="M9 12h6M12 9v6" />
                       </svg>
                     </div>
-                    <h3 className="bento-card-title" style={{ margin: "4px 0 0" }}>Gemini Context Assistant</h3>
+                    <h3 className="bento-card-title" style={{ margin: "4px 0 0" }}>Ask AuraMind Anytime</h3>
                   </div>
                 </div>
                 <p className="bento-card-desc" style={{ margin: 0 }}>
-                  Ask questions anytime. Your AI assistant has full access to your timetable, notes, and check-in history to provide targeted mental models and code examples.
+                  Ask questions whenever you get stuck. Your AI assistant has full access to your timetable, notes, and check-in history to give direct, actionable advice.
                 </p>
               </div>
             </div>
@@ -646,7 +777,7 @@ export default function HomePageClient() {
               <div className="bento-card">
                 <div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
-                    <span className="bento-card-tag" style={{ margin: 0 }}>06 / ANALYTICS</span>
+                    <span className="bento-card-tag" style={{ margin: 0 }}>06 / PROGRESS REPORTS</span>
                     <div className="dot-matrix" aria-hidden="true">
                       <span className="dot-matrix-dot" />
                       <span className="dot-matrix-dot" />
@@ -664,18 +795,18 @@ export default function HomePageClient() {
                         <path d="M4 20h16" />
                       </svg>
                     </div>
-                    <h3 className="bento-card-title" style={{ margin: "4px 0 0" }}>Behavioral Velocity &amp; Insights</h3>
+                    <h3 className="bento-card-title" style={{ margin: "4px 0 0" }}>Clear Daily &amp; Weekly Analytics</h3>
                   </div>
                 </div>
                 <p className="bento-card-desc" style={{ margin: 0 }}>
-                  Real metrics calculate focus vs resistance ratios, identifying your strongest cognitive time of day and your most frequent blocker.
+                  Real metrics calculate focus vs distraction time, identifying your most productive time of day and common hurdles.
                 </p>
               </div>
 
               <div className="bento-card">
                 <div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
-                    <span className="bento-card-tag" style={{ margin: 0 }}>07 / RECALIBRATION</span>
+                    <span className="bento-card-tag" style={{ margin: 0 }}>07 / MISSED-TASK RECOVERY</span>
                     <div className="dot-matrix" aria-hidden="true">
                       <span className="dot-matrix-dot" />
                       <span className="dot-matrix-dot" />
@@ -691,11 +822,11 @@ export default function HomePageClient() {
                         <path d="M22 11.5A10 10 0 0 0 3.2 7.2L2.5 8M2 12.5a10 10 0 0 0 18.8 4.3l.7.7" />
                       </svg>
                     </div>
-                    <h3 className="bento-card-title" style={{ margin: "4px 0 0" }}>Adaptive 7-Day Restructuring</h3>
+                    <h3 className="bento-card-title" style={{ margin: "4px 0 0" }}>Schedule Recovery Without Guilt</h3>
                   </div>
                 </div>
                 <p className="bento-card-desc" style={{ margin: 0 }}>
-                  On Day 7, 14, and 21, the system generates evidence-based schedule adaptations to keep you progressing when unforeseen friction arises.
+                  Life happens. When you fall behind, AuraMind suggests an adaptive recovery plan to rebalance future days so you stay on track.
                 </p>
               </div>
             </div>
@@ -1514,7 +1645,7 @@ export default function HomePageClient() {
                   ₹699<span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>/month</span>
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: 1.5, margin: "0 0 16px" }}>
-                  Up to 3 goals, 15 friends, WhatsApp check-ins, conversational Hindi AI calling agent, and Google Calendar.
+                  Up to 3 goals, 15 friends, hourly WhatsApp check-ins, 60 AI calls per month, and Google Calendar.
                 </p>
               </div>
               <Link href="/pricing" className="btn btn-primary btn-sm" style={{ width: "100%", justifyContent: "center" }}>
@@ -1546,7 +1677,7 @@ export default function HomePageClient() {
                   ₹1,299<span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>/month</span>
                 </div>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: 1.5, margin: "0 0 16px" }}>
-                  Up to 25 goals, 50 friends, WhatsApp milestone check-ins, 15+ AI phone calls, and 2-way Google Calendar sync.
+                  Up to 25 goals, 50 friends, WhatsApp check-ins for every scheduled milestone, 450 AI calls per month, and full Google Calendar integration.
                 </p>
               </div>
               <Link href="/pricing" className="btn btn-secondary btn-sm" style={{ width: "100%", justifyContent: "center" }}>

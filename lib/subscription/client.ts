@@ -1,5 +1,5 @@
 import { getAdminClient } from "@/lib/supabase/admin";
-import { SUBSCRIPTION_PLANS } from "./config";
+import { SUBSCRIPTION_PLANS, AI_CALLING_CONFIG } from "./config";
 import { SubscriptionTier, BillingCycle, UserSubscription } from "./types";
 
 // In-memory store for offline/testing/graceful fallback
@@ -219,5 +219,57 @@ export async function checkFriendLimit(userId: string): Promise<{ allowed: boole
     currentCount: sub.usage.friendsCount,
     maxAllowed: sub.plan.maxFriends,
     planName: sub.plan.name,
+  };
+}
+
+/**
+ * Verifies whether a user can initiate an AI voice call under their subscription tier limits.
+ */
+export async function checkAiCallingAllowance(userId: string): Promise<{
+  allowed: boolean;
+  reason?: string;
+  used: number;
+  allowance: number;
+  featureEnabled: boolean;
+}> {
+  if (!AI_CALLING_CONFIG.enabled) {
+    return {
+      allowed: false,
+      reason: AI_CALLING_CONFIG.statusNote,
+      used: 0,
+      allowance: 0,
+      featureEnabled: false,
+    };
+  }
+
+  const sub = await getUserSubscription(userId);
+  const allowance = sub.usage.aiCallsAllowance;
+  const used = sub.usage.aiCallsUsedThisMonth;
+
+  if (allowance <= 0) {
+    return {
+      allowed: false,
+      reason: `Your current ${sub.plan.name} does not include AI voice calls. Upgrade to Platinum (60 calls/mo) or Diamond (450 calls/mo) to unlock AI phone calls.`,
+      used,
+      allowance,
+      featureEnabled: true,
+    };
+  }
+
+  if (used >= allowance) {
+    return {
+      allowed: false,
+      reason: `You have reached your monthly AI calling allowance (${used}/${allowance} calls used). Allowance resets on your next billing cycle.`,
+      used,
+      allowance,
+      featureEnabled: true,
+    };
+  }
+
+  return {
+    allowed: true,
+    used,
+    allowance,
+    featureEnabled: true,
   };
 }

@@ -4,6 +4,7 @@ import { Ctx, Plan } from "@/lib/schemas";
 import { isGeminiConfigured } from "@/lib/ai/config";
 import { synthesizePersonalizedPlan } from "@/lib/ai/planner";
 import { fallbackPlan } from "@/lib/fallback";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 
 export const POST = guard(async (req) => {
   const body = await req.json().catch(() => ({}));
@@ -18,13 +19,29 @@ export const POST = guard(async (req) => {
   // 1. Verify request and retrieve status
   const rRes = await client
     .from("requests")
-    .select("id, status, plan, started_at, session_token, context")
+    .select("id, status, plan, started_at, session_token, context, user_id")
     .eq("id", id)
     .maybeSingle();
 
   const r = maybeOk(rRes);
   if (!r) {
     return J({ error: "Goal request not found." }, 404);
+  }
+
+  // Security check: verify owner
+  if (r.user_id) {
+    try {
+      const supabaseServer = createServerClient();
+      const {
+        data: { user },
+      } = await supabaseServer.auth.getUser();
+
+      if (!user || user.id !== r.user_id) {
+        return J({ error: "Access denied. You cannot activate a goal belonging to another user." }, 403);
+      }
+    } catch {
+      return J({ error: "Authentication check failed." }, 401);
+    }
   }
 
   const nowIso = new Date().toISOString();
