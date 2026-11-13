@@ -50,10 +50,15 @@ export async function getPlatinumBetaRecord(userId: string): Promise<PlatinumBet
         paymentStatus: data.payment_status || "approved",
         betaActivationDate: data.beta_activation_date,
         betaExpiryDate: data.beta_expiry_date,
+        planType: "platinum_beta",
         maxActiveGoals: data.max_active_goals || 3,
         maxFriends: data.max_friends || 15,
-        aiCallAllowance: data.ai_call_allowance || 60,
-        aiCallsConsumed: data.ai_calls_consumed || 0,
+        totalCallCredits: data.total_call_credits || 20,
+        callsConsumed: data.ai_calls_consumed || 0,
+        totalCallDurationSeconds: data.total_call_duration_seconds || 0,
+        maxCallDurationSeconds: data.max_call_duration_seconds || 90,
+        whatsAppUsage: data.whatsapp_messages_sent || 0,
+        paymentReference: data.payment_reference || undefined,
         whatsAppEligibility: data.whatsapp_eligible ?? true,
         calendarEligibility: data.calendar_eligible ?? true,
         isExpired,
@@ -74,7 +79,8 @@ export async function getPlatinumBetaRecord(userId: string): Promise<PlatinumBet
  */
 export async function activatePlatinumBeta(
   userId: string,
-  paymentStatus: "approved" | "pending" = "approved"
+  paymentStatus: "approved" | "pending" = "approved",
+  paymentReference?: string
 ): Promise<{ success: boolean; record: PlatinumBetaRecord; message: string }> {
   const admin = getAdminClient();
   const now = new Date();
@@ -87,10 +93,15 @@ export async function activatePlatinumBeta(
     paymentStatus,
     betaActivationDate: activationDate,
     betaExpiryDate: expiryDate,
+    planType: "platinum_beta",
     maxActiveGoals: 3,
     maxFriends: 15,
-    aiCallAllowance: 60,
-    aiCallsConsumed: 0,
+    totalCallCredits: 20,
+    callsConsumed: 0,
+    totalCallDurationSeconds: 0,
+    maxCallDurationSeconds: 90,
+    whatsAppUsage: 0,
+    paymentReference: paymentReference || undefined,
     whatsAppEligibility: true,
     calendarEligibility: true,
     isExpired: false,
@@ -110,10 +121,16 @@ export async function activatePlatinumBeta(
         payment_status: paymentStatus,
         beta_activation_date: activationDate,
         beta_expiry_date: expiryDate,
+        plan_type: "platinum_beta",
         max_active_goals: 3,
         max_friends: 15,
-        ai_call_allowance: 60,
+        ai_call_allowance: 20,
+        total_call_credits: 20,
         ai_calls_consumed: 0,
+        total_call_duration_seconds: 0,
+        max_call_duration_seconds: 90,
+        whatsapp_messages_sent: 0,
+        payment_reference: paymentReference || null,
         whatsapp_eligible: true,
         calendar_eligible: true,
         updated_at: activationDate,
@@ -127,7 +144,7 @@ export async function activatePlatinumBeta(
   return {
     success: true,
     record,
-    message: "AuraMind Platinum Beta activated! You have 20 days of complete Platinum access (3 goals, 15 friends, 60 AI calls, WhatsApp & Calendar).",
+    message: "AuraMind Platinum Beta activated! You have 20 days of complete Platinum access (3 goals, 15 friends, 20 AI calls capped at 90s, WhatsApp & Calendar).",
   };
 }
 
@@ -479,6 +496,7 @@ export async function recordAiCallUsage(
   // Update in-memory platinum beta
   const pBeta = inMemoryPlatinumBeta.get(userId);
   if (pBeta) {
+    pBeta.callsConsumed = newUsed;
     pBeta.aiCallsConsumed = newUsed;
   }
 
@@ -495,3 +513,5 @@ export async function recordAiCallUsage(
     callsRemaining: Math.max(0, allowanceCheck.allowance - newUsed),
   };
 }
+
+export const recordCallUsage = recordAiCallUsage;

@@ -1524,30 +1524,38 @@ export default function HomePageClient() {
         </div>
       </section>
 
-      {/* 4. LOOKUP EXISTING REQUEST SECTION */}
-      <section id="lookup" style={{ padding: "64px 0", borderTop: "1px solid var(--border-subtle)", backgroundColor: "var(--bg-secondary)" }}>
-        <div className="container-narrow text-center" style={{ textAlign: "center" }}>
-          <h2 style={{ fontSize: "1.6rem", marginBottom: "8px" }}>Resume an Existing Goal</h2>
-          <p style={{ maxWidth: "520px", margin: "0 auto 20px" }}>
-            Enter your persistent Access Code (e.g. AM-A1B2C3D4E5F60718) or Request UUID to reopen your dashboard.
+      {/* 4. SECURE ACCOUNT ACCESS & RESUME SECTION */}
+      <section id="account-access" style={{ padding: "64px 0", borderTop: "1px solid var(--border-subtle)", backgroundColor: "var(--bg-secondary)" }}>
+        <div className="container-narrow text-center" style={{ textAlign: "center", maxWidth: "640px", margin: "0 auto" }}>
+          <span className="badge badge-yellow" style={{ marginBottom: "10px" }}>
+            🔒 Authenticated Member Access
+          </span>
+          <h2 style={{ fontSize: "1.8rem", fontWeight: 800, margin: "0 0 10px", color: "#FFFFFF" }}>
+            Already on an AuraMind Goal Journey?
+          </h2>
+          <p style={{ margin: "0 auto 28px", color: "var(--text-secondary)", fontSize: "0.95rem", lineHeight: 1.6 }}>
+            Sign in to your authenticated account to open your active 30-day timetable, track verified focus sessions, and review daily accountability check-in logs.
           </p>
 
-          <div style={{ display: "flex", gap: "8px", maxWidth: "440px", margin: "0 auto" }}>
-            <input
-              type="text"
-              className="form-input font-mono"
-              placeholder="e.g. AM-A1B2C3D4E5F60718"
-              value={lookupCode}
-              onChange={(e) => setLookupCode(e.target.value)}
-              style={{ textTransform: "uppercase" }}
-            />
+          <div style={{ display: "flex", gap: "14px", justifyContent: "center", flexWrap: "wrap", marginBottom: "18px" }}>
             <Link
-              href={lookupCode ? `/goal/${lookupCode.trim()}` : "#"}
-              className={`btn btn-primary ${!lookupCode ? "disabled" : ""}`}
-              style={{ whiteSpace: "nowrap" }}
+              href="/login"
+              className="btn btn-primary"
+              style={{ padding: "12px 28px", fontWeight: 800, fontSize: "0.95rem" }}
             >
-              Open Workspace
+              Sign In to Your Dashboard &rarr;
             </Link>
+            <Link
+              href="/signup"
+              className="btn btn-secondary"
+              style={{ padding: "12px 28px", fontWeight: 700, fontSize: "0.95rem" }}
+            >
+              Create Account
+            </Link>
+          </div>
+
+          <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+            Your personal goals, check-ins, and timetable adjustments are securely isolated to your authenticated account.
           </div>
         </div>
       </section>

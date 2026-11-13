@@ -120,6 +120,26 @@ export default function Navbar() {
           {/* DESKTOP NAVIGATION (Hidden on mobile via CSS) */}
           <nav className="desktop-nav" style={{ display: "flex", alignItems: "center", gap: "16px" }}>
             <Link
+              href="/beta"
+              style={{
+                color: "var(--accent-primary)",
+                textDecoration: "none",
+                fontSize: "0.875rem",
+                fontWeight: 800,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px",
+                padding: "4px 10px",
+                borderRadius: "9999px",
+                backgroundColor: "rgba(255, 214, 0, 0.12)",
+                border: "1px solid rgba(255, 214, 0, 0.35)",
+                transition: "all var(--transition-fast)",
+              }}
+            >
+              <span>🚀</span>
+              <span>₹99 Beta</span>
+            </Link>
+            <Link
               href="/features"
               style={{
                 color: "var(--text-primary)",
@@ -467,6 +487,31 @@ export default function Navbar() {
 
           {/* Navigation Items List */}
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <Link
+              href="/beta"
+              onClick={() => setMobileMenuOpen(false)}
+              className="mobile-nav-link"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "14px 16px",
+                borderRadius: "10px",
+                backgroundColor: "rgba(255, 214, 0, 0.08)",
+                border: "1px solid var(--accent-primary)",
+                color: "var(--accent-primary)",
+                textDecoration: "none",
+                fontWeight: 800,
+                fontSize: "0.95rem",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <span style={{ fontSize: "1.2rem" }}>🚀</span>
+                <span>Join ₹99 Beta (Platinum)</span>
+              </div>
+              <span className="badge badge-yellow" style={{ fontSize: "0.7rem", fontWeight: 800 }}>100 Seats</span>
+            </Link>
+
             <Link
               href="/#create-goal"
               onClick={() => setMobileMenuOpen(false)}

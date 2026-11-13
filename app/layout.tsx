@@ -96,8 +96,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <div style={{ display: "flex", alignItems: "center", marginBottom: "12px" }}>
                   <AuraMindLogo height={24} compactOnMobile={false} />
                 </div>
-                <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", margin: 0 }}>
-                  A cognitive architecture platform that transforms ambitions into personalized 30-day deliberate practice schedules, tracks real-time focus metrics, and adapts to reality.
+                <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", margin: 0, lineHeight: 1.6 }}>
+                  Your Personal AI Accountability Assistant. AuraMind helps you create personalized 30-day goal plans, stay accountable with AI check-ins, and track verifiable focus progress.
                 </p>
               </div>
 
@@ -107,6 +107,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     Platform
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <Link href="/beta" style={{ color: "var(--accent-primary)", fontSize: "0.85rem", textDecoration: "none", fontWeight: 800 }}>
+                      🚀 Join ₹99 Beta (Platinum)
+                    </Link>
                     <Link href="/features" style={{ color: "var(--text-secondary)", fontSize: "0.85rem", textDecoration: "none" }}>
                       Features
                     </Link>
@@ -176,17 +179,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
                 <div>
                   <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-primary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "10px" }}>
-                    Architecture
+                    Technology
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     <span style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>
                       Google Gemini AI
                     </span>
                     <span style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>
-                      Supabase PostgreSQL
+                      Supabase Cloud Database
                     </span>
                     <span style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>
-                      Deliberate Practice Science
+                      Adaptive Goal Scheduling
                     </span>
                   </div>
                 </div>

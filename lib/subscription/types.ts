@@ -7,14 +7,32 @@ export interface PlatinumBetaRecord {
   paymentStatus: "approved" | "pending" | "rejected";
   betaActivationDate: string;
   betaExpiryDate: string;
+  planType: "platinum_beta";
   maxActiveGoals: number; // 3
   maxFriends: number; // 15
-  aiCallAllowance: number; // 60
-  aiCallsConsumed: number;
+  totalCallCredits: number; // 20
+  aiCallAllowance?: number; // compatibility alias for totalCallCredits
+  callsConsumed: number;
+  aiCallsConsumed?: number; // compatibility alias for callsConsumed
+  totalCallDurationSeconds: number; // Tracked duration
+  maxCallDurationSeconds: number; // 90
+  whatsAppUsage: number; // Messages sent
+  paymentReference?: string;
   whatsAppEligibility: boolean;
   calendarEligibility: boolean;
   isExpired: boolean;
   daysRemaining: number;
+}
+
+export interface UserCommunicationPreferences {
+  userId: string;
+  whatsappOptIn: boolean;
+  callingOptIn: boolean;
+  preferredCallingStart: string;
+  preferredCallingEnd: string;
+  quietHoursStart: string;
+  quietHoursEnd: string;
+  preferredLanguage: "hi" | "en";
 }
 
 export interface PlanConfig {

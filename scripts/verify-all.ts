@@ -324,15 +324,15 @@ test("Platinum Beta Plan - Full Platinum Quotas for 20 Days", () => {
 
   assert.strictEqual(pBeta.maxGoals, 3);
   assert.strictEqual(pBeta.maxFriends, 15);
-  assert.strictEqual(pBeta.aiCallsPerMonth, 60);
+  assert.strictEqual(pBeta.aiCallsPerMonth, 20); // Capped at 20 calls for 20-day beta
   assert.strictEqual(pBeta.whatsAppCheckins, true);
   assert.strictEqual(pBeta.googleCalendar, "basic");
   assert.strictEqual(pBeta.monthlyPriceIntro, 99);
 
-  // Both platinum_beta and beta should provide the identical Platinum experience
+  // Both platinum_beta and beta should provide the identical Platinum experience with 20 calls cap
   assert.strictEqual(beta.maxGoals, platinum.maxGoals);
   assert.strictEqual(beta.maxFriends, platinum.maxFriends);
-  assert.strictEqual(beta.aiCallsPerMonth, platinum.aiCallsPerMonth);
+  assert.strictEqual(beta.aiCallsPerMonth, 20);
   assert.strictEqual(beta.whatsAppCheckins, platinum.whatsAppCheckins);
   assert.strictEqual(beta.googleCalendar, platinum.googleCalendar);
 });
@@ -350,7 +350,7 @@ test("Beta vs Diamond Strict Feature Boundary", () => {
   assert.strictEqual(diamond.maxFriends, 50);
   assert.notStrictEqual(pBeta.maxFriends, diamond.maxFriends);
 
-  assert.strictEqual(pBeta.aiCallsPerMonth, 60);
+  assert.strictEqual(pBeta.aiCallsPerMonth, 20);
   assert.strictEqual(diamond.aiCallsPerMonth, 450);
   assert.notStrictEqual(pBeta.aiCallsPerMonth, diamond.aiCallsPerMonth);
 
@@ -365,7 +365,7 @@ test("Platinum Beta Activation & 20-Day Expiry Storage", async () => {
   assert.strictEqual(record.userId, testUserId);
   assert.strictEqual(record.maxActiveGoals, 3);
   assert.strictEqual(record.maxFriends, 15);
-  assert.strictEqual(record.aiCallAllowance, 60);
+  assert.strictEqual(record.totalCallCredits, 20);
   assert.strictEqual(record.whatsAppEligibility, true);
   assert.strictEqual(record.calendarEligibility, true);
   assert.strictEqual(record.isExpired, false);
@@ -376,11 +376,138 @@ test("Platinum Beta Activation & 20-Day Expiry Storage", async () => {
   assert.strictEqual(sub.status, "active");
   assert.strictEqual(sub.plan.maxGoals, 3);
   assert.strictEqual(sub.plan.maxFriends, 15);
-  assert.strictEqual(sub.plan.aiCallsPerMonth, 60);
+  assert.strictEqual(sub.plan.aiCallsPerMonth, 20);
 
   const goalCheck = await checkGoalLimit(testUserId);
   assert.strictEqual(goalCheck.maxAllowed, 3);
   assert.strictEqual(goalCheck.allowed, true);
+});
+
+// 9. Telephony Cost Controls, Spending Ceiling, and Safety Switch Verification
+import {
+  checkCallEligibility,
+  recordCallAttempt,
+  recordWhatsAppAttempt,
+  getSpendingState,
+  toggleEmergencyKillSwitch,
+  getSpendingDashboardData,
+} from "../lib/spending/controls";
+
+test("Financial Controls - 90-Second Call Duration Auto-Termination", async () => {
+  const testUserId = "user-duration-test-90s";
+  await activatePlatinumBeta(testUserId, "approved");
+
+  const eligibility = await checkCallEligibility(testUserId);
+  assert.strictEqual(eligibility.allowed, true);
+  assert.strictEqual(eligibility.maxDurationSeconds, 90);
+
+  // Attempt a call that ran for 150 seconds -> Must be clamped to 90s and marked terminated_limit
+  const { callRecord } = await recordCallAttempt({
+    userId: testUserId,
+    tier: "platinum_beta",
+    durationSeconds: 150,
+  });
+
+  assert.strictEqual(callRecord.durationSeconds, 90);
+  assert.strictEqual(callRecord.maxAllowedSeconds, 90);
+  assert.strictEqual(callRecord.status, "terminated_limit");
+  assert.strictEqual(callRecord.costInr, 18); // 90s = 1.5 min * ₹12/min = ₹18
+});
+
+test("Financial Controls - 20-Call Cap Enforcement and 21st Call Rejection", async () => {
+  const testUserId = "user-cap-test-20calls";
+  await activatePlatinumBeta(testUserId, "approved");
+
+  // Consume 20 calls
+  for (let i = 1; i <= 20; i++) {
+    await recordCallAttempt({
+      userId: testUserId,
+      tier: "platinum_beta",
+      durationSeconds: 60,
+    });
+  }
+
+  // Check eligibility for 21st call
+  const eligibility = await checkCallEligibility(testUserId);
+  assert.strictEqual(eligibility.allowed, false);
+  assert.ok(eligibility.reason?.includes("calling limit"));
+});
+
+test("Financial Controls - Emergency Integration Kill Switches", async () => {
+  const testUserId = "user-killswitch-test";
+  await activatePlatinumBeta(testUserId, "approved");
+
+  // AI Calling Kill Switch
+  await toggleEmergencyKillSwitch("calling", true);
+  const callCheck = await checkCallEligibility(testUserId);
+  assert.strictEqual(callCheck.allowed, false);
+  assert.ok(callCheck.reason?.includes("kill switch"));
+
+  // Restore calling
+  await toggleEmergencyKillSwitch("calling", false);
+  const callCheckRestored = await checkCallEligibility(testUserId);
+  assert.strictEqual(callCheckRestored.allowed, true);
+
+  // WhatsApp Kill Switch
+  await toggleEmergencyKillSwitch("whatsapp", true);
+  const waCheck = await recordWhatsAppAttempt({
+    userId: testUserId,
+    tier: "platinum_beta",
+    userLocalHour: 14,
+  });
+  assert.strictEqual(waCheck.ok, false);
+  assert.ok(waCheck.blockedReason?.includes("kill switch"));
+
+  // Restore WhatsApp
+  await toggleEmergencyKillSwitch("whatsapp", false);
+  const waCheckRestored = await recordWhatsAppAttempt({
+    userId: testUserId,
+    tier: "platinum_beta",
+    userLocalHour: 14,
+  });
+  assert.strictEqual(waCheckRestored.ok, true);
+});
+
+test("Financial Controls - WhatsApp Quiet Hours (22:00-08:00) Blocking", async () => {
+  const testUserId = "user-quiet-hours-test";
+
+  // During quiet hours (e.g. 23:00 / 11 PM) -> Prohibited
+  const lateNight = await recordWhatsAppAttempt({
+    userId: testUserId,
+    tier: "platinum_beta",
+    userLocalHour: 23,
+  });
+  assert.strictEqual(lateNight.ok, false);
+  assert.ok(lateNight.blockedReason?.includes("Quiet hours"));
+
+  // Early morning (05:00 AM) -> Prohibited
+  const earlyMorning = await recordWhatsAppAttempt({
+    userId: testUserId,
+    tier: "platinum_beta",
+    userLocalHour: 5,
+  });
+  assert.strictEqual(earlyMorning.ok, false);
+  assert.ok(earlyMorning.blockedReason?.includes("Quiet hours"));
+
+  // Active hours (14:00 / 2 PM) -> Allowed
+  const activeHours = await recordWhatsAppAttempt({
+    userId: testUserId,
+    tier: "platinum_beta",
+    userLocalHour: 14,
+  });
+  assert.strictEqual(activeHours.ok, true);
+});
+
+test("Financial Controls - ₹30,000 Global Beta Budget Ceiling & Shark Tank Metrics", async () => {
+  const spending = await getSpendingState();
+  assert.strictEqual(spending.budgetCeilingInr, 30000);
+  assert.ok(spending.totalSpentInr <= 30000);
+
+  const dashData = await getSpendingDashboardData();
+  assert.ok(dashData.successCriteria);
+  assert.strictEqual(typeof dashData.successCriteria.goalActivationRate, "number");
+  assert.strictEqual(typeof dashData.costPerParticipant, "number");
+  assert.ok(dashData.costPerParticipant <= 300);
 });
 
 process.on("beforeExit", () => {

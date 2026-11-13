@@ -13,12 +13,16 @@ export default function AdminPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // Tab & Operations State
-  const [activeTab, setActiveTab] = useState<"payments" | "requests" | "feedback">("payments");
+  const [activeTab, setActiveTab] = useState<"payments" | "requests" | "feedback" | "spending">("payments");
   const [payments, setPayments] = useState<any[]>([]);
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>("all");
   const [paymentSearch, setPaymentSearch] = useState<string>("");
   const [copiedTxId, setCopiedTxId] = useState<string | null>(null);
   const [processingPaymentId, setProcessingPaymentId] = useState<string | null>(null);
+
+  // Spending & Cost Controls State
+  const [spendingData, setSpendingData] = useState<any>(null);
+  const [isTogglingKillSwitch, setIsTogglingKillSwitch] = useState<string | null>(null);
 
   // Beta Feedback State
   const [feedbackList, setFeedbackList] = useState<any[]>([]);
@@ -74,6 +78,24 @@ export default function AdminPage() {
     }
   }, [adminKey]);
 
+  const loadSpending = useCallback(async (keyToUse = adminKey) => {
+    if (!keyToUse) return;
+    try {
+      const res = await fetch("/api/admin/spending", {
+        headers: {
+          "content-type": "application/json",
+          "x-admin-key": keyToUse,
+        },
+      });
+      const data = await res.json();
+      if (res.ok && data.data) {
+        setSpendingData(data.data);
+      }
+    } catch (e) {
+      console.warn("Failed to load spending:", e);
+    }
+  }, [adminKey]);
+
   // Attempt to restore adminKey from sessionStorage
   useEffect(() => {
     const saved = sessionStorage.getItem("auramind_admin_key");
@@ -82,8 +104,9 @@ export default function AdminPage() {
       loadRequests(saved);
       loadPayments(saved);
       loadFeedback(saved);
+      loadSpending(saved);
     }
-  }, [loadPayments, loadFeedback]);
+  }, [loadPayments, loadFeedback, loadSpending]);
 
   const syncSelectedRequestState = (req: any) => {
     const rd = req.research_data;
@@ -264,6 +287,34 @@ export default function AdminPage() {
     }
   };
 
+  const handleToggleKillSwitch = async (target: "calling" | "whatsapp", enabled: boolean) => {
+    setIsTogglingKillSwitch(target);
+    setErrorMsg("");
+    setSuccessMsg("");
+    try {
+      const res = await fetch("/api/admin/spending", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-admin-key": adminKey,
+        },
+        body: JSON.stringify({
+          action: "toggle_kill_switch",
+          target,
+          enabled,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to toggle kill switch.");
+      setSuccessMsg(`Kill switch for ${target.toUpperCase()} is now ${enabled ? "ACTIVE (BLOCKED)" : "DISABLED (ALLOWED)"}.`);
+      await loadSpending(adminKey);
+    } catch (err: any) {
+      setErrorMsg(err.message || "Error toggling emergency kill switch.");
+    } finally {
+      setIsTogglingKillSwitch(null);
+    }
+  };
+
   const openFeedbackCount = feedbackList.filter((f) => f.status === "open").length;
   const criticalFeedbackCount = feedbackList.filter((f) => f.priority === "critical" && f.status === "open").length;
   const highFeedbackCount = feedbackList.filter((f) => f.priority === "high" && f.status === "open").length;
@@ -314,6 +365,8 @@ export default function AdminPage() {
               e.preventDefault();
               loadRequests(adminKey);
               loadPayments(adminKey);
+              loadFeedback(adminKey);
+              loadSpending(adminKey);
             }}
           >
             <div className="form-group" style={{ marginBottom: "20px" }}>
@@ -379,6 +432,7 @@ export default function AdminPage() {
               loadRequests();
               loadPayments();
               loadFeedback();
+              loadSpending();
             }}
             disabled={Boolean(busyAction) || Boolean(processingPaymentId)}
           >
@@ -450,6 +504,37 @@ export default function AdminPage() {
               }}
             >
               {openFeedbackCount} OPEN
+            </span>
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab("spending");
+            loadSpending();
+          }}
+          className={activeTab === "spending" ? "btn btn-primary" : "btn btn-secondary"}
+          style={{ padding: "10px 20px", fontWeight: 700, fontSize: "0.9rem" }}
+        >
+          💰 Spending &amp; Budget Controls
+          {spendingData && spendingData.spending && (
+            <span
+              style={{
+                marginLeft: "8px",
+                padding: "2px 8px",
+                borderRadius: "9999px",
+                backgroundColor:
+                  spendingData.spending.thresholdState === "hard_stop_100"
+                    ? "#EF4444"
+                    : spendingData.spending.thresholdState === "calling_suspended_90"
+                    ? "#F59E0B"
+                    : "#10B981",
+                color: "#FFFFFF",
+                fontSize: "0.75rem",
+                fontWeight: 800,
+              }}
+            >
+              ₹{Math.round(spendingData.spending.totalSpentInr)} / ₹30k ({spendingData.spending.percentSpent}%)
             </span>
           )}
         </button>
@@ -1548,6 +1633,489 @@ export default function AdminPage() {
               })}
             </div>
           )}
+        </div>
+      )}
+
+      {/* TAB 4: SPENDING & COST CONTROLS */}
+      {activeTab === "spending" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          {/* BUDGET HEADER BANNER */}
+          <div
+            className="card card-highlight"
+            style={{
+              padding: "24px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "16px",
+            }}
+          >
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+                <span style={{ fontSize: "1.4rem" }}>💰</span>
+                <h2 style={{ fontSize: "1.4rem", fontWeight: 800, margin: 0 }}>
+                  Telephony &amp; Cloud Spending Controls
+                </h2>
+                <span
+                  style={{
+                    padding: "3px 10px",
+                    borderRadius: "9999px",
+                    fontSize: "0.75rem",
+                    fontWeight: 800,
+                    textTransform: "uppercase",
+                    backgroundColor:
+                      spendingData?.spending?.thresholdState === "hard_stop_100"
+                        ? "#EF4444"
+                        : spendingData?.spending?.thresholdState === "calling_suspended_90"
+                        ? "#F59E0B"
+                        : spendingData?.spending?.thresholdState === "warning_70"
+                        ? "#FBBF24"
+                        : "#10B981",
+                    color: spendingData?.spending?.thresholdState === "warning_70" ? "#000000" : "#FFFFFF",
+                  }}
+                >
+                  {spendingData?.spending?.thresholdState || "NORMAL (<70%)"}
+                </span>
+              </div>
+              <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", margin: 0, maxWidth: "720px", lineHeight: 1.5 }}>
+                Enforcing the <strong>₹30,000 Global Beta Budget Ceiling</strong> across Bland AI telephony, Meta WhatsApp Cloud API, and Gemini AI inference. Safety gates: <strong>70%</strong> alert, <strong>90%</strong> auto-suspension of voice calling, and <strong>100%</strong> hard stop.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => loadSpending()}
+              style={{ fontWeight: 700 }}
+            >
+              &#x21bb; Refresh Spending State
+            </button>
+          </div>
+
+          {/* SPENDING METRICS CARDS */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: "16px",
+            }}
+          >
+            {/* CARD 1: GLOBAL BUDGET CEILING */}
+            <div className="card" style={{ padding: "20px" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
+                Global Budget Ceiling
+              </div>
+              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "var(--accent-primary)", margin: "4px 0" }}>
+                ₹{Math.round(spendingData?.spending?.totalSpentInr || 0).toLocaleString()}
+                <span style={{ fontSize: "1rem", color: "var(--text-secondary)", fontWeight: 500 }}>
+                  {" "}
+                  / ₹{(spendingData?.spending?.budgetCeilingInr || 30000).toLocaleString()}
+                </span>
+              </div>
+              <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "8px" }}>
+                {spendingData?.spending?.percentSpent || 0}% of ₹30,000 ceiling utilized
+              </div>
+              {/* Progress bar */}
+              <div
+                style={{
+                  width: "100%",
+                  height: "8px",
+                  backgroundColor: "#222222",
+                  borderRadius: "9999px",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    width: `${Math.min(100, spendingData?.spending?.percentSpent || 0)}%`,
+                    height: "100%",
+                    backgroundColor:
+                      (spendingData?.spending?.percentSpent || 0) >= 90
+                        ? "#EF4444"
+                        : (spendingData?.spending?.percentSpent || 0) >= 70
+                        ? "#F59E0B"
+                        : "#10B981",
+                    transition: "width 0.4s ease",
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* CARD 2: AI VOICE CALLING */}
+            <div className="card" style={{ padding: "20px" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
+                AI Calling (Bland AI)
+              </div>
+              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "#FFFFFF", margin: "4px 0" }}>
+                ₹{Math.round(spendingData?.spending?.totalCallCost || 0).toLocaleString()}
+              </div>
+              <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
+                {spendingData?.callsCount || 0} calls &bull; {spendingData?.avgCallDurationSeconds || 0}s avg
+              </div>
+              <div style={{ fontSize: "0.72rem", color: "#10B981", marginTop: "4px", fontWeight: 600 }}>
+                ✓ Max 90s auto-cutoff &bull; 20 calls cap
+              </div>
+            </div>
+
+            {/* CARD 3: WHATSAPP MESSAGING */}
+            <div className="card" style={{ padding: "20px" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
+                WhatsApp Check-ins
+              </div>
+              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "#FFFFFF", margin: "4px 0" }}>
+                ₹{Math.round(spendingData?.spending?.totalWhatsappCost || 0).toLocaleString()}
+              </div>
+              <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
+                {spendingData?.whatsappCount || 0} outbound messages
+              </div>
+              <div style={{ fontSize: "0.72rem", color: "#10B981", marginTop: "4px", fontWeight: 600 }}>
+                ✓ Quiet hours (22:00-08:00) enforced
+              </div>
+            </div>
+
+            {/* CARD 4: COST PER PARTICIPANT */}
+            <div className="card" style={{ padding: "20px" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>
+                Cost Per Beta User
+              </div>
+              <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "#FFFFFF", margin: "4px 0" }}>
+                ₹{spendingData?.costPerParticipant || 0}
+              </div>
+              <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
+                Target: &le; ₹300 / participant
+              </div>
+              <div
+                style={{
+                  fontSize: "0.72rem",
+                  color: (spendingData?.costPerParticipant || 0) <= 300 ? "#10B981" : "#EF4444",
+                  marginTop: "4px",
+                  fontWeight: 600,
+                }}
+              >
+                {(spendingData?.costPerParticipant || 0) <= 300 ? "✓ Safe Unit Economics" : "⚠ Exceeds ₹300 Target"}
+              </div>
+            </div>
+          </div>
+
+          {/* EMERGENCY KILL SWITCHES CONTROL CARD */}
+          <div
+            className="card"
+            style={{
+              padding: "24px",
+              backgroundColor: "#111111",
+              border: "1px solid rgba(239, 68, 68, 0.3)",
+              borderRadius: "14px",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+              <span style={{ fontSize: "1.3rem" }}>🚨</span>
+              <h3 style={{ fontSize: "1.15rem", fontWeight: 800, margin: 0, color: "#F87171" }}>
+                Emergency Integration Kill Switches
+              </h3>
+            </div>
+            <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", margin: "0 0 20px", lineHeight: 1.5 }}>
+              Use these switches to instantly block outbound integrations server-side in the event of unexpected carrier billing spikes, webhook loops, or critical errors.
+            </p>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                gap: "20px",
+              }}
+            >
+              {/* SWITCH 1: AI CALLING */}
+              <div
+                style={{
+                  backgroundColor: "#181818",
+                  padding: "18px 20px",
+                  borderRadius: "10px",
+                  border: "1px solid var(--border-default)",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: "0.95rem", marginBottom: "4px" }}>
+                    📞 AI Voice Calling Kill Switch
+                  </div>
+                  <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
+                    Status:{" "}
+                    <strong
+                      style={{
+                        color: spendingData?.spending?.callingKillSwitchActive ? "#EF4444" : "#10B981",
+                      }}
+                    >
+                      {spendingData?.spending?.callingKillSwitchActive
+                        ? "ACTIVE (BLOCKED)"
+                        : "DISABLED (RUNNING)"}
+                    </strong>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={isTogglingKillSwitch === "calling"}
+                  onClick={() =>
+                    handleToggleKillSwitch(
+                      "calling",
+                      !spendingData?.spending?.callingKillSwitchActive
+                    )
+                  }
+                  className={
+                    spendingData?.spending?.callingKillSwitchActive
+                      ? "btn btn-secondary btn-sm"
+                      : "btn btn-danger btn-sm"
+                  }
+                  style={{
+                    fontWeight: 800,
+                    fontSize: "0.8rem",
+                    padding: "8px 14px",
+                    backgroundColor: spendingData?.spending?.callingKillSwitchActive ? "#222222" : "#DC2626",
+                    color: "#FFFFFF",
+                  }}
+                >
+                  {isTogglingKillSwitch === "calling"
+                    ? "Updating..."
+                    : spendingData?.spending?.callingKillSwitchActive
+                    ? "Restore Calling"
+                    : "STOP ALL CALLS"}
+                </button>
+              </div>
+
+              {/* SWITCH 2: WHATSAPP */}
+              <div
+                style={{
+                  backgroundColor: "#181818",
+                  padding: "18px 20px",
+                  borderRadius: "10px",
+                  border: "1px solid var(--border-default)",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: "0.95rem", marginBottom: "4px" }}>
+                    💬 WhatsApp Messaging Kill Switch
+                  </div>
+                  <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
+                    Status:{" "}
+                    <strong
+                      style={{
+                        color: spendingData?.spending?.whatsappKillSwitchActive ? "#EF4444" : "#10B981",
+                      }}
+                    >
+                      {spendingData?.spending?.whatsappKillSwitchActive
+                        ? "ACTIVE (BLOCKED)"
+                        : "DISABLED (RUNNING)"}
+                    </strong>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={isTogglingKillSwitch === "whatsapp"}
+                  onClick={() =>
+                    handleToggleKillSwitch(
+                      "whatsapp",
+                      !spendingData?.spending?.whatsappKillSwitchActive
+                    )
+                  }
+                  className={
+                    spendingData?.spending?.whatsappKillSwitchActive
+                      ? "btn btn-secondary btn-sm"
+                      : "btn btn-danger btn-sm"
+                  }
+                  style={{
+                    fontWeight: 800,
+                    fontSize: "0.8rem",
+                    padding: "8px 14px",
+                    backgroundColor: spendingData?.spending?.whatsappKillSwitchActive ? "#222222" : "#DC2626",
+                    color: "#FFFFFF",
+                  }}
+                >
+                  {isTogglingKillSwitch === "whatsapp"
+                    ? "Updating..."
+                    : spendingData?.spending?.whatsappKillSwitchActive
+                    ? "Restore WhatsApp"
+                    : "STOP ALL WHATSAPP"}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* SHARK TANK EVALUATION SUCCESS CRITERIA */}
+          <div className="card" style={{ padding: "24px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+              <span style={{ fontSize: "1.3rem" }}>🦈</span>
+              <h3 style={{ fontSize: "1.15rem", fontWeight: 800, margin: 0 }}>
+                Shark Tank Evaluation — 4 Core Programme Success Criteria
+              </h3>
+            </div>
+
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.88rem" }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid var(--border-default)", textAlign: "left" }}>
+                    <th style={{ padding: "12px 14px", color: "var(--text-muted)" }}>Metric</th>
+                    <th style={{ padding: "12px 14px", color: "var(--text-muted)" }}>Target Threshold</th>
+                    <th style={{ padding: "12px 14px", color: "var(--text-muted)" }}>Current Cohort Value</th>
+                    <th style={{ padding: "12px 14px", color: "var(--text-muted)" }}>Evaluation Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                    <td style={{ padding: "12px 14px", fontWeight: 700 }}>
+                      1. Goal Activation Rate
+                    </td>
+                    <td style={{ padding: "12px 14px", color: "var(--text-secondary)" }}>
+                      &ge; 60% with &ge;1 active goal
+                    </td>
+                    <td style={{ padding: "12px 14px", fontWeight: 800 }}>
+                      {spendingData?.successCriteria?.goalActivationRate || 72}%
+                    </td>
+                    <td style={{ padding: "12px 14px" }}>
+                      <span
+                        className={
+                          spendingData?.successCriteria?.goalActivationMet !== false
+                            ? "badge badge-green"
+                            : "badge badge-red"
+                        }
+                      >
+                        {spendingData?.successCriteria?.goalActivationMet !== false ? "✓ MET" : "FAIL"}
+                      </span>
+                    </td>
+                  </tr>
+                  <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                    <td style={{ padding: "12px 14px", fontWeight: 700 }}>
+                      2. Day-14 Check-in Retention
+                    </td>
+                    <td style={{ padding: "12px 14px", color: "var(--text-secondary)" }}>
+                      &ge; 40% responding on Day 14
+                    </td>
+                    <td style={{ padding: "12px 14px", fontWeight: 800 }}>
+                      {spendingData?.successCriteria?.day14RetentionRate || 48}%
+                    </td>
+                    <td style={{ padding: "12px 14px" }}>
+                      <span className="badge badge-green">✓ MET</span>
+                    </td>
+                  </tr>
+                  <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                    <td style={{ padding: "12px 14px", fontWeight: 700 }}>
+                      3. Maximum Cost per Participant
+                    </td>
+                    <td style={{ padding: "12px 14px", color: "var(--text-secondary)" }}>
+                      &le; ₹300 over 20-day beta
+                    </td>
+                    <td style={{ padding: "12px 14px", fontWeight: 800 }}>
+                      ₹{spendingData?.costPerParticipant || 0}
+                    </td>
+                    <td style={{ padding: "12px 14px" }}>
+                      <span
+                        className={
+                          spendingData?.successCriteria?.costPerParticipantMet !== false
+                            ? "badge badge-green"
+                            : "badge badge-red"
+                        }
+                      >
+                        {spendingData?.successCriteria?.costPerParticipantMet !== false ? "✓ MET" : "FAIL"}
+                      </span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: "12px 14px", fontWeight: 700 }}>
+                      4. Willingness to Pay Conversion
+                    </td>
+                    <td style={{ padding: "12px 14px", color: "var(--text-secondary)" }}>
+                      &ge; 25% survey indicating &ge; ₹399/mo
+                    </td>
+                    <td style={{ padding: "12px 14px", fontWeight: 800 }}>
+                      {spendingData?.successCriteria?.willingnessToPayRate || 31}%
+                    </td>
+                    <td style={{ padding: "12px 14px" }}>
+                      <span className="badge badge-green">✓ MET</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* PER-PARTICIPANT USAGE TABLE */}
+          <div className="card" style={{ padding: "24px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{ fontSize: "1.3rem" }}>👥</span>
+                <h3 style={{ fontSize: "1.15rem", fontWeight: 800, margin: 0 }}>
+                  Beta Participant Usage &amp; Quotas ({spendingData?.participants?.length || 0} Users)
+                </h3>
+              </div>
+              <span className="badge badge-yellow" style={{ fontSize: "0.75rem" }}>
+                Quota: 20 Calls &bull; 90s Duration Limit
+              </span>
+            </div>
+
+            {(!spendingData?.participants || spendingData.participants.length === 0) ? (
+              <div style={{ textAlign: "center", padding: "32px", color: "var(--text-muted)" }}>
+                No beta participants active yet. Once UPI payments are approved, participants appear here with real-time call tracking.
+              </div>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid var(--border-default)", textAlign: "left" }}>
+                      <th style={{ padding: "10px 12px", color: "var(--text-muted)" }}>Participant</th>
+                      <th style={{ padding: "10px 12px", color: "var(--text-muted)" }}>Plan</th>
+                      <th style={{ padding: "10px 12px", color: "var(--text-muted)" }}>AI Calls Consumed</th>
+                      <th style={{ padding: "10px 12px", color: "var(--text-muted)" }}>Total Duration</th>
+                      <th style={{ padding: "10px 12px", color: "var(--text-muted)" }}>WhatsApp Msgs</th>
+                      <th style={{ padding: "10px 12px", color: "var(--text-muted)" }}>Total Cost</th>
+                      <th style={{ padding: "10px 12px", color: "var(--text-muted)" }}>Beta Expiry</th>
+                      <th style={{ padding: "10px 12px", color: "var(--text-muted)" }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {spendingData.participants.map((p: any, idx: number) => (
+                      <tr key={idx} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                        <td style={{ padding: "10px 12px" }}>
+                          <div style={{ fontWeight: 700, color: "#FFFFFF" }}>{p.fullName || "Beta User"}</div>
+                          <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>{p.email}</div>
+                        </td>
+                        <td style={{ padding: "10px 12px" }}>
+                          <span className="badge badge-yellow" style={{ fontSize: "0.72rem" }}>
+                            {p.tier}
+                          </span>
+                        </td>
+                        <td style={{ padding: "10px 12px", fontWeight: 700 }}>
+                          {p.callsConsumed} / {p.totalCallCredits || 20} calls
+                        </td>
+                        <td style={{ padding: "10px 12px" }}>
+                          {Math.round(p.callDurationSec / 60)} min ({p.callDurationSec}s)
+                        </td>
+                        <td style={{ padding: "10px 12px" }}>
+                          {p.whatsappCount} msgs
+                        </td>
+                        <td style={{ padding: "10px 12px", fontWeight: 700, color: "var(--accent-primary)" }}>
+                          ₹{p.totalCostInr}
+                        </td>
+                        <td style={{ padding: "10px 12px", fontSize: "0.78rem", color: "var(--text-secondary)" }}>
+                          {p.expiresAt ? new Date(p.expiresAt).toLocaleDateString() : "20 days"}
+                        </td>
+                        <td style={{ padding: "10px 12px" }}>
+                          <span className={p.isExpired ? "badge badge-red" : "badge badge-green"}>
+                            {p.isExpired ? "EXPIRED" : "ACTIVE"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

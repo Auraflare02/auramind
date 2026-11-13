@@ -359,7 +359,7 @@ export async function approvePaymentRequest(
   // 1. Activate the subscription for the user
   const isBeta = req.tier === "beta" || req.tier === "platinum_beta";
   if (isBeta) {
-    await activatePlatinumBeta(req.userId, "approved");
+    await activatePlatinumBeta(req.userId, "approved", req.transactionId);
   } else {
     await updateUserSubscription(req.userId, req.tier, req.billingCycle);
   }
@@ -386,7 +386,7 @@ export async function approvePaymentRequest(
   }
 
   const successMessage = isBeta
-    ? `Platinum Beta activated! User ${req.userEmail} has 20 days of complete Platinum access (up to 3 goals, 15 friends, 60 AI calls, WhatsApp check-ins, and Google Calendar).`
+    ? `Platinum Beta activated! User ${req.userEmail} has 20 days of complete Platinum access (up to 3 goals, 15 friends, 20 AI calls capped at 90s, WhatsApp check-ins, and Google Calendar).`
     : `Plan activated successfully! User ${req.userEmail} upgraded to ${SUBSCRIPTION_PLANS[req.tier].name}.`;
 
   return {

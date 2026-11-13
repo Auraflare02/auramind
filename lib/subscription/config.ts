@@ -258,8 +258,8 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, PlanConfig> = {
     annualPriceMonthly: 99,
     maxGoals: 3,
     maxFriends: 15,
-    aiCallsPerMonth: 60,
-    aiCallsMax: 60,
+    aiCallsPerMonth: 20,
+    aiCallsMax: 20,
     whatsAppCheckins: true,
     googleCalendar: "basic",
     preferredCallingTime: true,
@@ -275,7 +275,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, PlanConfig> = {
     keyHighlights: [
       "Add up to 3 Goals with enhanced AI analysis & 30-day timetables",
       "Hourly WhatsApp check-in messages & reminders",
-      "AI Calling Agent (up to 60 calls in Hindi & English, preview)",
+      "Beta AI Calling Agent: Up to 20 calls (max 90 seconds/call, preview)",
       "Set your preferred AI calling schedule & pending-task follow-ups",
       "Basic Google Calendar integration & activity scheduling",
       "Add up to 15 Friends in your Accountability Circle",
@@ -309,10 +309,11 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, PlanConfig> = {
           "Hourly WhatsApp check-ins and progress prompts",
           "Application notifications for scheduled activities",
           "Task completion reminders & missed-task follow-ups",
-          "AI Calling Agent: Up to 60 calls during the 20-day beta (private preview)",
+          "Beta-specific AI Calling allowance: Up to 20 calls for the 20-day programme (private preview)",
+          "Strict 90-second maximum call duration with automatic termination",
           "Select preferred calling times with Hindi & English natural conversation",
           "AI asks about completed activities, pending tasks & next steps",
-          "Enforced 5-minute call duration cap and explicit user consent",
+          "Explicit calling consent required; server-side cost limits enforced",
         ],
       },
       {
@@ -340,8 +341,8 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, PlanConfig> = {
     annualPriceMonthly: 99,
     maxGoals: 3,
     maxFriends: 15,
-    aiCallsPerMonth: 60,
-    aiCallsMax: 60,
+    aiCallsPerMonth: 20,
+    aiCallsMax: 20,
     whatsAppCheckins: true,
     googleCalendar: "basic",
     preferredCallingTime: true,
@@ -357,7 +358,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, PlanConfig> = {
     keyHighlights: [
       "Add up to 3 Goals with enhanced AI analysis & 30-day timetables",
       "Hourly WhatsApp check-in messages & reminders",
-      "AI Calling Agent (up to 60 calls in Hindi & English, preview)",
+      "Beta AI Calling Agent: Up to 20 calls (max 90 seconds/call, preview)",
       "Set your preferred AI calling schedule & pending-task follow-ups",
       "Basic Google Calendar integration & activity scheduling",
       "Add up to 15 Friends in your Accountability Circle",
@@ -391,10 +392,11 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, PlanConfig> = {
           "Hourly WhatsApp check-ins and progress prompts",
           "Application notifications for scheduled activities",
           "Task completion reminders & missed-task follow-ups",
-          "AI Calling Agent: Up to 60 calls during the 20-day beta (private preview)",
+          "Beta-specific AI Calling allowance: Up to 20 calls for the 20-day programme (private preview)",
+          "Strict 90-second maximum call duration with automatic termination",
           "Select preferred calling times with Hindi & English natural conversation",
           "AI asks about completed activities, pending tasks & next steps",
-          "Enforced 5-minute call duration cap and explicit user consent",
+          "Explicit calling consent required; server-side cost limits enforced",
         ],
       },
       {
@@ -416,15 +418,18 @@ export const BETA_PROGRAM_CONFIG = {
   price: 99,
   durationDays: 20,
   maxUsers: 100,
-  name: "20 Days of AuraMind Platinum",
-  badge: "🚀 20 Days of Platinum for ₹99",
+  name: "20 Days of AuraMind Platinum Beta",
+  badge: "🚀 Platinum Beta (₹99 for 20 Days)",
   headline: "GET 20 DAYS OF AURAMIND PLATINUM FOR JUST ₹99.",
+  callAllowance: 20,
+  maxCallDurationSeconds: 90,
+  globalBudgetCeilingInr: 30000,
   features: [
     "Complete AuraMind Platinum experience for 20 days",
     "Maximum 3 active goals with AI research and personalized 30-day timetables",
     "Maximum 15 friends with private messaging & moderated World Chat",
     "Hourly WhatsApp check-ins and app task reminders",
-    "AI Calling Agent with up to 60 calls in Hindi/English (preview)",
+    "Beta-specific AI Calling allowance: up to 20 calls (max 90 seconds per call, preview)",
     "Basic Google Calendar goal activity scheduling",
     "Focus timer with distraction logging, XP levels, daily & weekly reports",
     "Missed-task adaptive recovery plans",
@@ -442,16 +447,32 @@ export const AI_CALLING_CONFIG = {
   enabled: process.env.ENABLE_AI_VOICE_CALLS === "true",
   // Status note for UI transparency
   statusNote: "Carrier AI telephony is currently in private developer testing and carrier approval.",
-  // Hard per-call duration cap (minutes) to protect against runaway telephony costs
-  maxCallDurationMinutes: 5,
-  // Hard limits per tier
+  // Max duration per call (seconds) enforced by the telephony server
+  maxCallDurationSeconds: {
+    gold: 0,
+    beta: 90,           // 90 seconds for Beta
+    platinum_beta: 90,  // 90 seconds for Platinum Beta
+    platinum: 180,      // 3 minutes for regular Platinum
+    diamond: 300,       // 5 minutes for Diamond
+  },
+  // Hard allowance limits per tier
   tierLimits: {
     gold: 0,
     platinum: 60,
     diamond: 450,
-    beta: 60,
-    platinum_beta: 60,
+    beta: 20,           // Capped at 20 calls for Beta
+    platinum_beta: 20,  // Capped at 20 calls for Platinum Beta
   },
+  // Global Beta spending ceiling in INR
+  globalBetaBudgetCeilingInr: 30000,
+  // Safety thresholds percentage
+  thresholdAlertPercent: 70,              // 70% = ₹21,000: Warning alert to admin
+  thresholdSuspendCallsPercent: 90,       // 90% = ₹27,000: Auto-suspend optional AI calls
+  thresholdHardStopPercent: 100,          // 100% = ₹30,000: Complete stop on cost-generating services
+  // Configurable vendor costs
+  costPerCallMinuteInr: Number(process.env.BLAND_AI_COST_PER_MINUTE_INR) || 12.0,
+  costPerWhatsappMsgInr: Number(process.env.WHATSAPP_COST_PER_MSG_INR) || 0.80,
+  costPerAi1kTokensInr: Number(process.env.GEMINI_COST_PER_1K_TOKENS_INR) || 0.05,
 };
 
 export const COMPARISON_TABLE_ROWS = [

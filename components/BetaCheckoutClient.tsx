@@ -135,7 +135,7 @@ export default function BetaCheckoutClient() {
             GET 20 DAYS OF AURAMIND PLATINUM FOR JUST ₹99.
           </h1>
           <p style={{ color: "var(--text-secondary)", fontSize: "1rem", maxWidth: "600px", margin: "0 auto" }}>
-            One-time ₹99 fee for 20 days of complete AuraMind Platinum access: 3 active goals, 15 friends, hourly WhatsApp check-ins, 60 AI phone calls (preview), and Google Calendar.
+            One-time ₹99 fee for 20 days of complete AuraMind Platinum access: 3 active goals, 15 friends, hourly WhatsApp check-ins, 20 AI phone calls (max 90s each), and Google Calendar.
           </p>
         </div>
 
@@ -457,7 +457,7 @@ export default function BetaCheckoutClient() {
                 {[
                   "Up to 3 Active Goals with AI Planning & 30-Day Timetables",
                   "Hourly WhatsApp Check-ins & In-App Alerts",
-                  "AI Calling Agent (Up to 60 calls in Hindi/English, preview)",
+                  "AI Calling Agent (Up to 20 calls @ 90s max with automatic termination, preview)",
                   "Up to 15 Accountability Friends & Moderated World Chat",
                   "Basic Google Calendar Activity Scheduling",
                   "Focus Timer with Distraction Logging, XP Levels & Streaks",
@@ -483,7 +483,7 @@ export default function BetaCheckoutClient() {
                   color: "var(--text-muted)",
                 }}
               >
-                <strong>Beta vs Diamond Notice:</strong> Beta unlocks the complete Platinum tier (3 goals, 15 friends, 60 calls). Diamond-exclusive benefits (25 goals, 50 friends, 450 calls) are reserved for Diamond subscribers.
+                <strong>Beta vs Diamond Notice:</strong> Beta unlocks the complete Platinum tier with strict beta safety limits (3 goals, 15 friends, 20 calls @ 90s max). Diamond-exclusive benefits (25 goals, 50 friends, 450 calls) are reserved for Diamond subscribers.
               </div>
             </div>
 

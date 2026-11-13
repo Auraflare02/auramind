@@ -37,7 +37,7 @@ export default function BetaPageClient() {
             className="lead"
             style={{ maxWidth: "760px", margin: "0 auto 32px", color: "var(--text-secondary)", fontSize: "1.15rem", lineHeight: 1.6 }}
           >
-            Unlock the complete AuraMind Platinum experience for 20 days: manage up to 3 concurrent goals, connect with 15 friends, receive hourly WhatsApp check-ins, AI calling agent (developer preview), Google Calendar integration, and advanced productivity reports.
+            Unlock the complete AuraMind Platinum experience for 20 days: manage up to 3 concurrent goals, connect with 15 friends, receive hourly WhatsApp check-ins, beta AI calling agent (up to 20 calls, max 90s per call, preview), Google Calendar integration, and advanced productivity reports.
           </p>
 
           {/* Pricing Highlight Box */}
@@ -285,8 +285,8 @@ export default function BetaPageClient() {
                 },
                 {
                   icon: "📞",
-                  title: "AI Calling Agent (Up to 60 Calls, Preview)",
-                  desc: "Up to 60 conversational AI phone calls in Hindi & English to ask about completed tasks, friction, and next steps.",
+                  title: "AI Calling Agent (Up to 20 Calls, Max 90s Each)",
+                  desc: "Up to 20 conversational AI accountability calls (hard capped at 90 seconds per call with automatic termination) in Hindi & English to verify completed tasks and next steps.",
                 },
                 {
                   icon: "📅",
@@ -316,7 +316,7 @@ export default function BetaPageClient() {
                 {
                   icon: "🔒",
                   title: "Platinum Limits (Beta vs Diamond Notice)",
-                  desc: "Beta includes full Platinum quotas (3 goals, 15 friends, 60 calls). Diamond-exclusive limits (25 goals, 50 friends, 450 calls) are not unlocked.",
+                  desc: "Beta includes full Platinum feature set with strict beta safety limits (3 goals, 15 friends, 20 calls @ 90s max). Diamond-exclusive limits (25 goals, 50 friends, 450 calls) are not unlocked.",
                 },
                 {
                   icon: "🛡️",
@@ -337,6 +337,76 @@ export default function BetaPageClient() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3.5 TARGET AUDIENCE COHORTS */}
+      <section style={{ padding: "80px 0", borderBottom: "1px solid var(--border-default)", backgroundColor: "#0A0A0A" }}>
+        <div className="container" style={{ maxWidth: "1000px" }}>
+          <div style={{ textAlign: "center", marginBottom: "48px" }}>
+            <span className="badge badge-yellow" style={{ marginBottom: "12px" }}>
+              Target Cohorts
+            </span>
+            <h2 style={{ fontSize: "2rem", fontWeight: 800, marginBottom: "16px" }}>
+              Who Is AuraMind Beta Built For?
+            </h2>
+            <p style={{ color: "var(--text-secondary)", fontSize: "1rem", maxWidth: "680px", margin: "0 auto" }}>
+              AuraMind is engineered specifically for individuals who have clear ambition but struggle with follow-through, procrastination, and lack of daily accountability.
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: "24px",
+            }}
+          >
+            {[
+              {
+                icon: "📚",
+                title: "Competitive Exam Aspirants",
+                subtitle: "UPSC CSE, JEE Advanced, NEET, GATE & CA Final",
+                desc: "Follow rigid 8-to-12 hour daily revision timetables. Replace distraction with hourly check-ins and AI voice accountability to ensure full syllabus coverage without burnout.",
+              },
+              {
+                icon: "💻",
+                title: "Engineers & Self-Taught Devs",
+                subtitle: "Full-Stack, AI Systems, Cloud & DSA Sprints",
+                desc: "Turn vague 'learn AI' goals into structured 30-day technical milestones with daily coding blocks, verified focus minutes, and adaptive timetable recovery when work gets busy.",
+              },
+              {
+                icon: "🚀",
+                title: "Founders & Working Professionals",
+                subtitle: "MVP Launches, Writing, Fitness & Skill-Building",
+                desc: "Execute consistent early-morning or late-evening deep work blocks. Get actionable accountability calls and progress metrics that keep you shipping week after week.",
+              },
+            ].map((cohort, idx) => (
+              <div
+                key={idx}
+                style={{
+                  backgroundColor: "#121212",
+                  border: "1px solid var(--border-default)",
+                  borderRadius: "14px",
+                  padding: "28px 24px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px",
+                }}
+              >
+                <div style={{ fontSize: "2rem" }}>{cohort.icon}</div>
+                <h3 style={{ fontSize: "1.15rem", fontWeight: 800, margin: 0, color: "#FFFFFF" }}>
+                  {cohort.title}
+                </h3>
+                <div style={{ fontSize: "0.8rem", color: "var(--accent-primary)", fontWeight: 700 }}>
+                  {cohort.subtitle}
+                </div>
+                <p style={{ fontSize: "0.88rem", color: "var(--text-secondary)", margin: 0, lineHeight: 1.6 }}>
+                  {cohort.desc}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -396,7 +466,7 @@ export default function BetaPageClient() {
             {[
               {
                 q: "What features are included in the ₹99 Beta Programme?",
-                a: "Every approved beta participant receives the complete AuraMind Platinum experience for 20 days: up to 3 concurrent active goals, up to 15 accountability friends, hourly WhatsApp check-ins, AI voice calling agent (up to 60 calls in Hindi/English, developer preview), basic Google Calendar scheduling, focus timer with distraction logging, XP levels, and advanced weekly reports. Access does not include Diamond-level quotas (25 goals, 50 friends, 450 calls).",
+                a: "Every approved beta participant receives the complete AuraMind Platinum experience for 20 days: up to 3 concurrent active goals, up to 15 accountability friends, hourly WhatsApp check-ins, AI voice calling agent (up to 20 calls in Hindi/English, max 90s each, preview), basic Google Calendar scheduling, focus timer with distraction logging, XP levels, and advanced weekly reports. Access does not include Diamond-level quotas (25 goals, 50 friends, 450 calls).",
               },
               {
                 q: "What happens after the 20 days are over?",
@@ -408,7 +478,7 @@ export default function BetaPageClient() {
               },
               {
                 q: "What is the status of AI voice calling and WhatsApp check-ins?",
-                a: "WhatsApp check-in integration is operational for beta cohorts with connected phone numbers. AI Voice Calling is currently in private developer testing with Bland AI enterprise carrier approval; beta participants are allocated 60 calls which activate under strict 5-minute caps upon carrier clearance.",
+                a: "WhatsApp check-in integration is operational for beta cohorts with connected phone numbers and explicit opt-in during active hours (08:00–22:00). AI Voice Calling is capped at 20 calls per user for the 20-day programme with an automatic 90-second duration hard cutoff and Hindi/English support.",
               },
               {
                 q: "What if I encounter an error or confusing feature?",
